@@ -15,6 +15,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, `
 		<h1> Homepage </h1>
 		<form method="post">
+
 			<input name="name" type="text" />
 			<input name="email" type="email" />
 			<input value="Submit Info" type="submit" />

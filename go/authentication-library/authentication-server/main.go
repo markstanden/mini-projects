@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -26,7 +27,22 @@ func signin(w http.ResponseWriter, r *http.Request) {
 }
 
 func hashPassword(ptPassword string) []byte {
-	scrypt.	
+	hash, err := generateFromPassword("password123",
+		struct {
+			memory      uint32
+			iterations  uint32
+			parallelism uint8
+			saltLength  uint32
+			keyLength   uint32
+		}{
+			memory:      64 * 1024,
+			iterations:  3,
+			parallelism: 2,
+			saltLength:  16,
+			keyLength:   32,
+		})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(hash)
 }
-
-

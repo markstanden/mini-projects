@@ -5,7 +5,7 @@ import (
 )
 
 type Token struct {
-	header struct {
+	Header struct {
 
 		// ALG - Algorithm
 		// The encoding type used within the JWT
@@ -22,7 +22,11 @@ type Token struct {
 		// for the use of encoding tokens for other uses.
 		TYP string
 	}
-	payload struct {
+
+	// Payload contains the data stored within the JWT
+	// Note information stored here is not secure,
+	// it will be transmitted encoded into URLBase64
+	Payload struct {
 
 		// *** Registered Claims ***
 
@@ -64,8 +68,6 @@ type Token struct {
 
 		// *** private claims ***
 		// Custom claims specific to our web app.
-		// Note information stored here is not secure,
-		// it will be transmitted encoded into URLBase64
 
 	}
 }

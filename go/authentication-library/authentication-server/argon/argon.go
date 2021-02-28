@@ -2,6 +2,8 @@ package argon
 
 import (
 	"crypto/rand"
+	"encoding/base64"
+	"fmt"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -9,6 +11,7 @@ import (
 // KDFconfig is the base struct for my Argon2id wrapper
 // we will use the standard library's argon2 IDKey function
 // func IDKey(password, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte
+// $argon2id$v=19$m=64,t=4,p=8$SSALT$vHASH
 
 type KDFconfig struct {
 
@@ -36,9 +39,9 @@ type KDFconfig struct {
 func Encode(pw string) (hashWithConfig string) {
 
 	newArgon := KDFconfig{
-		SaltLength: 16,
-		Time:       4,
-		Memory:     16 * 1024,
+		SaltLength: 64,
+		Time:       10,
+		Memory:     64 * 1024,
 		Threads:    8,
 		KeyLen:     16,
 	}
@@ -49,7 +52,15 @@ func Encode(pw string) (hashWithConfig string) {
 	}
 
 	hash := argon2.IDKey([]byte(pw), salt, newArgon.Time, newArgon.Memory, newArgon.Threads, newArgon.KeyLen)
-	hashWithConfig = string(hash)
+
+	hashWithConfig = fmt.Sprintf("$argon2id$v=%v$m=%v,t=%v,p=%v$%s$%s",
+		argon2.Version,
+		newArgon.Memory,
+		newArgon.Time,
+		newArgon.Threads,
+		base64.RawStdEncoding.EncodeToString(salt),
+		base64.RawStdEncoding.EncodeToString(hash))
+
 	return hashWithConfig
 }
 

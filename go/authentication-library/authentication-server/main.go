@@ -36,8 +36,8 @@ func signin(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Printf(`
 		Password: %s,
-		Hash: %s.
-	`, r.PostForm.Get("password"), argon.Encode(r.PostForm.Get("password")))
+		Hash: %s,
+		`, r.PostForm.Get("password"), argon.Encode(r.PostForm.Get("password")))
 	}
 
 }

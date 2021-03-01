@@ -31,13 +31,30 @@ func signin(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		err := r.ParseForm()
 		if err != nil {
-			log.Panic("Failed to parseform")
+			log.Println("Failed to parseform: ", err)
+
 		}
 
+		compareOK := false
+
+		hash, err := argon.Encode(r.PostForm.Get("password"))
+		if err != nil {
+			log.Println("failed to create hash: ", err)
+		}
+
+		err = argon.Compare(r.PostForm.Get("password"), hash)
+		if err != nil {
+			log.Println("failed to make comparison: ", err)
+		} else {
+			compareOK = true
+		}
+
+		// Output the password, and the hash, and the result of the conparison.
 		fmt.Printf(`
 		Password: %s,
 		Hash: %s,
-		`, r.PostForm.Get("password"), argon.Encode(r.PostForm.Get("password")))
+		compare ok?: %v,
+		`, r.PostForm.Get("password"), hash, compareOK)
 	}
 
 }

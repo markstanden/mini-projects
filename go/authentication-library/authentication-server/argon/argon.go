@@ -16,7 +16,7 @@ import (
 // KDFconfig is the base struct for my Argon2id wrapper
 // we will use the standard library's argon2 IDKey function
 // func IDKey(password, salt []byte, time, memory uint32, threads uint8, keyLen uint32) []byte
-// $argon2id$v=19$m=64,t=4,p=8$SSALT$vHASH
+// $argon2id$v=19$t=10,m=65536,p=8$SALT$HASH
 
 type KDFconfig struct {
 
@@ -73,6 +73,10 @@ func Encode(pw string) (hashWithConfig string, err error) {
 		base64.RawStdEncoding.EncodeToString(hash)), nil
 }
 
+// We will hash the provided strings using the arguments stored in the
+// provided hash to compare against.
+// this will allow us change the defaults and still compare against existing
+// passwords.:
 func Compare(ptPassword string, hash string) (err error) {
 	// If we fail at any point prior to hashing,
 	// it won't be worth the expense of hashing.

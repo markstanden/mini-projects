@@ -1,4 +1,4 @@
-package password-to-argon2
+package argon
 
 import (
 	"crypto/rand"

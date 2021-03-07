@@ -5,7 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/markstanden/authentication/argon"
+	"github.com/markstanden/argonhasher"
+	"github.com/markstanden/jwt"
 )
 
 func main() {
@@ -37,24 +38,32 @@ func signin(w http.ResponseWriter, r *http.Request) {
 
 		compareOK := false
 
-		hash, err := argon.Encode(r.PostForm.Get("password"))
+		hash, err := argonhasher.Encode(r.PostForm.Get("password"))
 		if err != nil {
 			log.Println("failed to create hash: ", err)
 		}
 
-		err = argon.Compare(r.PostForm.Get("password"), hash)
+		err = argonhasher.Compare(r.PostForm.Get("password"), hash)
 		if err != nil {
 			log.Println("failed to make comparison: ", err)
 		} else {
 			compareOK = true
 		}
 
-		// Output the password, and the hash, and the result of the conparison.
+		// Output the password, and the hash, and the result of the comparison.
 		fmt.Printf(`
 		Password: %s,
 		Hash: %s,
 		compare ok?: %v,
 		`, r.PostForm.Get("password"), hash, compareOK)
+		
+		// Create a JWT
+		token := jwt.New()
+		token.Payload.JTI = hash
+		token.Encode()
+
+		fmt.Println(token.Decode())
+		// 
 	}
 
 }

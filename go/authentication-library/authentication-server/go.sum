@@ -1,3 +1,7 @@
+github.com/markstanden/argonhasher v0.0.0-20210307205013-00240975d63b h1:FBf+ywODzTWYrS3cxltHyXR43roJvAVn4WQKbEaF4F4=
+github.com/markstanden/argonhasher v0.0.0-20210307205013-00240975d63b/go.mod h1:5XTxuwjVNo3k5DcTC3go2rP+RrQc0NbCkzOzzQoFWjw=
+github.com/markstanden/jwt v0.0.0-20210307194032-2cb9d7cb627a h1:MQIX1jqmcUvrrO56zPJ59zW649IJsZbq5TY7fgCOREs=
+github.com/markstanden/jwt v0.0.0-20210307194032-2cb9d7cb627a/go.mod h1:mhWF5VfSKzpBzPUfpY4aHtIdt9KQuqKg/S3nTC3qi1Y=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 h1:/ZScEX8SfEmUGRHs0gxpqteO5nfNW6axyZbBdw9A12g=
 golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83/go.mod h1:jdWPYTVW3xRLrWPugEBEK3UY2ZEsg3UU495nc5E+M+I=

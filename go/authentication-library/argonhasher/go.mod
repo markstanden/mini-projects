@@ -1,3 +1,3 @@
-module github.com/markstanden/password-to-argon2
+module github.com/markstanden/argonhasher
 
 go 1.16

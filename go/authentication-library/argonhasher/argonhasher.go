@@ -1,4 +1,4 @@
-package argon
+package argonhasher
 
 import (
 	"crypto/rand"

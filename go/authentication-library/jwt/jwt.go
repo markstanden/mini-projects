@@ -4,28 +4,27 @@ import (
 	"errors"
 )
 
+// Token is the struct that holds all of the data to be written to the JWT
 type Token struct {
+	// Header contains the required standard JWT fields
+	// Header.ALG (Algorithm) The encoding type used within the JWT
+	// It is important that the encoding method is checked to be as expected prior to decoding.
+	// Header.CTY (Content Type) Used only in nested JWT operations
+	// Header.TYP (Type) Set to "JWT" for JWT operations, allows for the use of encoding tokens for other uses.
 	Header struct {
-
-		// ALG - Algorithm
-		// The encoding type used within the JWT
-		// It is important that the encoding method
-		// is checked to be as expected prior to decoding.
 		ALG string
-
-		// CTY - Content Type
-		// Used only in nested JWT operations
 		CTY string
-
-		// TYP - Type
-		// Set to "JWT" for JWT operations, allows
-		// for the use of encoding tokens for other uses.
 		TYP string
 	}
 
 	// Payload contains the data stored within the JWT
 	// Note information stored here is not secure,
 	// it will be transmitted encoded into URLBase64
+	// ISS - issuer (string || URI),
+	// SUB (subject) who the JWT was supplied to. (Should be a unique identifier),
+	// AUD (audience).  Who the JWT is intended for,
+	// EXP (expiration time) - the time the JWT ceases to be valid,
+	EXP     string
 	Payload struct {
 
 		// *** Registered Claims ***
@@ -72,9 +71,28 @@ type Token struct {
 	}
 }
 
+// New creates a new token, with sane defaults
 func New() *Token {
 
-	return &Token{}
+	return &Token{
+		Header: struct {
+			ALG string
+			CTY string
+			TYP string
+		}{
+			ALG: "HS512",
+			TYP: "JWT",
+		},
+		Payload: struct {
+			ISS string
+			SUB string
+			AUD string
+			EXP string
+			NBT string
+			IAT string
+			JTI string
+		}{},
+	}
 }
 
 // Encode creates a token from the jwt struct

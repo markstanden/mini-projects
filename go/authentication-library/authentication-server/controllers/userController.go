@@ -1,13 +1,30 @@
 package controllers
 
 import (
-	_ "github.com/markstanden/authentication/models"
+	"fmt"
+	"log"
+
+	"github.com/markstanden/authentication/models"
 )
 
-	const (
+// Connect is a test function to check connection
+  func Connect(email string) *models.User{
+    const (
     host     = "localhost"
     port     = 5432
-    user     = "postgres"
+    username = "postgres"
     password = ""
-    dbname   = "authentication"
+    databaseName   = "authentication"
   )
+
+    db := models.NewConnection(host, username, password, databaseName, port)
+    err := db.DB.Ping();
+    if err != nil {
+      fmt.Println("Connection Failure", err)
+    }
+    user, err := db.FindByEmail(email)
+    if err != nil {
+      log.Println("User Not Found")
+    }
+    return user
+  }

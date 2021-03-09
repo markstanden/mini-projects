@@ -15,21 +15,26 @@ type User struct {
 	UniqueID string
 	Name string
 	Email string
-	hashedPassword string
+	HashedPassword string
 	Token string
 }
 
 // UserStore specifies the requred functions of the user store
 type UserStore interface {
-	New() *UserStore
+	NewConnection(host, username, password, databaseName string, port int)
 	Close()
 	FindByID(id string) *User
 	FindByEmail(email string) *User
-	FindByHashedPassword(hashedPassword string) *User
+	FindByToken(hashedPassword string) *User
+	Delete(*User)
 }
 
 // NewUser returns a pointer to a new, empty User struct 
 func NewUser() *User {
 	return &User{}
 }
+
+/* func (u *User) Update() {
+
+} */
 

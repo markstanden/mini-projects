@@ -5,8 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/markstanden/authentication/controllers"
+
 	"github.com/markstanden/argonhasher"
-	"github.com/markstanden/jwt"
 )
 
 func main() {
@@ -57,12 +58,15 @@ func signin(w http.ResponseWriter, r *http.Request) {
 		compare ok?: %v,
 		`, r.PostForm.Get("password"), hash, compareOK)
 		
-		// Create a JWT
-		token := jwt.New()
-		token.Payload.JTI = hash
-		token.Encode()
+		// Test
+		fmt.Println(controllers.Connect(r.PostForm.Get("email")))
 
-		fmt.Println(token.Decode())
+		// Create a JWT
+		//token := jwt.New()
+		//token.Payload.JTI = hash
+		//token.Encode()
+
+		//fmt.Println(token.Decode())
 		// 
 	}
 

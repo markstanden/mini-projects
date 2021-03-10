@@ -2,19 +2,57 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
-
-	"github.com/markstanden/authentication/controllers"
+	"os"
 
 	"github.com/markstanden/argonhasher"
+	"github.com/markstanden/authentication/cache"
+	"github.com/markstanden/authentication/config"
+
+	//"github.com/markstanden/authentication/http"
+	"github.com/markstanden/authentication/postgres"
 )
 
+var c *cache.UserCache
+
 func main() {
-	http.HandleFunc("/", signin)
-	http.ListenAndServe(":8080", nil)
+	if err := run(os.Args, os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
 }
 
+func run(args []string, stdout io.Writer) error {
+
+	// open a connection to the database
+	db := postgres.NewConnection(
+		config.PGhost,
+		config.PGusername,
+		config.PGpassword,
+		config.PGdatabaseName,
+		config.PGport,
+	)
+
+	// check the database connection is up and running
+	err := db.DB.Ping()
+	if err != nil {
+		fmt.Println("Connection Failure", err)
+	}
+	// Close the database when the server ends
+	defer db.DB.Close()
+
+	// Create a user cache
+	c = cache.NewUserCache(db)
+
+	// Create a handler for our routes
+	http.HandleFunc("/signin", signin)
+	http.ListenAndServe(":8080", nil)
+	return nil
+}
+
+// SignIn produces the signin route
 func signin(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 
@@ -57,17 +95,19 @@ func signin(w http.ResponseWriter, r *http.Request) {
 		Hash: %s,
 		compare ok?: %v,
 		`, r.PostForm.Get("password"), hash, compareOK)
-		
-		// Test
-		fmt.Println(controllers.Connect(r.PostForm.Get("email")))
 
-		// Create a JWT
-		//token := jwt.New()
-		//token.Payload.JTI = hash
-		//token.Encode()
-
-		//fmt.Println(token.Decode())
-		// 
+		user, err := c.FindByEmail(r.PostForm.Get("email"))
+		if err != nil {
+			log.Println("User Not Found")
+		}
+		fmt.Fprintln(w, user)
 	}
 
+	// Create a JWT
+	//token := jwt.New()
+	//token.Payload.JTI = hash
+	//token.Encode()
+
+	//fmt.Println(token.Decode())
+	//
 }

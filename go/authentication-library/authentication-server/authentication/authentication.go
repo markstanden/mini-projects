@@ -1,4 +1,4 @@
-package models
+package authentication
 
 //User is the base struct for our User model.
 //	UniqueID string
@@ -19,22 +19,9 @@ type User struct {
 	Token string
 }
 
-// UserStore specifies the requred functions of the user store
-type UserStore interface {
-	NewConnection(host, username, password, databaseName string, port int)
-	Close()
-	FindByID(id string) *User
-	FindByEmail(email string) *User
-	FindByToken(hashedPassword string) *User
-	Delete(*User)
+// UserService specifies the requred functions of the user store
+type UserService interface {
+	FindByEmail(email string) (*User, error)
+	FindByToken(token string) (*User, error)
+	//Delete(*User)
 }
-
-// NewUser returns a pointer to a new, empty User struct 
-func NewUser() *User {
-	return &User{}
-}
-
-/* func (u *User) Update() {
-
-} */
-

@@ -1,4 +1,5 @@
 # jwt
+## JWT creation library to be shared across my apps, with sane defaults
 
 A library for basic jwt creation and parsing written in go
 

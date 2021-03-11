@@ -71,8 +71,8 @@ type Token struct {
 	}
 }
 
-// New creates a new token, with sane defaults
-func New() *Token {
+// NewToken creates a new token, with sane defaults
+func NewToken() *Token {
 
 	return &Token{
 		Header: struct {

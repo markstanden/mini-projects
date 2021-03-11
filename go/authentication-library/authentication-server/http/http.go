@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/markstanden/authentication/authentication"
+	"github.com/markstanden/authentication"
 )
 
 type Handler struct {

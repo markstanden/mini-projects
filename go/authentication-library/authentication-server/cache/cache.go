@@ -3,7 +3,7 @@ package cache
 import (
 	"fmt"
 
-	"github.com/markstanden/authentication/authentication"
+	"github.com/markstanden/authentication"
 )
 
 // Heavily based on Ben Johnson's user cache gist
@@ -30,7 +30,7 @@ func NewUserCache(us authentication.UserService) *UserCache {
 func (c *UserCache) FindByEmail(email string) (*authentication.User, error) {
 	// Check the local cache first.
 	if u := c.emailCache[email]; u != nil {
-                fmt.Println("From Cache")
+		fmt.Println("From Cache")
 		return u, nil
 	}
 
@@ -47,9 +47,9 @@ func (c *UserCache) FindByEmail(email string) (*authentication.User, error) {
 // FindByToken returns a user for a given token.
 // Returns the cached instance if available.
 func (c *UserCache) FindByToken(email string) (*authentication.User, error) {
-	// Check the local cache first.
+	// Check the local cache first. ````
 	if u := c.tokenCache[email]; u != nil {
-                fmt.Println("From Cache")
+		fmt.Println("From Cache")
 		return u, nil
 	}
 

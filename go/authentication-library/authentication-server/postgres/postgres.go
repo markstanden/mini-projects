@@ -7,7 +7,7 @@ import (
 
 	// This is the required postgres driver for the database/sql package
 	_ "github.com/lib/pq"
-	"github.com/markstanden/authentication/authentication"
+	"github.com/markstanden/authentication"
 )
 
 // UserService is a struct providing a psql implementation of authentication.UserService

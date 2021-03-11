@@ -12,11 +12,11 @@ package authentication
 //	Token string
 //		The generated identification token stored within the ID token
 type User struct {
-	UniqueID       string
-	Name           string
-	Email          string
+	UniqueID string
+	Name string
+	Email string
 	HashedPassword string
-	Token          string
+	Token string
 }
 
 // UserService specifies the requred functions of the user store
@@ -24,4 +24,10 @@ type UserService interface {
 	FindByEmail(email string) (*User, error)
 	FindByToken(token string) (*User, error)
 	//Delete(*User)
+}
+
+// PassHash specifies the requirements of the passord hashing module
+type PassHash interface {
+	Encode(plainTextPassword string) string
+	Compare(plainTextPassword, hashedPassword string) error
 }

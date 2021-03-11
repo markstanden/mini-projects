@@ -7,7 +7,6 @@ import (
 
 	"github.com/markstanden/argonhasher"
 	"github.com/markstanden/authentication"
-	"github.com/markstanden/jwt"
 )
 
 // SignUp produces the signup route
@@ -54,8 +53,9 @@ func SignUp(us authentication.UserService) http.Handler {
 			log.Println("failed to create hash: ", err)
 		}
 
+		fmt.Println(hash)
 		// Create a unique token to represent the user
-		t := jwt.NewToken()
+		//t := jwt.NewToken()
 	// Create a JWT
 	//token := jwt.New()
 	//token.Payload.JTI = hash

@@ -26,8 +26,8 @@ type UserService interface {
 	//Delete(*User)
 }
 
-// PassHash specifies the requirements of the passord hashing module
-type PassHash interface {
+// PasswordHash specifies the requirements of the passord hashing module
+type PasswordHash interface {
 	Encode(plainTextPassword string) string
 	Compare(plainTextPassword, hashedPassword string) error
 }

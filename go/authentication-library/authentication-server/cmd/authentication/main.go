@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/markstanden/authentication/cache"
-	"github.com/markstanden/authentication/config"
 
 	"github.com/markstanden/authentication/postgres"
 	"github.com/markstanden/authentication/routes"
@@ -26,13 +25,7 @@ func main() {
 func run(args []string, stdout io.Writer) error {
 
 	// open a connection to the database
-	db := postgres.NewConnection(
-		config.PGhost,
-		config.PGusername,
-		config.PGpassword,
-		config.PGdatabaseName,
-		config.PGport,
-	)
+	db := postgres.NewConnection()
 
 	// check the database connection is up and running
 	err := db.DB.Ping()

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	// This is the required postgres driver for the database/sql package
 	_ "github.com/lib/pq"
@@ -15,15 +16,61 @@ type UserService struct{
   DB *sql.DB
 }
 
+// PGConfig is the Postgres configuration options struct
+type pgconfig struct{
+  host string
+  port string
+  user string
+  password string
+  dbname string
+}
+
+// GetPostgresEnvConfig returns a populated struct with the postgres config options
+func getPostgresEnvConfig() (config pgconfig) {
+  
+  // Host is the name of host to connect to
+  if config.host = os.Getenv("PGHOST"); config.host == "" {
+    log.Println("PGHOST environment variable not set, using default instead")
+    config.host = "localhost"
+  } 
+  
+  // Port is the port number to connect to at the server host, or socket file name extension for Unix-domain connections.
+  if config.port = os.Getenv("PGPORT"); config.port == "" {
+    log.Println("PGPORT environment variable not set, using default instead")
+    config.port = "5432"
+  }
+
+  // User is the PostgreSQL user name to connect as. Defaults to be the same as the operating system name of the user running the application.
+  if config.user = os.Getenv("PGUSER"); config.user == "" {
+    log.Println("PGUSER environment variable not set, using default instead")
+    config.user = "postgres"
+  }
+
+  // Password is the password to be used if the server demands password authentication.
+  if config.password = os.Getenv("PGPASSWORD"); config.password == "" {
+    log.Println("PGPASSWORD environment variable not set, using default instead")
+    config.password = ""
+  }
+
+  // DBName is the database name. Defaults to be the same as the user name.
+  if config.dbname = os.Getenv("PGDATABASE"); config.dbname == "" {
+    log.Println("PGDATABASE environment variable not set, using default instead")
+    config.dbname = config.user
+  }
+  return config
+}
+
 // NewConnection returns a new Postgres DB instance
-func NewConnection(host, username, password, databaseName string, port int) (us UserService) {
+func NewConnection() (us UserService) {
+  
+  config := getPostgresEnvConfig()
+
   // Create a connection string with password argument, incase a password is added at a later date
   //psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+ "password=%s databaseName=%s sslmode=disable", host, port, user, password, databaseName)
 
   // Create a connection string without a password argument
-  connectionString := fmt.Sprintf("host=%s port=%d user=%s "+
-    "dbname=%s sslmode=disable",
-    host, port, username, databaseName)
+  connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+    config.host, config.port, config.user, config.password, config.dbname)
 
   // Connect to postgres using the connection string
   var err error

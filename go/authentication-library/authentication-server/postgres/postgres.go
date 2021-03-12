@@ -51,7 +51,6 @@ func getPostgresEnvConfig() (config pgconfig) {
 		log.Println("PGDATABASE environment variable not set, using default instead")
 		//config.dbname = config.user
 		config.dbname = "authentication"
-
 	}
 	return config
 }
@@ -65,14 +64,14 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 	// Password is the password to be used if the server demands password authentication.
 	config.password, err = secrets.GetSecret("PGPASSWORD")
 	if err != nil {
-		log.Println("PGPASSWORD secret variable not set, using default instead")
-		config.password = ""
+		log.Println("PGPASSWORD secret variable not set, using default instead", err)
+		config.password = "postgres"
 	}
-
+	fmt.Println(config)
 	// Create a connection string without a password argument
 	connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.host, config.port, config.user, config.password, config.dbname)
-
+	fmt.Println(connectionString)
 	// Connect to postgres using the connection string
 	us.DB, err = sql.Open("postgres", connectionString)
 	if err != nil {
@@ -173,12 +172,14 @@ func (us UserService) FindByToken(t string) (u *authentication.User, err error) 
 
 // Add adds the user to the database
 func (us UserService) Add(u *authentication.User) (err error) {
-
-  sql := "INSERT INTO users (id, name, email, hashedpassword, token) VALUES ($1, $2, $3, $4, $5) RETURNING id"
-  err = us.DB.QueryRow(sql, "DEFAULT", u.Name, u.Email, u.HashedPassword, u.Token).Scan(u.UniqueID)
+	var id int
+  sql := "INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4) RETURNING id"
+  err = us.DB.QueryRow(sql, u.Name, u.Email, u.HashedPassword, u.Token).Scan(&id)
 	if err != nil {
 		return err
 	}
+
+	u.UniqueID = id
 
   //return the ID of the created user
 	return nil

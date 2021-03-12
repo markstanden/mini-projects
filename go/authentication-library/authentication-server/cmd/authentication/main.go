@@ -26,19 +26,13 @@ func run(args []string, stdout io.Writer) error {
 	// create a secret store to pass to the UserStore
 	secrets := &googlecloud.SecretStore{}
 
-	test, _ := secrets.GetSecret("TEST")
-	fmt.Println(test)
+	test, err := secrets.GetSecret("TEST")
+	fmt.Println("Test Secret Phrase : ", test, "/nError : ", err)
 
 	// open a connection to the database
 	db, err := postgres.NewConnection(secrets)
 	if err != nil {
 		return fmt.Errorf("error esablishing connection to database: /n %v", err)
-	}
-
-	// check the database connection is up and running
-	err = db.DB.Ping()
-	if err != nil {
-		return fmt.Errorf("error checking connection to database: /n %v", err)
 	}
 
 	db.Create()

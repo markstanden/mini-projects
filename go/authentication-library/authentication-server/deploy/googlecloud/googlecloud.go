@@ -53,7 +53,7 @@ func (secrets SecretStore) GetSecret(key string) (secret string, err error) {
 func accessSecretVersion(w io.Writer, name string) error {
         // name := "projects/my-project/secrets/my-secret/versions/5"
         // name := "projects/my-project/secrets/my-secret/versions/latest"
-
+				fmt.Println(name)
         // Create the client.
         ctx := context.Background()
         client, err := secretmanager.NewClient(ctx)

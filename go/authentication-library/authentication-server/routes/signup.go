@@ -59,7 +59,7 @@ func SignUp(us authentication.UserService) http.Handler {
 			log.Println("failed to create token hash: ", err)
 		}
 
-		err = us.Add(authentication.User{
+		err = us.Add(&authentication.User{
     	Name: r.PostForm.Get("name"),
     	Email: r.PostForm.Get("email"),
     	HashedPassword: passwordHash,

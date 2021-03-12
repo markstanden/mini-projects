@@ -12,7 +12,7 @@ package authentication
 //	Token string
 //		The generated identification token stored within the ID token
 type User struct {
-	UniqueID string
+	UniqueID int
 	Name string
 	Email string
 	HashedPassword string
@@ -23,7 +23,7 @@ type User struct {
 type UserService interface {
 	FindByEmail(email string) (*User, error)
 	FindByToken(token string) (*User, error)
-	Add(user User) error
+	Add(user *User) error
 	//Delete(*User)
 }
 

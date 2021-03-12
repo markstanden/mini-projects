@@ -81,7 +81,7 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 
 // Create a new database if required
 func (us UserService) Create() {
-	us.DB.Exec(`CREATE TABLE IF NOT EXIST users (
+	us.DB.Exec(`CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
@@ -95,7 +95,7 @@ func (us UserService) FindByID(id string) (u *authentication.User, err error) {
 	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE id = $1", id)
 	fmt.Println(rows)
 
-	uid := ""
+	uid := 0
 	name := ""
 	email := ""
 	hashedPassword := ""
@@ -122,7 +122,7 @@ func (us UserService) FindByEmail(em string) (u *authentication.User, err error)
 	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE email = $1", em)
 	fmt.Println(rows)
 
-	uid := ""
+	uid := 0
 	name := ""
 	email := ""
 	hashedPassword := ""
@@ -148,7 +148,7 @@ func (us UserService) FindByToken(t string) (u *authentication.User, err error) 
 	rows := us.DB.QueryRow("SELECT (id, name, email, hashedpassword, token) FROM users WHERE token = $1", t)
 	fmt.Println(rows)
 
-	uid := ""
+	uid := 0
 	name := ""
 	email := ""
 	hashedPassword := ""
@@ -170,12 +170,14 @@ func (us UserService) FindByToken(t string) (u *authentication.User, err error) 
 }
 
 // Add adds the user to the database
-func (us UserService) Add(u authentication.User) (err error) {
-  sql := `INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4)`
-	_, err = us.DB.Exec(sql, u.Name, u.Email, u.HashedPassword, u.Token)
+func (us UserService) Add(u *authentication.User) (err error) {
+
+  sql := "INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4) RETURNING id"
+  err = us.DB.QueryRow(sql, u.Name, u.Email, u.HashedPassword, u.Token).Scan(u.UniqueID)
 	if err != nil {
 		return err
 	}
 
+  //return the ID of the created user
 	return nil
 }

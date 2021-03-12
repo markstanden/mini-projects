@@ -26,9 +26,6 @@ func run(args []string, stdout io.Writer) error {
 	// create a secret store to pass to the UserStore
 	secrets := &googlecloud.SecretStore{}
 
-	test, err := secrets.GetSecret("TEST")
-	fmt.Println("Test Secret Phrase : ", test, "/nError : ", err)
-
 	// open a connection to the database
 	db, err := postgres.NewConnection(secrets)
 	if err != nil {

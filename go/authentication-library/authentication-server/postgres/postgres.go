@@ -49,7 +49,9 @@ func getPostgresEnvConfig() (config pgconfig) {
 	// DBName is the database name. Defaults to be the same as the user name.
 	if config.dbname = os.Getenv("PGDATABASE"); config.dbname == "" {
 		log.Println("PGDATABASE environment variable not set, using default instead")
-		config.dbname = config.user
+		//config.dbname = config.user
+		config.dbname = "authentication"
+
 	}
 	return config
 }

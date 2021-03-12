@@ -45,6 +45,7 @@ func run(args []string, stdout io.Writer) error {
 
 	// Create a handler for our routes, pass in the cache
 	http.Handle("/signin", routes.SignIn(c))
+	http.Handle("/signup", routes.SignUp(c))
 
 	// start the server.
 	if err := http.ListenAndServe(":8080", nil); err != nil {

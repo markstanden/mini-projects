@@ -19,13 +19,13 @@ func SignUp(us authentication.UserService) http.Handler {
 		fmt.Fprintln(w, `
 		<h1> Sign Up for a new StandenSoft Account </h1>
 		<form method="post">
-			<label for="name">Email:</label>
+			<label for="name">Name:</label>
 			<input id="name" name="name" type="text" /><br>
 			<label for="email">Email:</label>
 			<input id="email" name="email" type="email" /><br>
 			<label for="password">Password</label>
 			<input id="password" name="password" type="password" /><br>
-			<label for="confirmpassword">Password</label>
+			<label for="confirmpassword">Confirm Password</label>
 			<input id="confirmpassword" name="confirmpassword" type="password" /><br>
 			<input value="Submit Info" type="submit" />
 		</form>
@@ -48,12 +48,27 @@ func SignUp(us authentication.UserService) http.Handler {
 		}
 
 		// hash the password
-		hash, err := argonhasher.Encode(r.PostForm.Get("password"))
+		passwordHash, err := argonhasher.Encode(r.PostForm.Get("password"))
 		if err != nil {
 			log.Println("failed to create hash: ", err)
 		}
 
-		fmt.Println(hash)
+		idkey := r.PostForm.Get("name") + r.PostForm.Get("email")
+		idHash, err := argonhasher.Encode(idkey)
+		if err != nil {
+			log.Println("failed to create token hash: ", err)
+		}
+
+		err = us.Add(authentication.User{
+    	Name: r.PostForm.Get("name"),
+    	Email: r.PostForm.Get("email"),
+    	HashedPassword: passwordHash,
+    	Token: idHash,
+		})
+		if err != nil {
+			log.Println("failed to create user account", err)
+		}
+		http.RedirectHandler("/", http.StatusSeeOther)
 		// Create a unique token to represent the user
 		//t := jwt.NewToken()
 	// Create a JWT

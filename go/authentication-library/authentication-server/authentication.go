@@ -23,6 +23,7 @@ type User struct {
 type UserService interface {
 	FindByEmail(email string) (*User, error)
 	FindByToken(token string) (*User, error)
+	Add(user User) error
 	//Delete(*User)
 }
 

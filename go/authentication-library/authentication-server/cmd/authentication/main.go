@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/markstanden/authentication/cache"
-
 	"github.com/markstanden/authentication/postgres"
 	"github.com/markstanden/authentication/routes"
 )
@@ -23,6 +22,11 @@ func main() {
 }
 
 func run(args []string, stdout io.Writer) error {
+	
+
+	// get secrets from the secret store
+	keys := []string{"PGPASSWORD"}
+	secrets, err := googlecloudsecrets.getSecrets(keys)
 
 	// open a connection to the database
 	db := postgres.NewConnection()

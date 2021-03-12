@@ -31,3 +31,13 @@ type PasswordHash interface {
 	Encode(plainTextPassword string) string
 	Compare(plainTextPassword, hashedPassword string) error
 }
+
+// SecretStore is an interface for the secret storage logic to retrieve secrets,
+// which will be platform dependant.
+type SecretStore interface {
+	// Creates a map and fills it with the required information
+	getSecrets(keys []string) (map[string] string, error)
+
+	// Takes directly from the store, updating the map afterwards
+	updatedSecret(key string) (string, error)
+}

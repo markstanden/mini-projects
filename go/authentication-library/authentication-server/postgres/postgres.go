@@ -14,6 +14,7 @@ import (
 // UserService is a struct providing a psql implementation of authentication.UserService
 type UserService struct{
   DB *sql.DB
+  secret *authentication.SecretStore
 }
 
 // PGConfig is the Postgres configuration options struct

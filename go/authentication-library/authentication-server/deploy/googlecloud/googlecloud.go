@@ -31,7 +31,7 @@ func (secrets SecretStore) GetSecret(key string) (secret string, err error) {
 	// name := "projects/my-project/secrets/my-secret/versions/latest"
 	requestString := fmt.Sprint(
 		"projects/" +
-		"markstandendev-api" +
+		"145660875199" +
 		"/secrets/" +
 		key +
 		"/versions/" +

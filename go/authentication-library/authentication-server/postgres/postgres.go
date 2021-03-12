@@ -47,12 +47,6 @@ func getPostgresEnvConfig() (config pgconfig) {
     config.user = "postgres"
   }
 
-  // Password is the password to be used if the server demands password authentication.
-  if config.password = os.Getenv("PGPASSWORD"); config.password == "" {
-    log.Println("PGPASSWORD environment variable not set, using default instead")
-    config.password = ""
-  }
-
   // DBName is the database name. Defaults to be the same as the user name.
   if config.dbname = os.Getenv("PGDATABASE"); config.dbname == "" {
     log.Println("PGDATABASE environment variable not set, using default instead")
@@ -62,24 +56,28 @@ func getPostgresEnvConfig() (config pgconfig) {
 }
 
 // NewConnection returns a new Postgres DB instance
-func NewConnection() (us UserService) {
+func NewConnection(secrets authentication.SecretStore) (us UserService, err error) {
   
+  // create the config object, taking the non-secret info from the env variables
   config := getPostgresEnvConfig()
 
-  // Create a connection string with password argument, incase a password is added at a later date
-  //psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+ "password=%s databaseName=%s sslmode=disable", host, port, user, password, databaseName)
+  // Password is the password to be used if the server demands password authentication.
+  config.password, err = secrets.GetSecret("PGPASSWORD")
+  if err != nil {
+    log.Println("PGPASSWORD secret variable not set, using default instead")
+    config.password = ""
+  }
 
   // Create a connection string without a password argument
   connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
     config.host, config.port, config.user, config.password, config.dbname)
 
   // Connect to postgres using the connection string
-  var err error
   us.DB, err = sql.Open("postgres", connectionString)
   if err != nil {
-    panic(err)
+    return us, err
   }
-  return us
+  return us, nil
 }
 
 // Create a new database if required

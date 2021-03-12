@@ -1,13 +1,13 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 
 	"github.com/markstanden/authentication/cache"
+	"github.com/markstanden/authentication/deploy/googlecloud"
 	"github.com/markstanden/authentication/postgres"
 	"github.com/markstanden/authentication/routes"
 )
@@ -22,19 +22,20 @@ func main() {
 }
 
 func run(args []string, stdout io.Writer) error {
-	
 
-	// get secrets from the secret store
-	keys := []string{"PGPASSWORD"}
-	secrets, err := googlecloudsecrets.getSecrets(keys)
+	// create a secret store to pass to the UserStore
+	secrets := &googlecloud.SecretStore{}
 
 	// open a connection to the database
-	db := postgres.NewConnection()
+	db, err := postgres.NewConnection(secrets)
+	if err != nil {
+		return fmt.Errorf("error esablishing connection to database: /n %v", err)
+	}
 
 	// check the database connection is up and running
-	err := db.DB.Ping()
+	err = db.DB.Ping()
 	if err != nil {
-		fmt.Println("Connection Failure", err)
+		return fmt.Errorf("error checking connection to database: /n %v", err)
 	}
 	// Close the database when the server ends
 	defer db.DB.Close()
@@ -47,7 +48,7 @@ func run(args []string, stdout io.Writer) error {
 
 	// start the server.
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		return errors.New("Failed to Start HTTP server: " + err.Error())
+		return fmt.Errorf("failed to start HTTP server: /n %v", err)
 	}
 	// return no errors if the app closes normally
 	return nil

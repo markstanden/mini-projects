@@ -172,8 +172,8 @@ func (us UserService) FindByToken(t string) (u *authentication.User, err error) 
 // Add adds the user to the database
 func (us UserService) Add(u *authentication.User) (err error) {
 
-  sql := "INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4) RETURNING id"
-  err = us.DB.QueryRow(sql, u.Name, u.Email, u.HashedPassword, u.Token).Scan(u.UniqueID)
+  sql := "INSERT INTO users (id, name, email, hashedpassword, token) VALUES ($1, $2, $3, $4, $5) RETURNING id"
+  err = us.DB.QueryRow(sql, "DEFAULT", u.Name, u.Email, u.HashedPassword, u.Token).Scan(u.UniqueID)
 	if err != nil {
 		return err
 	}

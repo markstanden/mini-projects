@@ -31,7 +31,9 @@ func run(args []string, stdout io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("error esablishing connection to database: /n %v", err)
 	}
-
+	
+	db.Create()
+	
 	// check the database connection is up and running
 	err = db.DB.Ping()
 	if err != nil {

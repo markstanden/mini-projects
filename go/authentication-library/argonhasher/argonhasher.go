@@ -48,9 +48,9 @@ func Encode(pw string) (hashWithConfig string, err error) {
 
 	newArgon := KDFconfig{
 		SaltLength: 64,
-		Time:       10,
+		Time:       3,
 		Memory:     64 * 1024,
-		Threads:    8,
+		Threads:    2,
 		KeyLen:     16,
 	}
 

@@ -46,9 +46,9 @@ func run(args []string, stdout io.Writer) error {
 	c := cache.NewUserCache(db)
 
 	// Create a handler for our routes, pass in the cache
-	http.Handle("/", routes.Home(db))
+	http.Handle("/", routes.Home(c))
 	http.Handle("/create-users-table", routes.CreateUsersTable(db))
-	http.Handle("/signin", routes.SignIn(db))
+	http.Handle("/signin", routes.SignIn(c))
 	http.Handle("/signup", routes.SignUp(c))
 
 	// start the server.

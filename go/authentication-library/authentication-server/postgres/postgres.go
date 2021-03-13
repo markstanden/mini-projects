@@ -91,9 +91,7 @@ func (us UserService) Create() (sqlResult sql.Result, err error) {
 
 // FindByID returns the first matching user (IDs should be unique) and returns a User object
 func (us UserService) FindByID(id string) (u *authentication.User, err error) {
-	fmt.Println("Got here", id)
 	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE id = $1", id)
-	fmt.Println(rows)
 
 	uid := 0
 	name := ""

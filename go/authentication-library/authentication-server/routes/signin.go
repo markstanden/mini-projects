@@ -37,7 +37,7 @@ func SignIn(us authentication.UserService) http.Handler {
 
 			user, err := us.FindByEmail(r.PostForm.Get("email"))
 			if err != nil {
-				fmt.Fprintf(w, "failed to lookup user account, invalid UserName :/n%v", err)
+				fmt.Fprintf(w, "failed to lookup user account, invalid UserName :\n%v", err)
 			}
 
 			// Initialise a boolean variable that hold whether the password matches the stored, hashed password.

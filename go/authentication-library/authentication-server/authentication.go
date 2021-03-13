@@ -14,11 +14,11 @@ import "database/sql"
 //	Token string
 //		The generated identification token stored within the ID token
 type User struct {
-	UniqueID int
-	Name string
-	Email string
+	UniqueID       int
+	Name           string
+	Email          string
 	HashedPassword string
-	Token string
+	Token          string
 }
 
 // UserService specifies the requred functions of the user store

@@ -13,7 +13,7 @@ import (
 
 // UserService is a struct providing a psql implementation of authentication.UserService
 type UserService struct {
-	DB     *sql.DB
+	DB *sql.DB
 }
 
 // PGConfig is the Postgres configuration options struct
@@ -30,25 +30,25 @@ func getPostgresEnvConfig() (config pgconfig) {
 
 	// Host is the name of host to connect to
 	if config.host = os.Getenv("PGHOST"); config.host == "" {
-		log.Println("PGHOST environment variable not set, using default instead")
+		log.Println("authentication/postgres: PGHOST environment variable not set, using default instead")
 		config.host = "localhost"
 	}
 
 	// Port is the port number to connect to at the server host, or socket file name extension for Unix-domain connections.
 	if config.port = os.Getenv("PGPORT"); config.port == "" {
-		log.Println("PGPORT environment variable not set, using default instead")
+		log.Println("authentication/postgres: PGPORT environment variable not set, using default instead")
 		config.port = "5432"
 	}
 
 	// User is the PostgreSQL user name to connect as. Defaults to be the same as the operating system name of the user running the application.
 	if config.user = os.Getenv("PGUSER"); config.user == "" {
-		log.Println("PGUSER environment variable not set, using default instead")
+		log.Println("authentication/postgres: PGUSER environment variable not set, using default instead")
 		config.user = "postgres"
 	}
 
 	// DBName is the database name. Defaults to be the same as the user name.
 	if config.dbname = os.Getenv("PGDATABASE"); config.dbname == "" {
-		log.Println("PGDATABASE environment variable not set, using default instead")
+		log.Println("authentication/postgres: PGDATABASE environment variable not set, using default instead")
 		//config.dbname = config.user
 		config.dbname = "authentication"
 	}
@@ -64,7 +64,7 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 	// Password is the password to be used if the server demands password authentication.
 	config.password, err = secrets.GetSecret("145660875199", "PGPASSWORD", "latest")
 	if err != nil {
-		log.Println("PGPASSWORD secret variable not available, using default instead", err)
+		log.Println("authentication/postgres: PGPASSWORD secret variable not available, using default instead", err)
 		config.password = "postgres"
 	}
 	// Create a connection string without a password argument
@@ -86,7 +86,7 @@ func (us UserService) Create() (sqlResult sql.Result, err error) {
     email varchar(255) UNIQUE NOT NULL,
     hashedpassword varchar(255) NOT NULL,
     token varchar(255) UNIQUE NOT NULL);`)
-		
+
 }
 
 // FindByID returns the first matching user (IDs should be unique) and returns a User object
@@ -103,7 +103,6 @@ func (us UserService) FindByID(id string) (u *authentication.User, err error) {
 
 	err = rows.Scan(&uid, &name, &email, &hashedPassword, &token)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
@@ -118,9 +117,7 @@ func (us UserService) FindByID(id string) (u *authentication.User, err error) {
 
 // FindByEmail returns the first matching user (Emails should be unique) and returns a User object
 func (us UserService) FindByEmail(em string) (u *authentication.User, err error) {
-	fmt.Println("Got here", em)
 	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE email = $1", em)
-	fmt.Println(rows)
 
 	uid := 0
 	name := ""
@@ -130,7 +127,6 @@ func (us UserService) FindByEmail(em string) (u *authentication.User, err error)
 
 	err = rows.Scan(&uid, &name, &email, &hashedPassword, &token)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
@@ -146,7 +142,6 @@ func (us UserService) FindByEmail(em string) (u *authentication.User, err error)
 // FindByToken returns the first matching user (Tokens should be unique) and returns a User object
 func (us UserService) FindByToken(t string) (u *authentication.User, err error) {
 	rows := us.DB.QueryRow("SELECT (id, name, email, hashedpassword, token) FROM users WHERE token = $1", t)
-	fmt.Println(rows)
 
 	uid := 0
 	name := ""
@@ -156,7 +151,6 @@ func (us UserService) FindByToken(t string) (u *authentication.User, err error) 
 
 	err = rows.Scan(&uid, &name, &email, &hashedPassword, &token)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 
@@ -172,14 +166,14 @@ func (us UserService) FindByToken(t string) (u *authentication.User, err error) 
 // Add adds the user to the database
 func (us UserService) Add(u *authentication.User) (err error) {
 	var id int
-  sql := "INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4) RETURNING id"
-  err = us.DB.QueryRow(sql, u.Name, u.Email, u.HashedPassword, u.Token).Scan(&id)
+	sql := "INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4) RETURNING id"
+	err = us.DB.QueryRow(sql, u.Name, u.Email, u.HashedPassword, u.Token).Scan(&id)
 	if err != nil {
 		return err
 	}
 
 	u.UniqueID = id
 
-  //return the ID of the created user
+	//return the ID of the created user
 	return nil
 }

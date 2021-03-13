@@ -26,7 +26,7 @@ func run(args []string, stdout io.Writer) error {
 	port := os.Getenv("PORT")
 	if port == "" {
 		// $PORT env variable not set, assume local dev environment
-		log.Printf("$PORT Env Variable not set, setting default")
+		log.Printf("authentication/main: $PORT Env Variable not set, setting to default")
 		port = "8080"
 	}
 

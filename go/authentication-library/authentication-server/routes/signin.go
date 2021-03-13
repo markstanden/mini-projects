@@ -40,16 +40,12 @@ func SignIn(us authentication.UserService) http.Handler {
 				fmt.Fprintf(w, "failed to lookup user account, invalid UserName :/n%v", err)
 			}
 
-			untrustedHash, err := argonhasher.Encode(r.PostForm.Get("password"))
-			if err != nil {
-				log.Println("failed to create check hash: ", err)
-			}
 			// Initialise a boolean variable that hold whether the password matches the stored, hashed password.
 			compareOK := false
 
-			err = argonhasher.Compare(user.HashedPassword, untrustedHash)
+			err = argonhasher.Compare(r.PostForm.Get("password"), user.HashedPassword)
 			if err != nil {
-				fmt.Fprintf(w, "Your password is incorrect!/n%v", err)
+				fmt.Fprintf(w, "Your password is incorrect!\n%v", err)
 			} else {
 				compareOK = true
 			}

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
@@ -22,6 +23,14 @@ func main() {
 }
 
 func run(args []string, stdout io.Writer) error {
+	
+	// Attempt to get port to listen on from ENV variables
+	port := os.Getenv("PORT")
+	if port == "" {
+		// $PORT env variable not set, assume local dev environment
+		log.Printf("$PORT Env Variable not set, setting default")
+		port = "8080"
+	}
 
 	// create a secret store to pass to the UserStore
 	secrets := &googlecloud.SecretStore{}
@@ -32,7 +41,7 @@ func run(args []string, stdout io.Writer) error {
 		return fmt.Errorf("error esablishing connection to database: /n %v", err)
 	}
 
-	db.Create()
+	//db.Create()
 	// Close the database when the server ends
 	defer db.DB.Close()
 
@@ -40,13 +49,24 @@ func run(args []string, stdout io.Writer) error {
 	c = cache.NewUserCache(db)
 
 	// Create a handler for our routes, pass in the cache
-	http.Handle("/signin", routes.SignIn(c))
-	http.Handle("/signup", routes.SignUp(c))
+	http.Handle("/", routes.Home(db))
+	http.Handle("/signin", routes.SignIn(db))
+	http.Handle("/signup", routes.SignUp(db))
 
 	// start the server.
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":" + port, nil); err != nil {
 		return fmt.Errorf("failed to start HTTP server: /n %v", err)
 	}
+	
+	
+	/*
+	certFile := ""
+	keyFile := ""
+	if err := http.ListenAndServeTLS(":" + port, certFile, keyFile, nil); err != nil {
+		return fmt.Errorf("failed to start HTTPS server: /n %v", err)
+	}
+	*/
+	
 	// return no errors if the app closes normally
 	return nil
 }

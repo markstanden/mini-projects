@@ -48,9 +48,9 @@ func Encode(pw string) (hashWithConfig string, err error) {
 
 	newArgon := KDFconfig{
 		SaltLength: 64,
-		Time:       3,
+		Time:       10,
 		Memory:     64 * 1024,
-		Threads:    2,
+		Threads:    8,
 		KeyLen:     16,
 	}
 
@@ -120,7 +120,7 @@ func Compare(ptPassword string, hash string) (err error) {
 	// Match the key length in the current hash rather than using our defaults.
 	key, err := base64.RawStdEncoding.DecodeString(config[5])
 	if err != nil {
-		return errors.New("Failed to decode hash")
+		return fmt.Errorf("failed to decode hash")
 	}
 	newArgon.KeyLen = uint32(len(key))
 
@@ -148,7 +148,7 @@ func Compare(ptPassword string, hash string) (err error) {
 		return nil
 	}
 
-	return errors.New("Mismatched Password")
+	return fmt.Errorf("mismatched password")
 }
 
 // createSalt creates a random string of bytes of length saltLength

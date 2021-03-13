@@ -93,7 +93,6 @@ func Compare(ptPassword string, hash string) (err error) {
 	tmp := strings.Split(config[3], ",")
 
 	t, err := strconv.ParseUint(tmp[0][2:], 10, 32)
-	fmt.Println(t)
 	if err != nil {
 		return errors.New("failed to retrieve config.Time")
 	}

@@ -18,7 +18,7 @@ func SignUp(us authentication.UserService) http.Handler {
 			w.Header().Set("type", "html")
 			fmt.Fprintln(w, `
 		<h1> Sign Up for a new StandenSoft Account </h1>
-		<form method="post">
+		<form action="/signup" method="POST">
 			<label for="name">Name:</label>
 			<input id="name" name="name" type="text" /><br>
 			<label for="email">Email:</label>

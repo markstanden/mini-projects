@@ -18,7 +18,7 @@ func SignIn(us authentication.UserService) http.Handler {
 			w.Header().Set("type", "html")
 			fmt.Fprintln(w, `
 		<h1> Homepage </h1>
-		<form method="post">
+		<form action="/signin" method="POST">
 			<label for="email">Email:</label>
 			<input id="email" name="email" type="email" /><br>
 			<label for="password">Password</label>

@@ -42,13 +42,13 @@ func SignIn(us authentication.UserService) http.Handler {
 
 			// Initialise a boolean variable that hold whether the password matches the stored, hashed password.
 			compareOK := false
-
 			err = argonhasher.Compare(r.PostForm.Get("password"), user.HashedPassword)
 			if err != nil {
 				fmt.Fprintf(w, "Your password is incorrect!\n%v", err)
 			} else {
 				compareOK = true
 			}
+			
 
 			if compareOK {
 				log.Println("User Account Logged In OK")

@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/markstanden/authentication"
@@ -72,10 +73,10 @@ func (c *UserCache) Add(u *authentication.User) (err error) {
 		return err
 	}
 
-	// may as well add to each cache too
-	c.emailCache[u.Email] = u
-	c.tokenCache[u.Token] = u
-
 	// no errors
 	return nil
+}
+
+func (c *UserCache) Create() (sqlResult sql.Result, err error) {
+	return c.store.Create()
 }

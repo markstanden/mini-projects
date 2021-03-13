@@ -11,12 +11,12 @@ import (
 
 // SignIn produces the signin route
 func SignIn(us authentication.UserService) http.Handler {
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == "GET" {
+		if r.Method == "GET" {
 
-		w.Header().Set("type", "html")
-		fmt.Fprintln(w, `
+			w.Header().Set("type", "html")
+			fmt.Fprintln(w, `
 		<h1> Homepage </h1>
 		<form method="post">
 			<label for="email">Email:</label>
@@ -26,51 +26,54 @@ func SignIn(us authentication.UserService) http.Handler {
 			<input value="Submit Info" type="submit" />
 		</form>
 	`)
-	}
-	if r.Method == "POST" {
-		// Parse the form data in the response
-		err := r.ParseForm()
-		// Check for errors in the parsing
-		if err != nil {
-			log.Println("Failed to Parse Form: ", err)
 		}
+		if r.Method == "POST" {
+			// Parse the form data in the response
+			err := r.ParseForm()
+			// Check for errors in the parsing
+			if err != nil {
+				log.Println("Failed to Parse Form: ", err)
+			}
 
-		// Initialise a boolean variable that hold whether the password matches the stored, hashed password.
-		compareOK := false
+			user, err := us.FindByEmail(r.PostForm.Get("email"))
+			if err != nil {
+				fmt.Fprintf(w, "failed to lookup user account, invalid UserName :/n%v", err)
+			}
 
-		
-		hash, err := argonhasher.Encode(r.PostForm.Get("password"))
-		if err != nil {
-			log.Println("failed to create hash: ", err)
+			untrustedHash, err := argonhasher.Encode(r.PostForm.Get("password"))
+			if err != nil {
+				log.Println("failed to create check hash: ", err)
+			}
+			// Initialise a boolean variable that hold whether the password matches the stored, hashed password.
+			compareOK := false
+
+			err = argonhasher.Compare(user.HashedPassword, untrustedHash)
+			if err != nil {
+				fmt.Fprintf(w, "Your password is incorrect!/n%v", err)
+			} else {
+				compareOK = true
+			}
+
+			if compareOK {
+				log.Println("User Account Logged In OK")
+
+				fmt.Fprintf(w, `
+			User Account Details:
+			ID: %v
+			Name: %v
+			Email: %v
+			Token: %v
+			Error: %v
+			`, user.UniqueID, user.Name, user.Email, user.Token, err)
+			}
+
+			// Create a JWT
+			//token := jwt.New()
+			//token.Payload.JTI = hash
+			//token.Encode()
+
+			//fmt.Println(token.Decode())
+			//
 		}
-
-		err = argonhasher.Compare(r.PostForm.Get("password"), hash)
-		if err != nil {
-			log.Println("failed to make comparison: ", err)
-		} else {
-			compareOK = true
-		}
-
-		// Output the password, and the hash, and the result of the comparison.
-		fmt.Printf(`
-		Password: %s,
-		Hash: %s,
-		compare ok?: %v,
-		`, r.PostForm.Get("password"), hash, compareOK)
-
-		user, err := us.FindByEmail(r.PostForm.Get("email"))
-		if err != nil {
-			log.Println("User Not Found")
-		}
-		fmt.Fprintln(w, user)
-	}
-
-	// Create a JWT
-	//token := jwt.New()
-	//token.Payload.JTI = hash
-	//token.Encode()
-
-	//fmt.Println(token.Decode())
-	//
 	})
-} 
+}

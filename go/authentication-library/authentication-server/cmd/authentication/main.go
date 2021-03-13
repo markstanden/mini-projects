@@ -13,8 +13,6 @@ import (
 	"github.com/markstanden/authentication/routes"
 )
 
-var c *cache.UserCache
-
 func main() {
 	if err := run(os.Args, os.Stdout); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -41,17 +39,17 @@ func run(args []string, stdout io.Writer) error {
 		return fmt.Errorf("error esablishing connection to database: /n %v", err)
 	}
 
-	//db.Create()
 	// Close the database when the server ends
 	defer db.DB.Close()
 
 	// Create a user cache and shadow the db
-	c = cache.NewUserCache(db)
+	c := cache.NewUserCache(db)
 
 	// Create a handler for our routes, pass in the cache
 	http.Handle("/", routes.Home(db))
+	http.Handle("/create-users-table", routes.CreateUsersTable(db))
 	http.Handle("/signin", routes.SignIn(db))
-	http.Handle("/signup", routes.SignUp(db))
+	http.Handle("/signup", routes.SignUp(c))
 
 	// start the server.
 	if err := http.ListenAndServe(":" + port, nil); err != nil {

@@ -8,17 +8,16 @@ import (
 )
 
 // SignIn produces the signin route
-func Home(us authentication.UserService) http.Handler {
+func CreateUsersTable(us authentication.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "GET" {
 
 			w.Header().Set("type", "html")
-			fmt.Fprintln(w, `
-		<h1> Homepage </h1>
-		<a href="/signin">Sign In</a>
-		<a href="/signup">Sign Up</a>
-	`)
+			sqlResult, err := us.Create()
+			fmt.Fprintf(w, `
+		<h1> Creating Users Table: /nError : %v/nSQL Result: %v</h1>
+	`, err, sqlResult)
 		}
 
 	})

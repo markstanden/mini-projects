@@ -62,16 +62,14 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 	config := getPostgresEnvConfig()
 
 	// Password is the password to be used if the server demands password authentication.
-	config.password, err = secrets.GetSecret("PGPASSWORD")
+	config.password, err = secrets.GetSecret("145660875199", "PGPASSWORD", "latest")
 	if err != nil {
-		log.Println("PGPASSWORD secret variable not set, using default instead", err)
+		log.Println("PGPASSWORD secret variable not available, using default instead", err)
 		config.password = "postgres"
 	}
-	fmt.Println(config)
 	// Create a connection string without a password argument
 	connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.host, config.port, config.user, config.password, config.dbname)
-	fmt.Println(connectionString)
 	// Connect to postgres using the connection string
 	us.DB, err = sql.Open("postgres", connectionString)
 	if err != nil {
@@ -81,13 +79,14 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 }
 
 // Create a new database if required
-func (us UserService) Create() {
-	us.DB.Exec(`CREATE TABLE users (
+func (us UserService) Create() (sqlResult sql.Result, err error) {
+	return us.DB.Exec(`CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
     hashedpassword varchar(255) NOT NULL,
     token varchar(255) UNIQUE NOT NULL);`)
+		
 }
 
 // FindByID returns the first matching user (IDs should be unique) and returns a User object

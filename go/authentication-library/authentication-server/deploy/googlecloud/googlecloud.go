@@ -24,18 +24,12 @@ type SecretStore struct{
 } */
 
 // GetSecret looks up the secret from the store and updates its value in the map
-func (secrets SecretStore) GetSecret(key string) (secret string, err error) {
+func (secrets SecretStore) GetSecret(project, key, version string) (secret string, err error) {
 	
 	// request string needs to look like this
 	// name := "projects/my-project/secrets/my-secret/versions/5"
 	// name := "projects/my-project/secrets/my-secret/versions/latest"
-	requestString := fmt.Sprint(
-		"projects/" +
-		"145660875199" +
-		"/secrets/" +
-		key +
-		"/versions/" +
-		"latest")
+	requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", project, key, version)
 
 	// create a new buffer to receive the secret
 	buf := new(bytes.Buffer)
@@ -53,7 +47,7 @@ func (secrets SecretStore) GetSecret(key string) (secret string, err error) {
 func accessSecretVersion(w io.Writer, name string) error {
         // name := "projects/my-project/secrets/my-secret/versions/5"
         // name := "projects/my-project/secrets/my-secret/versions/latest"
-				fmt.Println(name)
+		
         // Create the client.
         ctx := context.Background()
         client, err := secretmanager.NewClient(ctx)

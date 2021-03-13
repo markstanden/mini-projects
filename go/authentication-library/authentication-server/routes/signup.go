@@ -11,12 +11,12 @@ import (
 
 // SignUp produces the signup route
 func SignUp(us authentication.UserService) http.Handler {
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == "GET" {
+		if r.Method == "GET" {
 
-		w.Header().Set("type", "html")
-		fmt.Fprintln(w, `
+			w.Header().Set("type", "html")
+			fmt.Fprintln(w, `
 		<h1> Sign Up for a new StandenSoft Account </h1>
 		<form method="post">
 			<label for="name">Name:</label>
@@ -30,53 +30,68 @@ func SignUp(us authentication.UserService) http.Handler {
 			<input value="Submit Info" type="submit" />
 		</form>
 	`)
-	}
-	if r.Method == "POST" {
-		// Parse the form data in the response
-		err := r.ParseForm()
-		// Check for errors in the parsing
-		if err != nil {
-			log.Println("Failed to Parse Form: ", err)
 		}
-		
-		// Check the form data
+		if r.Method == "POST" {
+			// Parse the form data in the response
+			err := r.ParseForm()
+			// Check for errors in the parsing
+			if err != nil {
+				log.Println("Failed to Parse Form: ", err)
+			}
 
-		// Check that the passwords match
-		if r.PostForm.Get("password") != r.PostForm.Get("confirmpassword") {
-			log.Println("Passwords do not match, Cannot create account")
-			http.RedirectHandler("/signin", http.StatusSeeOther)
+			// Check the form data
+
+			// Check that the passwords match
+			if r.PostForm.Get("password") != r.PostForm.Get("confirmpassword") {
+				log.Println("Passwords do not match, Cannot create account")
+				http.RedirectHandler("/signin", http.StatusSeeOther)
+			}
+
+			// hash the password
+			passwordHash, err := argonhasher.Encode(r.PostForm.Get("password"))
+			if err != nil {
+				log.Println("failed to create hash: ", err)
+			}
+
+			idkey := r.PostForm.Get("name") + r.PostForm.Get("email")
+			idHash, err := argonhasher.Encode(idkey)
+			if err != nil {
+				log.Println("failed to create token hash: ", err)
+			}
+
+			err = us.Add(&authentication.User{
+				Name:           r.PostForm.Get("name"),
+				Email:          r.PostForm.Get("email"),
+				HashedPassword: passwordHash,
+				Token:          idHash,
+			})
+			if err != nil {
+				log.Println("failed to create user account :/n", err)
+			}
+			log.Println("User Account Created OK, Looking up user")
+			userCheck, err := us.FindByEmail(r.PostForm.Get("email"))
+			if err != nil {
+				log.Println("failed to lookup created user account :/n", err)
+			}
+			fmt.Fprintf(w, `
+		User Account Created OK:
+		ID: %v
+		Name: %v
+		Email: %v
+		Hash: %v
+		Token: %v
+		Error: %v
+		`, userCheck.UniqueID, userCheck.Name, userCheck.Email, userCheck.HashedPassword, userCheck.Token, err)
+			//http.RedirectHandler("/", http.StatusSeeOther)
+			// Create a unique token to represent the user
+			//t := jwt.NewToken()
+			// Create a JWT
+			//token := jwt.New()
+			//token.Payload.JTI = hash
+			//token.Encode()
+
+			//fmt.Println(token.Decode())
+			//
 		}
-
-		// hash the password
-		passwordHash, err := argonhasher.Encode(r.PostForm.Get("password"))
-		if err != nil {
-			log.Println("failed to create hash: ", err)
-		}
-
-		idkey := r.PostForm.Get("name") + r.PostForm.Get("email")
-		idHash, err := argonhasher.Encode(idkey)
-		if err != nil {
-			log.Println("failed to create token hash: ", err)
-		}
-
-		err = us.Add(&authentication.User{
-    	Name: r.PostForm.Get("name"),
-    	Email: r.PostForm.Get("email"),
-    	HashedPassword: passwordHash,
-    	Token: idHash,
-		})
-		if err != nil {
-			log.Println("failed to create user account", err)
-		}
-		http.RedirectHandler("/", http.StatusSeeOther)
-		// Create a unique token to represent the user
-		//t := jwt.NewToken()
-	// Create a JWT
-	//token := jwt.New()
-	//token.Payload.JTI = hash
-	//token.Encode()
-
-	//fmt.Println(token.Decode())
-	//
-	}})
-} 
+	})
+}

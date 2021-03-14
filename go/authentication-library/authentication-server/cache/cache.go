@@ -28,7 +28,7 @@ func NewUserCache(us authentication.UserService) *UserCache {
 
 // FindByEmail returns a user for a given email.
 // Returns the cached instance if available.
-func (c *UserCache) FindByEmail(email string) (*authentication.User, error) {
+func (c UserCache) FindByEmail(email string) (*authentication.User, error) {
 	// Check the local cache first.
 	if u := c.emailCache[email]; u != nil {
 		fmt.Printf("authentication/cache: read from emailCache, current size: %v Users", len(c.emailCache))
@@ -47,7 +47,7 @@ func (c *UserCache) FindByEmail(email string) (*authentication.User, error) {
 
 // FindByToken returns a user for a given token.
 // Returns the cached instance if available.
-func (c *UserCache) FindByToken(email string) (*authentication.User, error) {
+func (c UserCache) FindByToken(email string) (*authentication.User, error) {
 	// Check the local cache first. ````
 	if u := c.tokenCache[email]; u != nil {
 		fmt.Printf("authentication/cache: read from tokenCache, current size: %v Users", len(c.tokenCache))
@@ -66,7 +66,7 @@ func (c *UserCache) FindByToken(email string) (*authentication.User, error) {
 
 // FindByToken returns a user for a given token.
 // Returns the cached instance if available.
-func (c *UserCache) Add(u *authentication.User) (err error) {
+func (c UserCache) Add(u *authentication.User) (err error) {
 	// add the user to the main store
 	err = c.store.Add(u)
 	if err != nil {
@@ -77,6 +77,6 @@ func (c *UserCache) Add(u *authentication.User) (err error) {
 	return nil
 }
 
-func (c *UserCache) Create() (sqlResult sql.Result, err error) {
+func (c UserCache) Create() (sqlResult sql.Result, err error) {
 	return c.store.Create()
 }

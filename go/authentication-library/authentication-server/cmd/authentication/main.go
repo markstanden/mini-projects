@@ -21,7 +21,7 @@ func main() {
 }
 
 func run(args []string, stdout io.Writer) error {
-	
+
 	// Attempt to get port to listen on from ENV variables
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -52,19 +52,18 @@ func run(args []string, stdout io.Writer) error {
 	http.Handle("/signup", routes.SignUp(c))
 
 	// start the server.
-	if err := http.ListenAndServe(":" + port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		return fmt.Errorf("failed to start HTTP server: /n %v", err)
 	}
-	
-	
+
 	/*
-	certFile := ""
-	keyFile := ""
-	if err := http.ListenAndServeTLS(":" + port, certFile, keyFile, nil); err != nil {
-		return fmt.Errorf("failed to start HTTPS server: /n %v", err)
-	}
+		certFile := ""
+		keyFile := ""
+		if err := http.ListenAndServeTLS(":" + port, certFile, keyFile, nil); err != nil {
+			return fmt.Errorf("failed to start HTTPS server: /n %v", err)
+		}
 	*/
-	
+
 	// return no errors if the app closes normally
 	return nil
 }

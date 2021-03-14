@@ -48,7 +48,6 @@ func SignIn(us authentication.UserService) http.Handler {
 			} else {
 				compareOK = true
 			}
-			
 
 			if compareOK {
 				log.Println("User Account Logged In OK")

@@ -7,9 +7,9 @@ import (
 )
 
 type Handler struct {
-        UserService authentication.UserService
+	UserService authentication.UserService
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-        // handle request
+	// handle request
 }

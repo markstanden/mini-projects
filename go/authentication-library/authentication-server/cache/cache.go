@@ -2,7 +2,7 @@ package cache
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 
 	"github.com/markstanden/authentication"
 )
@@ -31,7 +31,7 @@ func NewUserCache(us authentication.UserService) *UserCache {
 func (c UserCache) FindByEmail(email string) (*authentication.User, error) {
 	// Check the local cache first.
 	if u := c.emailCache[email]; u != nil {
-		fmt.Printf("authentication/cache: read from emailCache, current size: %v Users", len(c.emailCache))
+		log.Printf("authentication/cache: user (%d) read from emailCache, current size: %v Users", u.UniqueID, len(c.emailCache))
 		return u, nil
 	}
 
@@ -50,7 +50,7 @@ func (c UserCache) FindByEmail(email string) (*authentication.User, error) {
 func (c UserCache) FindByToken(email string) (*authentication.User, error) {
 	// Check the local cache first. ````
 	if u := c.tokenCache[email]; u != nil {
-		fmt.Printf("authentication/cache: read from tokenCache, current size: %v Users", len(c.tokenCache))
+		log.Printf("authentication/cache: user (%d) read from tokenCache, current size: %v Users", u.UniqueID, len(c.tokenCache))
 		return u, nil
 	}
 

@@ -18,11 +18,11 @@ func CreateUsersTable(us authentication.UserService) http.Handler {
 
 			w.Header().Set("type", "html")
 			fmt.Fprintln(w, `
-		<h1> Game Over </h1>
-		<form action="/create-users-table" method="POST">
-			<input value="Reset the Users table and start again?" type="submit" />
-		</form>
-	`)
+				<h1> Game Over </h1>
+				<form action="/create-users-table" method="POST">
+					<input value="Reset the Users table and start again?" type="submit" />
+				</form>
+			`)
 		}
 
 		if r.Method == "POST" {

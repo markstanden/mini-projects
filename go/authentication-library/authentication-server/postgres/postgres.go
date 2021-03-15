@@ -93,7 +93,7 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 
 // FullReset drops the user table and creates a new table
 func (us UserService) FullReset() (err error) {
-	_, err = us.DB.Exec(`DROP TABLE users;`)
+	_, err = us.DB.Exec(`DROP TABLE IF EXISTS users;`)
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to drop users table:\n%v", err)
 	}
@@ -113,25 +113,41 @@ func (us UserService) FullReset() (err error) {
 // Find returns the first instance of the key value pair in the database.
 // it is intended to search unique keys only (id, email, token)
 func (us UserService) Find(key, value string) (u *authentication.User, err error) {
-	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE $1 = $2", key, value)
+	var row *sql.Row
+	
+	
+	switch key {
+	case "email":
+		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE email = $1", value)
+	case "token":
+		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE token = $1", value)
+	}
 
-	var (
-		uid                                uint
-		name, email, hashedPassword, token string
-	)
 
-	err = rows.Scan(&uid, &name, &email, &hashedPassword, &token)
-	if err != nil {
+	uid := 0
+	name := ""
+	email := ""
+	hashedPassword := ""
+	token := ""
+	err = row.Scan(&uid, &name, &email, &hashedPassword, &token)
+
+	switch err {
+	case sql.ErrNoRows:
+		log.Println("authentication/sql: user not found")
+		return nil, fmt.Errorf("user not found")
+	case nil:
+		return &authentication.User{
+			UniqueID:       uid,
+			Name:           name,
+			Email:          email,
+			HashedPassword: hashedPassword,
+			Token:          token,
+		}, nil
+	default:
+		log.Println("authentication/sql: user lookup error")
 		return nil, err
 	}
 
-	return &authentication.User{
-		UniqueID:       uid,
-		Name:           name,
-		Email:          email,
-		HashedPassword: hashedPassword,
-		Token:          token,
-	}, nil
 }
 
 /* // FindByID returns the first matching user (IDs should be unique) and returns a User object
@@ -208,7 +224,7 @@ func (us UserService) FindByToken(t string) (u *authentication.User, err error) 
 
 // Add adds the user to the database
 func (us UserService) Add(u *authentication.User) (err error) {
-	var id uint
+	var id int
 	sql := "INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4) RETURNING id"
 	err = us.DB.QueryRow(sql, u.Name, u.Email, u.HashedPassword, u.Token).Scan(&id)
 	if err != nil {

@@ -117,8 +117,7 @@ func (c CachedStore) FindByToken(email string) (*authentication.User, error) {
 	return u, err
 } */
 
-// FindByToken returns a user for a given token.
-// Returns the cached instance if available.
+// Add passes the Add request to the wrapped store
 func (c CachedStore) Add(u *authentication.User) (err error) {
 	// add the user to the main store
 	err = c.store.Add(u)

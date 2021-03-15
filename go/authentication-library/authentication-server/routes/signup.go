@@ -44,7 +44,8 @@ func SignUp(us authentication.UserService) http.Handler {
 			// Check that the passwords match
 			if r.PostForm.Get("password") != r.PostForm.Get("confirmpassword") {
 				log.Println("Passwords do not match, Cannot create account")
-				http.RedirectHandler("/signin", http.StatusSeeOther)
+				http.Redirect(w, r, "/signup", http.StatusSeeOther)
+				return
 			}
 
 			// hash the password
@@ -66,13 +67,14 @@ func SignUp(us authentication.UserService) http.Handler {
 				Token:          idHash,
 			})
 			if err != nil {
-				log.Println("failed to create user account :/n", err)
+				log.Println("failed to create user account :\n", err)
 				http.Redirect(w, r, "/", http.StatusSeeOther)
+				return
 			}
 			log.Println("User Account Created OK, Looking up user")
 			userCheck, err := us.Find("email", r.PostForm.Get("email"))
 			if err != nil {
-				log.Println("failed to lookup created user account :/n", err)
+				log.Println("failed to lookup created user account :\n", err)
 			}
 			fmt.Fprintf(w, `
 		User Account Created OK:

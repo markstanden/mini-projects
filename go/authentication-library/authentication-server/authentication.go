@@ -12,7 +12,7 @@ package authentication
 //	Token string
 //		The generated identification token stored within the ID token
 type User struct {
-	UniqueID       uint
+	UniqueID       int
 	Name           string
 	Email          string
 	HashedPassword string

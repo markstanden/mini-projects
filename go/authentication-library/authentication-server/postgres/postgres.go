@@ -79,14 +79,21 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 }
 
 // Create a new database if required
-func (us UserService) Create() (sqlResult sql.Result, err error) {
-	return us.DB.Exec(`CREATE TABLE users (
+func (us UserService) FullReset() (err error) {
+	_, err = us.DB.Exec(`DROP TABLE users;`)
+	if err != nil {
+		return fmt.Errorf("authentication/postgres: Failed to drop users table:\n%v", err)
+	}
+	_, err = us.DB.Exec(`CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
     hashedpassword varchar(255) NOT NULL,
     token varchar(255) UNIQUE NOT NULL);`)
-
+	if err != nil {
+		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
+	}
+	return nil
 }
 
 // FindByID returns the first matching user (IDs should be unique) and returns a User object

@@ -36,20 +36,20 @@ func run(args []string, stdout io.Writer) error {
 	// open a connection to the database
 	db, err := postgres.NewConnection(secrets)
 	if err != nil {
-		return fmt.Errorf("error esablishing connection to database: /n %v", err)
+		return fmt.Errorf("error establishing connection to database: /n %v", err)
 	}
 
 	// Close the database when the server ends
 	defer db.DB.Close()
 
 	// Create a user cache and shadow the db
-	c := cache.NewUserCache(db)
+	cache := cache.NewUserCache(db)
 
 	// Create a handler for our routes, pass in the cache
-	http.Handle("/", routes.Home(c))
-	http.Handle("/create-users-table", routes.CreateUsersTable(db))
-	http.Handle("/signin", routes.SignIn(c))
-	http.Handle("/signup", routes.SignUp(c))
+	http.Handle("/", routes.Home(cache))
+	http.Handle("/create-users-table", routes.CreateUsersTable(cache))
+	http.Handle("/signin", routes.SignIn(cache))
+	http.Handle("/signup", routes.SignUp(cache))
 
 	// start the server.
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"database/sql"
 	"log"
 
 	"github.com/markstanden/authentication"
@@ -77,6 +76,18 @@ func (c UserCache) Add(u *authentication.User) (err error) {
 	return nil
 }
 
-func (c UserCache) Create() (sqlResult sql.Result, err error) {
-	return c.store.Create()
+// Create forwards the error (if any) created by the main datastore
+// following a call to drop the existing user table and rebuild.
+// obviously this is for use in development only, to allow quick changes to
+// the database structure / authentication.User struct object.
+func (c UserCache) FullReset() (err error) {
+
+	// Reset the current user cache, otherwise previous user entries will persist
+	// this won't be an issue for the current use case of the function, but may
+	// prevent future bugs
+	c.emailCache = make(map[string]*authentication.User)
+	c.tokenCache = make(map[string]*authentication.User)
+
+	// reset the main store and return any errors.
+	return c.store.FullReset()
 }

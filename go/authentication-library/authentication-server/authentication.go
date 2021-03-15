@@ -1,7 +1,5 @@
 package authentication
 
-import "database/sql"
-
 //User is the base struct for our User model.
 //	UniqueID string
 //		Each user has a unique ID within the UserStore
@@ -26,7 +24,7 @@ type UserService interface {
 	FindByEmail(email string) (*User, error)
 	FindByToken(token string) (*User, error)
 	Add(user *User) error
-	Create() (sql.Result, error)
+	FullReset() error
 	//Delete(*User)
 }
 

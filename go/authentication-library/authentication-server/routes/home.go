@@ -16,7 +16,7 @@ func Home(us authentication.UserService) http.Handler {
 			w.Header().Set("type", "html")
 			fmt.Fprintln(w, `
 		<h1> Homepage </h1>
-		<a href="/signin">Sign In</a>
+		<a href="/signin">Sign In</a><br>
 		<a href="/signup">Sign Up</a>
 	`)
 		}

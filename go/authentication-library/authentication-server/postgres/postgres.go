@@ -93,10 +93,13 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 
 // FullReset drops the user table and creates a new table
 func (us UserService) FullReset() (err error) {
+	// If the table already exists, drop it
 	_, err = us.DB.Exec(`DROP TABLE IF EXISTS users;`)
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to drop users table:\n%v", err)
 	}
+
+	// Create the new table
 	_, err = us.DB.Exec(`CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name varchar(255) NOT NULL,
@@ -157,6 +160,7 @@ func (us UserService) Add(u *authentication.User) (err error) {
 		return err
 	}
 
+	// The current user doesn't have an id set yet, so set it now.
 	u.UniqueID = id
 
 	// Log addition to database.

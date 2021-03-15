@@ -56,14 +56,6 @@ func run(args []string, stdout io.Writer) error {
 		return fmt.Errorf("failed to start HTTP server: /n %v", err)
 	}
 
-	/*
-		certFile := ""
-		keyFile := ""
-		if err := http.ListenAndServeTLS(":" + port, certFile, keyFile, nil); err != nil {
-			return fmt.Errorf("failed to start HTTPS server: /n %v", err)
-		}
-	*/
-
 	// return no errors if the app closes normally
 	return nil
 }

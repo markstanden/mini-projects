@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/markstanden/authentication/cache"
 	"github.com/markstanden/authentication/deploy/googlecloud"
 	"github.com/markstanden/authentication/postgres"
 	"github.com/markstanden/authentication/routes"
@@ -42,13 +43,13 @@ func run(args []string, stdout io.Writer) error {
 	defer db.DB.Close()
 
 	// Create a user cache and shadow the db
-	//cache := cache.NewUserCache(db)
+	cache := cache.NewUserCache(db)
 
 	// Create a handler for our routes, pass in the cache
-	http.Handle("/", routes.Home(db))
-	http.Handle("/create-users-table", routes.CreateUsersTable(db))
-	http.Handle("/signin", routes.SignIn(db))
-	http.Handle("/signup", routes.SignUp(db))
+	http.Handle("/", routes.Home(cache))
+	http.Handle("/create-users-table", routes.CreateUsersTable(cache))
+	http.Handle("/signin", routes.SignIn(cache))
+	http.Handle("/signup", routes.SignUp(cache))
 
 	// start the server.
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

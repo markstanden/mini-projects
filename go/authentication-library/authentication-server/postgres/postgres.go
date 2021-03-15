@@ -52,6 +52,11 @@ func getPostgresEnvConfig() (config pgconfig) {
 		//config.dbname = config.user
 		config.dbname = "authentication"
 	}
+
+	// User is the PostgreSQL user name to connect as. Defaults to be the same as the operating system name of the user running the application.
+	if config.password = os.Getenv("PGPASSWORD"); config.password == "" {
+		config.password = ""
+	}
 	return config
 }
 
@@ -62,14 +67,22 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 	config := getPostgresEnvConfig()
 
 	// Password is the password to be used if the server demands password authentication.
-	config.password, err = secrets.GetSecret("145660875199", "PGPASSWORD", "latest")
+	secretPW, err := secrets.GetSecret("145660875199", "PGPASSWORD", "latest")
 	if err != nil {
-		log.Println("authentication/postgres: PGPASSWORD secret variable not available, using default instead", err)
-		config.password = "postgres"
+		log.Println("authentication/postgres: PGPASSWORD secret variable not available, using ENV or default instead", err)
+	} else {
+		// set the config password to the password from the secret store
+		log.Println("authentication/postgres: PGPASSWORD secret obtained from the secret store.")
+		config.password = secretPW
 	}
 	// Create a connection string without a password argument
-	connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.host, config.port, config.user, config.password, config.dbname)
+	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable",
+		config.host, config.port, config.user, config.dbname)
+
+	if config.password != "" {
+		connectionString = fmt.Sprintf("%s password=%s", connectionString, config.password) 
+	}
+	fmt.Println(connectionString)
 	// Connect to postgres using the connection string
 	us.DB, err = sql.Open("postgres", connectionString)
 	if err != nil {
@@ -78,7 +91,7 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 	return us, nil
 }
 
-// Create a new database if required
+// FullReset drops the user table and creates a new table
 func (us UserService) FullReset() (err error) {
 	_, err = us.DB.Exec(`DROP TABLE users;`)
 	if err != nil {
@@ -88,15 +101,40 @@ func (us UserService) FullReset() (err error) {
     id SERIAL PRIMARY KEY,
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
-    hashedpassword varchar(255) NOT NULL,
-    token varchar(255) UNIQUE NOT NULL);`)
+    hashedpassword varchar(160) NOT NULL,
+    token varchar(160) UNIQUE NOT NULL);`)
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}
+	log.Println("authentication/postgres: users table dropped and created ok")
 	return nil
 }
 
-// FindByID returns the first matching user (IDs should be unique) and returns a User object
+// Find returns the first instance of the key value pair in the database.
+// it is intended to search unique keys only (id, email, token)
+func (us UserService) Find(key, value string) (u *authentication.User, err error) {
+	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE $1 = $2", key, value)
+	
+	var (
+		uid uint
+		name, email, hashedPassword, token string
+	)
+
+	err = rows.Scan(&uid, &name, &email, &hashedPassword, &token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &authentication.User{
+		UniqueID:       uid,
+		Name:           name,
+		Email:          email,
+		HashedPassword: hashedPassword,
+		Token:          token,
+	}, nil
+}
+
+/* // FindByID returns the first matching user (IDs should be unique) and returns a User object
 func (us UserService) FindByID(id string) (u *authentication.User, err error) {
 	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE id = $1", id)
 
@@ -166,11 +204,11 @@ func (us UserService) FindByToken(t string) (u *authentication.User, err error) 
 		HashedPassword: hashedPassword,
 		Token:          token,
 	}, nil
-}
+} */
 
 // Add adds the user to the database
 func (us UserService) Add(u *authentication.User) (err error) {
-	var id int
+	var id uint
 	sql := "INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4) RETURNING id"
 	err = us.DB.QueryRow(sql, u.Name, u.Email, u.HashedPassword, u.Token).Scan(&id)
 	if err != nil {
@@ -178,6 +216,9 @@ func (us UserService) Add(u *authentication.User) (err error) {
 	}
 
 	u.UniqueID = id
+	
+	// Log addition to database.
+	log.Printf("authentication/postgres: user (%d) added to db", id)
 
 	//return the ID of the created user
 	return nil

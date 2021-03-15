@@ -20,9 +20,9 @@ func SignIn(us authentication.UserService) http.Handler {
 		<h1> Homepage </h1>
 		<form action="/signin" method="POST">
 			<label for="email">Email:</label>
-			<input id="email" name="email" type="email" /><br>
+			<input id="email" name="email" type="email" maxlength="255" /><br>
 			<label for="password">Password</label>
-			<input id="password" name="password" type="password" /><br>
+			<input id="password" name="password" type="password" maxlength="255"/><br>
 			<input value="Submit Info" type="submit" />
 		</form>
 	`)
@@ -35,7 +35,7 @@ func SignIn(us authentication.UserService) http.Handler {
 				log.Println("Failed to Parse Form: ", err)
 			}
 
-			user, err := us.FindByEmail(r.PostForm.Get("email"))
+			user, err := us.Find("email", r.PostForm.Get("email"))
 			if err != nil {
 				fmt.Fprintf(w, "failed to lookup user account, invalid UserName :\n%v", err)
 			}

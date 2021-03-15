@@ -33,7 +33,54 @@ func NewUserCache(us authentication.UserService) *CachedStore {
 	}
 }
 
-// FindByEmail returns a user for a given email.
+func (c CachedStore) Find(key, value string) (*authentication.User, error) {
+	// Check the local cache first.
+	switch key {
+	case "email":
+		if u := c.cache.emailCache[value]; u != nil {
+			log.Printf(
+				"authentication/cache: user (%d) read from emailCache, current size: %v Users",
+				u.UniqueID, len(c.cache.emailCache))
+			// We have found a user so return early, no need to query main store.
+			return u, nil
+		}
+	
+	case "token":
+		if u := c.cache.tokenCache[value]; u != nil {
+			log.Printf(
+				"authentication/cache: user (%d) read from tokenCache, current size: %v Users",
+				u.UniqueID, len(c.cache.tokenCache))
+			// We have found a user so return early, no need to query main store.
+			return u, nil
+		}
+	}
+
+	// User not found in the cache, so check in the wrapped service.
+	u, err := c.store.Find(key, value) 
+	if err != nil {
+		
+		// User not found so send error
+		return nil, err
+	
+	} else if u != nil {
+	
+		// The user is located - add to the correct cache
+		switch key {
+		case "email":
+			c.cache.emailCache[value] = u
+		case "token":
+			c.cache.tokenCache[value] = u
+		}
+	
+	}
+	
+	// Return the found user
+	return u, err
+
+}
+
+
+/* // FindByEmail returns a user for a given email.
 // Returns the cached instance if available.
 func (c CachedStore) FindByEmail(email string) (*authentication.User, error) {
 	// Check the local cache first.
@@ -50,12 +97,12 @@ func (c CachedStore) FindByEmail(email string) (*authentication.User, error) {
 		c.cache.emailCache[email] = u
 	}
 	return u, err
-}
+} */
 
-// FindByToken returns a user for a given token.
+/* // FindByToken returns a user for a given token.
 // Returns the cached instance if available.
 func (c CachedStore) FindByToken(email string) (*authentication.User, error) {
-	// Check the local cache first. ````
+	// Check the local cache first.
 	if u := c.cache.tokenCache[email]; u != nil {
 		log.Printf("authentication/cache: user (%d) read from tokenCache, current size: %v Users", u.UniqueID, len(c.cache.tokenCache))
 		return u, nil
@@ -69,7 +116,7 @@ func (c CachedStore) FindByToken(email string) (*authentication.User, error) {
 		c.cache.tokenCache[email] = u
 	}
 	return u, err
-}
+} */
 
 // FindByToken returns a user for a given token.
 // Returns the cached instance if available.

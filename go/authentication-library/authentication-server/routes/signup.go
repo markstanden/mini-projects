@@ -20,11 +20,11 @@ func SignUp(us authentication.UserService) http.Handler {
 		<h1> Sign Up for a new StandenSoft Account </h1>
 		<form action="/signup" method="POST">
 			<label for="name">Name:</label>
-			<input id="name" name="name" type="text" /><br>
+			<input id="name" name="name" type="text" maxlength="255"/><br>
 			<label for="email">Email:</label>
-			<input id="email" name="email" type="email" /><br>
+			<input id="email" name="email" type="email" maxlength="255"/><br>
 			<label for="password">Password</label>
-			<input id="password" name="password" type="password" /><br>
+			<input id="password" name="password" type="password" maxlength="255"/><br>
 			<label for="confirmpassword">Confirm Password</label>
 			<input id="confirmpassword" name="confirmpassword" type="password" /><br>
 			<input value="Submit Info" type="submit" />
@@ -67,9 +67,10 @@ func SignUp(us authentication.UserService) http.Handler {
 			})
 			if err != nil {
 				log.Println("failed to create user account :/n", err)
+				http.Redirect(w, r, "/", http.StatusSeeOther)
 			}
 			log.Println("User Account Created OK, Looking up user")
-			userCheck, err := us.FindByEmail(r.PostForm.Get("email"))
+			userCheck, err := us.Find("email", r.PostForm.Get("email"))
 			if err != nil {
 				log.Println("failed to lookup created user account :/n", err)
 			}

@@ -6,7 +6,7 @@ import (
 	"github.com/markstanden/authentication"
 )
 
-// Heavily based on Ben Johnson's user cache gist
+// initially based on Ben Johnson's user cache gist
 // https://gist.github.com/benbjohnson/ffed98c3be896af58c5d74dd52cf0234#file-cache-go
 
 // UserCache
@@ -34,88 +34,45 @@ func NewUserCache(us authentication.UserService) *CachedStore {
 }
 
 func (c CachedStore) Find(key, value string) (*authentication.User, error) {
-	// Check the local cache first.
+
+	var cache map[string]*authentication.User
+
+	
 	switch key {
 	case "email":
-		if u := c.cache.emailCache[value]; u != nil {
-			log.Printf(
-				"authentication/cache: user (%d) read from emailCache, current size: %v Users",
-				u.UniqueID, len(c.cache.emailCache))
-			// We have found a user so return early, no need to query main store.
-			return u, nil
-		}
-
+		cache = c.cache.emailCache
 	case "token":
-		if u := c.cache.tokenCache[value]; u != nil {
-			log.Printf(
-				"authentication/cache: user (%d) read from tokenCache, current size: %v Users",
-				u.UniqueID, len(c.cache.tokenCache))
-			// We have found a user so return early, no need to query main store.
-			return u, nil
-		}
+		cache = c.cache.tokenCache
+	}
+
+	// Check the local cache first.
+	if u := cache[value]; u != nil {
+		log.Printf(
+			"authentication/cache: user (%d) read from %#v, current size: %v Users",
+			u.UniqueID, cache, len(cache))
+		
+		// We have found a user in the cache
+		// return early, no need to query main store.
+		return u, nil
 	}
 
 	// User not found in the cache, so check in the wrapped service.
 	u, err := c.store.Find(key, value)
+	
+	// If the user is not found return nil user, error
 	if err != nil {
-
-		// User not found so send error
 		return nil, err
+	}
 
-	} else if u != nil {
-
-		// The user is located - add to the correct cache
-		switch key {
-		case "email":
-			c.cache.emailCache[value] = u
-		case "token":
-			c.cache.tokenCache[value] = u
-		}
-
+	// If the user is located - add to the correct cache
+	if u != nil {
+		cache[value] = u
 	}
 
 	// Return the found user
 	return u, err
 
 }
-
-/* // FindByEmail returns a user for a given email.
-// Returns the cached instance if available.
-func (c CachedStore) FindByEmail(email string) (*authentication.User, error) {
-	// Check the local cache first.
-	if u := c.cache.emailCache[email]; u != nil {
-		log.Printf("authentication/cache: user (%d) read from emailCache, current size: %v Users", u.UniqueID, len(c.cache.emailCache))
-		return u, nil
-	}
-
-	// Otherwise fetch from the underlying service.
-	u, err := c.store.FindByEmail(email)
-	if err != nil {
-		return nil, err
-	} else if u != nil {
-		c.cache.emailCache[email] = u
-	}
-	return u, err
-} */
-
-/* // FindByToken returns a user for a given token.
-// Returns the cached instance if available.
-func (c CachedStore) FindByToken(email string) (*authentication.User, error) {
-	// Check the local cache first.
-	if u := c.cache.tokenCache[email]; u != nil {
-		log.Printf("authentication/cache: user (%d) read from tokenCache, current size: %v Users", u.UniqueID, len(c.cache.tokenCache))
-		return u, nil
-	}
-
-	// Otherwise fetch from the underlying service.
-	u, err := c.store.FindByToken(email)
-	if err != nil {
-		return nil, err
-	} else if u != nil {
-		c.cache.tokenCache[email] = u
-	}
-	return u, err
-} */
 
 // Add passes the Add request to the wrapped store
 func (c CachedStore) Add(u *authentication.User) (err error) {

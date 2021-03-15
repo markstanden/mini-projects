@@ -114,15 +114,13 @@ func (us UserService) FullReset() (err error) {
 // it is intended to search unique keys only (id, email, token)
 func (us UserService) Find(key, value string) (u *authentication.User, err error) {
 	var row *sql.Row
-	
-	
+
 	switch key {
 	case "email":
 		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE email = $1", value)
 	case "token":
 		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE token = $1", value)
 	}
-
 
 	uid := 0
 	name := ""
@@ -149,78 +147,6 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 	}
 
 }
-
-/* // FindByID returns the first matching user (IDs should be unique) and returns a User object
-func (us UserService) FindByID(id string) (u *authentication.User, err error) {
-	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE id = $1", id)
-
-	uid := 0
-	name := ""
-	email := ""
-	hashedPassword := ""
-	token := ""
-
-	err = rows.Scan(&uid, &name, &email, &hashedPassword, &token)
-	if err != nil {
-		return nil, err
-	}
-
-	return &authentication.User{
-		UniqueID:       uid,
-		Name:           name,
-		Email:          email,
-		HashedPassword: hashedPassword,
-		Token:          token,
-	}, nil
-}
-
-// FindByEmail returns the first matching user (Emails should be unique) and returns a User object
-func (us UserService) FindByEmail(em string) (u *authentication.User, err error) {
-	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE email = $1", em)
-
-	uid := 0
-	name := ""
-	email := ""
-	hashedPassword := ""
-	token := ""
-
-	err = rows.Scan(&uid, &name, &email, &hashedPassword, &token)
-	if err != nil {
-		return nil, err
-	}
-
-	return &authentication.User{
-		UniqueID:       uid,
-		Name:           name,
-		Email:          email,
-		HashedPassword: hashedPassword,
-		Token:          token,
-	}, nil
-}
-
-// FindByToken returns the first matching user (Tokens should be unique) and returns a User object
-func (us UserService) FindByToken(t string) (u *authentication.User, err error) {
-	rows := us.DB.QueryRow("SELECT (id, name, email, hashedpassword, token) FROM users WHERE token = $1", t)
-
-	uid := 0
-	name := ""
-	email := ""
-	hashedPassword := ""
-	token := ""
-
-	err = rows.Scan(&uid, &name, &email, &hashedPassword, &token)
-	if err != nil {
-		return nil, err
-	}
-
-	return &authentication.User{
-		UniqueID:       uid,
-		Name:           name,
-		Email:          email,
-		HashedPassword: hashedPassword,
-		Token:          token,
-	}, nil
-} */
 
 // Add adds the user to the database
 func (us UserService) Add(u *authentication.User) (err error) {

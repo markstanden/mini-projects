@@ -22,8 +22,6 @@ type User struct {
 // UserService specifies the requred functions of the user store
 type UserService interface {
 	Find(key, value string) (*User, error)
-	/* FindByEmail(email string) (*User, error)
-	FindByToken(token string) (*User, error) */
 	Add(user *User) error
 	FullReset() error
 	//Delete(*User)

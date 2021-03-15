@@ -23,18 +23,19 @@ func CreateUsersTable(us authentication.UserService) http.Handler {
 					<input value="Reset the Users table and start again?" type="submit" />
 				</form>
 			`)
-
-			if r.Method == "POST" {
-				w.Header().Set("type", "html")
-				if err := us.FullReset(); err != nil {
-					log.Println("authentication/routes: Failed to create Users table database:\n\t", err)
-				}
-
-				// Table has been dropped and recreated, so log and redirect to root route.
-				log.Println("authentication/routes: Table dropped and created ok")
-				http.Redirect(w, r, "/", http.StatusSeeOther)
-
-			}
 		}
+		if r.Method == "POST" {
+			log.Println("authentication/routes: Request to drop table received")
+			w.Header().Set("type", "html")
+			if err := us.FullReset(); err != nil {
+				log.Println("authentication/routes: Failed to create Users table database:\n\t", err)
+			}
+
+			// Table has been dropped and recreated, so log and redirect to root route.
+			log.Println("authentication/routes: Table dropped and created ok")
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+
+		}
+
 	})
 }

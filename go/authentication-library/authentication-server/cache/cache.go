@@ -44,7 +44,7 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 			// We have found a user so return early, no need to query main store.
 			return u, nil
 		}
-	
+
 	case "token":
 		if u := c.cache.tokenCache[value]; u != nil {
 			log.Printf(
@@ -56,14 +56,14 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 	}
 
 	// User not found in the cache, so check in the wrapped service.
-	u, err := c.store.Find(key, value) 
+	u, err := c.store.Find(key, value)
 	if err != nil {
-		
+
 		// User not found so send error
 		return nil, err
-	
+
 	} else if u != nil {
-	
+
 		// The user is located - add to the correct cache
 		switch key {
 		case "email":
@@ -71,14 +71,13 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 		case "token":
 			c.cache.tokenCache[value] = u
 		}
-	
+
 	}
-	
+
 	// Return the found user
 	return u, err
 
 }
-
 
 /* // FindByEmail returns a user for a given email.
 // Returns the cached instance if available.

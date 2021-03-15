@@ -80,7 +80,7 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 		config.host, config.port, config.user, config.dbname)
 
 	if config.password != "" {
-		connectionString = fmt.Sprintf("%s password=%s", connectionString, config.password) 
+		connectionString = fmt.Sprintf("%s password=%s", connectionString, config.password)
 	}
 	fmt.Println(connectionString)
 	// Connect to postgres using the connection string
@@ -114,9 +114,9 @@ func (us UserService) FullReset() (err error) {
 // it is intended to search unique keys only (id, email, token)
 func (us UserService) Find(key, value string) (u *authentication.User, err error) {
 	rows := us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE $1 = $2", key, value)
-	
+
 	var (
-		uid uint
+		uid                                uint
 		name, email, hashedPassword, token string
 	)
 
@@ -216,7 +216,7 @@ func (us UserService) Add(u *authentication.User) (err error) {
 	}
 
 	u.UniqueID = id
-	
+
 	// Log addition to database.
 	log.Printf("authentication/postgres: user (%d) added to db", id)
 

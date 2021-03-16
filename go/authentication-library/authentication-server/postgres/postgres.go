@@ -82,7 +82,7 @@ func NewConnection(secrets authentication.SecretStore) (us UserService, err erro
 	if config.password != "" {
 		connectionString = fmt.Sprintf("%s password=%s", connectionString, config.password)
 	}
-	fmt.Println(connectionString)
+
 	// Connect to postgres using the connection string
 	us.DB, err = sql.Open("postgres", connectionString)
 	if err != nil {

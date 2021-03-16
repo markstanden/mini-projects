@@ -2,19 +2,23 @@ package jwt
 
 import (
 	"errors"
+	"time"
 )
 
 // Token is the struct that holds all of the data to be written to the JWT
 type Token struct {
+	Header
+	Payload 
+}
 	// Header contains the required standard JWT fields
 	// Header.ALG (Algorithm) The encoding type used within the JWT
 	// It is important that the encoding method is checked to be as expected prior to decoding.
 	// Header.CTY (Content Type) Used only in nested JWT operations
 	// Header.TYP (Type) Set to "JWT" for JWT operations, allows for the use of encoding tokens for other uses.
-	Header struct {
-		ALG string
-		CTY string
-		TYP string
+type Header struct {
+		Algorithm string `json:"ALG,string"`
+		ContentType string `json:"CTY,string"`
+		Type string `json:"TYP,string"`
 	}
 
 	// Payload contains the data stored within the JWT
@@ -24,41 +28,40 @@ type Token struct {
 	// SUB (subject) who the JWT was supplied to. (Should be a unique identifier),
 	// AUD (audience).  Who the JWT is intended for,
 	// EXP (expiration time) - the time the JWT ceases to be valid,
-	EXP     string
-	Payload struct {
+type Payload struct {
 
 		// *** Registered Claims ***
 
 		// ISS - issuer (string || URI)
-		ISS string
+		Issuer string `json:"ISS,string"`
 
 		// SUB - subject
 		// who the JWT was supplied to.
 		// Should be a unique identifier
-		SUB string
+		Subject string `json:"SUB,string"`
 
 		// AUD - audience
 		// who the JWT is intended for.
 		// Should be rejected if the principal processing
 		// the claim does not identify itself with
 		// the value listed here.
-		AUD string
+		Audience string `json:"AUD,string"`
 
 		// EXP - expiration time
 		// the time the JWT ceases to be valid
-		EXP string
+		ExpirationTime string `json:"EXP,string"`
 
 		// NBT - OPTIONAL - not before time
 		// the time the begins to be valid
-		NBT string
+		NotBeforeTime string `json:"NBT,string"`
 
 		// IAT - OPTIONAL - issued at time
 		// the time the JWT was issued
-		IAT string
+		IssuedAtTime string `json:"IAT,string"`
 
 		// JTI - OPTIONAL - JWT ID
 		// The unique identifier for the JWT
-		JTI string
+		ID string `json:"JTI,string"`
 
 		// *** public claims ***
 		// Public claims are collision resistant (i.e. URI namespaced)
@@ -69,30 +72,27 @@ type Token struct {
 		// Custom claims specific to our web app.
 
 	}
-}
 
 // NewToken creates a new token, with sane defaults
-func NewToken() *Token {
+func NewToken(issuer, uniqueID, audience, starts, expires, id string) *Token {
+	
+	now, err := time.Now().MarshalJSON()
 
-	return &Token{
-		Header: struct {
-			ALG string
-			CTY string
-			TYP string
-		}{
-			ALG: "HS512",
-			TYP: "JWT",
-		},
-		Payload: struct {
-			ISS string
-			SUB string
-			AUD string
-			EXP string
-			NBT string
-			IAT string
-			JTI string
-		}{},
-	}
+	h := Header{
+			Algorithm: "HS512",
+			Type: "JWT",
+		}
+			p := Payload{
+			Issuer: issuer,
+			Subject: uniqueID,
+			Audience: audience,
+			ExpirationTime: expires,
+			NotBeforeTime: starts,
+			IssuedAtTime: string(now),
+			ID: id,
+		}
+	return &Token{Header: h, Payload: p}
+		
 }
 
 // Encode creates a token from the jwt struct

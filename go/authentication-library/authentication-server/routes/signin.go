@@ -16,7 +16,7 @@ func SignIn(us authentication.UserService) http.Handler {
 		if r.Method == "GET" {
 
 			w.Header().Set("type", "html")
-			fmt.Fprintln(w, getHTML("Sign In", "") )
+			fmt.Fprintln(w, getHTML("Sign In", ""))
 		}
 		if r.Method == "POST" {
 			// Parse the form data in the response
@@ -28,14 +28,14 @@ func SignIn(us authentication.UserService) http.Handler {
 
 			user, err := us.Find("email", r.PostForm.Get("email"))
 			if err != nil {
-				fmt.Fprintln(w, getHTML("Sign In - Invalid UserName", r.PostForm.Get("email")) )
+				fmt.Fprintln(w, getHTML("Sign In - Invalid UserName", r.PostForm.Get("email")))
 			}
 
 			// Initialise a boolean variable that hold whether the password matches the stored, hashed password.
 			compareOK := false
 			err = argonhasher.Compare(r.PostForm.Get("password"), user.HashedPassword)
 			if err != nil {
-				fmt.Fprintln(w, getHTML("Sign In - Invalid Password", r.PostForm.Get("email")) )
+				fmt.Fprintln(w, getHTML("Sign In - Invalid Password", r.PostForm.Get("email")))
 			} else {
 				compareOK = true
 			}

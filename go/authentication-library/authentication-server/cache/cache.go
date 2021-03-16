@@ -37,7 +37,6 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 
 	var cache map[string]*authentication.User
 
-	
 	switch key {
 	case "email":
 		cache = c.cache.emailCache
@@ -50,7 +49,7 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 		log.Printf(
 			"authentication/cache: user (%d) read from %#v, current size: %v Users",
 			u.UniqueID, cache, len(cache))
-		
+
 		// We have found a user in the cache
 		// return early, no need to query main store.
 		return u, nil
@@ -58,7 +57,7 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 
 	// User not found in the cache, so check in the wrapped service.
 	u, err := c.store.Find(key, value)
-	
+
 	// If the user is not found return nil user, error
 	if err != nil {
 		return nil, err

@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -61,7 +62,7 @@ type Payload struct {
 
 		// JTI - OPTIONAL - JWT ID
 		// The unique identifier for the JWT
-		ID string `json:"JTI,string"`
+		TokenID string `json:"JTI,string"`
 
 		// *** public claims ***
 		// Public claims are collision resistant (i.e. URI namespaced)
@@ -73,25 +74,41 @@ type Payload struct {
 
 	}
 
+func standardise(t time.Time) (string, error) {
+	sb, err := t.UTC().MarshalText()
+	if err != nil {
+		return "", err
+	}
+	return string(sb), nil
+}
+
 // NewToken creates a new token, with sane defaults
-func NewToken(issuer, uniqueID, audience, starts, expires, id string) *Token {
+func NewToken(issuer, uniqueID, audience, starts, expires, tokenID string) (token *Token, err error) {
 	
-	now, err := time.Now().MarshalJSON()
+	// Get the current time and convert to UTC and standardised JSON string
+	now, err := standardise(time.Now())
+	if err != nil {
+		return nil, fmt.Errorf("incorrect time set: \n%v", err)
+	}
+
+
+
+
 
 	h := Header{
-			Algorithm: "HS512",
-			Type: "JWT",
-		}
-			p := Payload{
-			Issuer: issuer,
-			Subject: uniqueID,
-			Audience: audience,
-			ExpirationTime: expires,
-			NotBeforeTime: starts,
-			IssuedAtTime: string(now),
-			ID: id,
-		}
-	return &Token{Header: h, Payload: p}
+		Algorithm: "HS512",
+		Type: "JWT",
+	}
+	p := Payload{
+		Issuer: issuer,
+		Subject: uniqueID,
+		Audience: audience,
+		ExpirationTime: expires,
+		NotBeforeTime: string(now),
+		IssuedAtTime: string(now),
+		TokenID: tokenID,
+	}
+	return &Token{Header: h, Payload: p}, nil
 		
 }
 

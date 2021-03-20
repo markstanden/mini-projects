@@ -6,18 +6,18 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
-	"time"
 )
 
-// Decode checks the validity of the jwt token,
-// returns the unique identifer or an error
-func Validate(untrustedB64 string, secret string) (data map[string]string, err error) {
+// Decode turns a signed JWT into a map[string]string (or returns an error)
+// but only after checking the validity of the token.
+func Decode(untrustedB64 string, secret string) (data map[string]string, err error) {
 
 	// untrustedB64 should be a two or three base64 URL encoded strings, separated by dots
+	// check that first
 
 	// Verify that the JWT contains at least one period ('.') character.
 	if !strings.Contains(untrustedB64, ".") {
-		return nil, fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("invalid token, no dots")
 	}
 
 	// Split the dot separated base64 URL encoded string into 2 or 3 segments depending on whether it contains a signature
@@ -28,66 +28,46 @@ func Validate(untrustedB64 string, secret string) (data map[string]string, err e
 		return nil, fmt.Errorf("token split error, incorrect number of sections")
 	}
 
-	// Trim the dot from the ends of the split base64 URL encoded string
-	headerUntrustedB64 := strings.TrimSuffix(splitUntrustedB64[0], ".")
-	payloadUntrustedB64 := strings.TrimSuffix(splitUntrustedB64[1], ".")
-	signatureUntrustedB64 := strings.TrimSuffix(splitUntrustedB64[2], ".")
+	// create the structures to hold the different versions of the 3 parts of the token
+	var untrustedValid [][]byte
+	var untrustedValidB64 = make([]string, 3)
 
-	// re-encode the header + payload.
-	// This is the costly part so check if it's worth doing first
+	for i, split := range splitUntrustedB64 {
+		// Trim the dot from the ends of the split base64 URL encoded string
+		// and add the cleaned up version to the base64 []string
+		s := strings.TrimSuffix(string(split), ".")
+		untrustedValidB64[i] = s
 
-	// Check that the header, payload, and signature are actually valid base64 strings
-	// decode and assign for later use.
-	var (
-		headerUntrustedBytes, payloadUntrustedBytes, signatureUntrustedBytes []byte
-	)
-
-	headerUntrustedBytes, err = decode(headerUntrustedB64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode JWT header :\n%v", err)
+		// Check that the header, payload, and signature are actually valid base64 strings
+		// if so decode and assign for later use in the [][]byte
+		decoded, err := decode(s)
+		if err != nil {
+			return nil, err
+		}
+		untrustedValid = append(untrustedValid, decoded)
 	}
 
-	payloadUntrustedBytes, err = decode(payloadUntrustedB64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode JWT payload :\n%v", err)
-	}
+	// now the data has had basic validation, recreate the body of the jwt to be tested
+	toEncode := []byte(untrustedValidB64[0] + "." + untrustedValidB64[1])
 
-	signatureUntrustedBytes, err = decode(signatureUntrustedB64)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode JWT signature :\n%v", err)
-	}
-
-	// create the slice of bytes to encode
-	// {json header} + "." + {json payload}
-	toEncode := []byte(headerUntrustedB64 + "." + payloadUntrustedB64)
-
+	// prep the hash
 	h := hmac.New(sha512.New, []byte(secret))
+	// hash and write the jwt body
 	h.Write(toEncode)
 	testBytes := h.Sum(nil)
 
-	if hmac.Equal(testBytes, signatureUntrustedBytes) {
+	// check that the hashed body is equal to the decoded signature supplied by the jwt
+	if hmac.Equal(testBytes, untrustedValid[2]) {
 		fmt.Println("Signature Verified")
 	} else {
 		fmt.Println("Signature invalid")
 	}
 
-	// Let the Encoded JOSE Header be the portion of the JWT before the first period ('.') character.
+	// Now we are satisfied the token is valid, we can extract the data
 
-	fmt.Println(string(headerUntrustedBytes))
-	fmt.Println(string(payloadUntrustedBytes))
+	fmt.Println(string(untrustedValid[0]))
+	fmt.Println(string(untrustedValid[1]))
 	return data, nil
-}
-
-func getTime() time.Time {
-	return time.Now()
-}
-
-func format(t time.Time) (string, error) {
-	sb, err := t.UTC().MarshalText()
-	if err != nil {
-		return "", err
-	}
-	return string(sb), nil
 }
 
 // decode checks the validity of the supplied string and if valid decodes to a []byte.

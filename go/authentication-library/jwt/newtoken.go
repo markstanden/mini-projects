@@ -62,3 +62,15 @@ func NewToken(secret, issuer, uniqueID, audience, tokenID, keyID string) (token 
 	return signedToken, nil
 
 }
+
+func getTime() time.Time {
+	return time.Now()
+}
+
+func format(t time.Time) (string, error) {
+	sb, err := t.UTC().MarshalText()
+	if err != nil {
+		return "", err
+	}
+	return string(sb), nil
+}

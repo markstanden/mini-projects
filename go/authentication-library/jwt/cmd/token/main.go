@@ -25,7 +25,7 @@ func run(args []string, stdout io.Writer) error {
 	}
 	fmt.Println("Created Token: ", jwt)
 
-	data, err := token.Validate(jwt, secret)
+	data, err := token.Decode(jwt, secret)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}

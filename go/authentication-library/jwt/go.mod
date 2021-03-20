@@ -1,3 +1,3 @@
-module github.com/markstanden/jwt
+module github.com/markstanden/token
 
 go 1.16

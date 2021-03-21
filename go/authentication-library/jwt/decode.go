@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // The allowable characters in a URL flavoured base64 encoded string.
@@ -38,7 +39,6 @@ func Decode(untrustedB64 string, secret string) (trusted map[string]interface{},
 		return nil, fmt.Errorf("invalid signature section")
 	}
 
-
 	// create the structures to hold the different versions of the 3 parts of the token
 	var untrustedValid [][]byte
 	var untrustedValidB64 = make([]string, 3)
@@ -57,7 +57,7 @@ func Decode(untrustedB64 string, secret string) (trusted map[string]interface{},
 
 		// Check that the header, payload, and signature are actually valid base64 strings
 		// if so decode and assign for later use in the [][]byte
-		decoded, err := decode(splitTrimmed)
+		decoded, err := convertB64ToString(splitTrimmed)
 		if err != nil {
 			return nil, err
 		}
@@ -88,19 +88,37 @@ func Decode(untrustedB64 string, secret string) (trusted map[string]interface{},
 	}
 
 	// the date fields (iat, nbf, exp) will unmarshall as float64
-	// convert to int64
+	// convert to int64, and test validity
 	fields := []string{"iat", "nbf", "exp"}
 	for _, f := range fields {
-		if _, exists := trusted[f]; exists {
+		if _, ok := trusted[f]; ok {
 			trusted[f] = int64(trusted[f].(float64))
 		}
+	}
+
+	now := getUnixTime(time.Now())
+
+	// check to see if the token has expired, if it exists
+	if exp, ok := trusted["exp"]; ok {
+		if exp.(int64) < now {
+			return nil, fmt.Errorf("token has expired")
+		}
+		return nil, fmt.Errorf("token has no expiry date")
+	}
+
+	// check to see if the token has a valid creation date
+	if iat, ok := trusted["iat"]; ok {
+		if iat.(int64) > now || iat.(int64) < getUnixTime(time.Now().AddDate(-1, 0, 0)) {
+			return nil, fmt.Errorf("token creation date invalid")
+		}
+		return nil, fmt.Errorf("token has no expiry date")
 	}
 
 	return trusted, nil
 }
 
 // decode checks the validity of the supplied string and if valid decodes to a []byte.
-func decode(untrusted string) (valid []byte, err error) {
+func convertB64ToString(untrusted string) (valid []byte, err error) {
 
 	valid, err = base64.RawURLEncoding.Strict().DecodeString(untrusted)
 	if err != nil {
@@ -120,43 +138,3 @@ func checkValidity(toCheck, validRunes string) (valid bool) {
 	}
 	return true
 }
-
-/*
-
-   4.   Verify that the resulting octet sequence is a UTF-8-encoded
-        representation of a completely valid JSON object conforming to
-        RFC 7159 [RFC7159]; let the JOSE Header be this JSON object.
-
-   5.   Verify that the resulting JOSE Header includes only parameters
-        and values whose syntax and semantics are both understood and
-        supported or that are specified as being ignored when not
-        understood.
-
-   6.   Determine whether the JWT is a JWS or a JWE using any of the
-        methods described in Section 9 of [JWE].
-
-	7.   Depending upon whether the JWT is a JWS or JWE, there are two
-        cases:
-
-        *  If the JWT is a JWS, follow the steps specified in [JWS] for
-           validating a JWS.  Let the Message be the result of base64url
-           decoding the JWS Payload.
-
-        *  Else, if the JWT is a JWE, follow the steps specified in
-           [JWE] for validating a JWE.  Let the Message be the resulting
-           plaintext.
-
-   8.   If the JOSE Header contains a "cty" (content type) value of
-        "JWT", then the Message is a JWT that was the subject of nested
-        signing or encryption operations.  In this case, return to Step
-        1, using the Message as the JWT.
-
-   9.   Otherwise, base64url decode the Message following the
-        restriction that no line breaks, whitespace, or other additional
-        characters have been used.
-
-   10.  Verify that the resulting octet sequence is a UTF-8-encoded
-        representation of a completely valid JSON object conforming to
-        RFC 7159 [RFC7159]; let the JWT Claims Set be this JSON object.
-
-*/

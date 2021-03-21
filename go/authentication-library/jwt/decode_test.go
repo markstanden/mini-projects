@@ -69,14 +69,14 @@ func TestDecode(t *testing.T) {
 		// test input string with "iat" created in the future
 		{"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3R5IE1jVGVzdGZhY2UiLCJpYXQiOjIwMDAwMDAwMDEsImV4cCI6MjAwMDAyMjIyMn0.XlF_dhnLt7tLc73_v7_T8LtFVVQMgJV3vy6tm9VoWF1BJVrit1CkyOlMzBQ2uz0iQs1Ggm7bw7JEK1l-t994Cw",
 			"secretcode",
-			"Failed to return an error for an expired token"},
+			"Failed to return an error for an issued at time from the future"},
 
 		// test input string with "nbf" valid from the future
 		{"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3R5IE1jVGVzdGZhY2UiLCJpYXQiOjEwMDAwMDAwMDEsIm5iZiI6MjAwMDAwMDAwMSwiZXhwIjoyMDAwMDIyMjIyfQ.3iCZdcj4JC7Kbh8uG2GBmlRUCUkHNGPzLCc41ctZPn0mPx1As4XsEiDU4mzknCgEYUCJJ4NAuvea943RUrMOvw",
 			"secretcode",
 			"Failed to return an error for a token with a not before time from the future"},
 	}
-	
+
 	for i, test := range testsShouldError {
 		// test input string with no dots
 		got, err := Decode(test[0], test[1])

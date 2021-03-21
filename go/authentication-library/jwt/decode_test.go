@@ -1,10 +1,12 @@
 package token
 
 import (
+	"fmt"
 	"testing"
+	"time"
 )
 
-type test [3]string
+type test []string
 
 func TestDecode(t *testing.T) {
 
@@ -43,7 +45,7 @@ func TestDecode(t *testing.T) {
 		// test input string with incorrect secret
 		{"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3R5IE1jVGVzdGZhY2UiLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTUxOTk5OTk5fQ.7P9PODLthZjoMYASHZtmLKSYheID6ACLoqEwHL45cX-z5YeGFRIASIbEEEj5hk2vLMeKegkXv5jwL3DcqFxIIg",
 			"secretcde",
-			"Failed to return an error for an empty secret"},
+			"Failed to return an error for an incorrect secret"},
 
 		// test input string with "alg" set to "none" **Known Exploit**
 		{"eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJpZCI6MSwiaWF0IjoxNTczMzU4Mzk2fQ.",
@@ -74,12 +76,12 @@ func TestDecode(t *testing.T) {
 			"secretcode",
 			"Failed to return an error for a token with a not before time from the future"},
 	}
-
+	
 	for i, test := range testsShouldError {
 		// test input string with no dots
 		got, err := Decode(test[0], test[1])
 		if got != nil || err == nil {
-			t.Error("test ", i, "\n:", test[2])
+			t.Error("test ", i, ":\n", test[2])
 		}
 	}
 }
@@ -87,18 +89,19 @@ func TestDecode(t *testing.T) {
 func TestDecodeJWTIO(t *testing.T) {
 	// test with a valid SHA512 JWT created from jwt.io website
 	test := "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.HRpHR0crlulg0h0QlCEvILEb8HGlmj9t8KTHh6ZedffoHtoBYLRtrFsdLRqJshJOQEt0r60aAQP3Bd8MJuu2ag"
+	fmt.Println(getUnixTime(time.Now()))
 	secret := "secretcode"
 	var want = make(map[string]interface{})
 	want["sub"] = "1234567890"
 	want["name"] = "John Doe"
-	want["admin"] = "true"
-	want["iat"] = "1516239022"
+	want["admin"] = true
+	want["iat"] = int64(1516239022)
 
 	got, _ := Decode(test, secret)
 
 	for k, v := range want {
 		if got[k] != v {
-			t.Fatalf("\ngot: %v,\nwant: %v", got, want)
+			t.Fatalf("\ngot: %v,\nwant: %v", got[k], want[k])
 		}
 	}
 

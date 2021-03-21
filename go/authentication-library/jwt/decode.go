@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -12,9 +13,9 @@ import (
 // shamelessly stolen from the base64 package, as it is not exported.
 const encodeURL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
-// Decode turns a signed JWT into a map[string]string (or returns an error)
+// Decode turns a signed JWT into a map[string]interface (or returns an error)
 // but only after checking the validity of the token.
-func Decode(untrustedB64 string, secret string) (data map[string]string, err error) {
+func Decode(untrustedB64 string, secret string) (trusted map[string]interface{}, err error) {
 
 	// untrustedB64 should be a two or three base64 URL encoded strings, separated by dots
 	// check that first
@@ -31,6 +32,12 @@ func Decode(untrustedB64 string, secret string) (data map[string]string, err err
 	if len(splitUntrustedB64) <= 1 || len(splitUntrustedB64) > 3 {
 		return nil, fmt.Errorf("token split error, incorrect number of sections")
 	}
+
+	// If there is only 2 sections, or the signature section is empty, exit early
+	if len(splitUntrustedB64) == 2 || len(splitUntrustedB64) == 3 && splitUntrustedB64[2] == "" {
+		return nil, fmt.Errorf("invalid signature section")
+	}
+
 
 	// create the structures to hold the different versions of the 3 parts of the token
 	var untrustedValid [][]byte
@@ -69,16 +76,27 @@ func Decode(untrustedB64 string, secret string) (data map[string]string, err err
 
 	// check that the hashed body is equal to the decoded signature supplied by the jwt
 	if hmac.Equal(testBytes, untrustedValid[2]) {
-		fmt.Println("Signature Verified")
 	} else {
-		fmt.Println("Signature invalid")
+		return nil, fmt.Errorf("signature invalid")
 	}
 
 	// Now we are satisfied the token is valid, we can extract the data
 
-	fmt.Println(string(untrustedValid[0]))
-	fmt.Println(string(untrustedValid[1]))
-	return data, nil
+	err = json.Unmarshal(untrustedValid[1], &trusted)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling json: \n%v", err)
+	}
+
+	// the date fields (iat, nbf, exp) will unmarshall as float64
+	// convert to int64
+	fields := []string{"iat", "nbf", "exp"}
+	for _, f := range fields {
+		if _, exists := trusted[f]; exists {
+			trusted[f] = int64(trusted[f].(float64))
+		}
+	}
+
+	return trusted, nil
 }
 
 // decode checks the validity of the supplied string and if valid decodes to a []byte.

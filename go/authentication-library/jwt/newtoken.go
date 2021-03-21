@@ -5,27 +5,14 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
 // NewToken creates a new token, with sane defaults
-func NewToken(secret, issuer, uniqueID, audience, tokenID, keyID string) (token string, err error) {
+func NewToken(secret, issuer, uniqueID, audience, tokenID, keyID string, validFor int64) (token string, err error) {
 
 	// Get the current time and convert to UTC and standardised JSON string
-	now, err := format(getTime())
-	if err != nil {
-		return "", fmt.Errorf("incorrect time set: \n%v", err)
-	}
-	expires, err := format(
-		time.Now().
-			AddDate(
-				0, /* years */
-				1, /* months */
-				0 /* days */))
-	if err != nil {
-		return "", fmt.Errorf("incorrect expiry set: \n%v", err)
-	}
+	now := getUnixTime(time.Now())
 
 	h := Header{
 		Algorithm: "HS512",
@@ -35,7 +22,7 @@ func NewToken(secret, issuer, uniqueID, audience, tokenID, keyID string) (token 
 		Issuer:         issuer,
 		Subject:        uniqueID,
 		Audience:       audience,
-		ExpirationTime: expires,
+		ExpirationTime: now + validFor,
 		NotBeforeTime:  now,
 		IssuedAtTime:   now,
 		TokenID:        tokenID,
@@ -63,14 +50,6 @@ func NewToken(secret, issuer, uniqueID, audience, tokenID, keyID string) (token 
 
 }
 
-func getTime() time.Time {
-	return time.Now()
-}
-
-func format(t time.Time) (string, error) {
-	sb, err := t.UTC().MarshalText()
-	if err != nil {
-		return "", err
-	}
-	return string(sb), nil
+func getUnixTime(t time.Time) int64 {
+	return t.UTC().Unix()
 }

@@ -41,29 +41,29 @@ type Payload struct {
 	// Should be rejected if the principal processing
 	// the claim does not identify itself with
 	// the value listed here.
-	Audience string `json:"aud,omitempty"`
+	Audience string `json:"aud,string,omitempty"`
 
 	// EXP - expiration time
 	// the time the JWT ceases to be valid
-	ExpirationTime string `json:"exp,omitempty"`
+	ExpirationTime int64 `json:"exp,string,omitempty"`
 
-	// NBT - OPTIONAL - not before time
+	// NBF - OPTIONAL - not before time
 	// the time the begins to be valid
-	NotBeforeTime string `json:"nbt,omitempty"`
+	NotBeforeTime int64 `json:"nbf,string,omitempty"`
 
 	// IAT - OPTIONAL - issued at time
 	// the time the JWT was issued
-	IssuedAtTime string `json:"iat,omitempty"`
+	IssuedAtTime int64 `json:"iat,string,omitempty"`
 
 	// JTI - OPTIONAL - JWT ID
 	// The unique identifier for the JWT
-	TokenID string `json:"jti,omitempty"`
+	TokenID string `json:"jti,string,omitempty"`
 
 	// *** public claims ***
 	// Public claims are collision resistant (i.e. URI namespaced)
 	// or defined in the "IANA JSON Web Token Registry"
 	// https://www.iana.org/assignments/jwt/jwt.xhtml
-	KeyID string `json:"kid,omitempty"`
+	KeyID string `json:"kid,string,omitempty"`
 
 	// *** private claims ***
 	// Custom claims specific to our web app.

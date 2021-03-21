@@ -19,7 +19,7 @@ func main() {
 }
 
 func run(args []string, stdout io.Writer) error {
-	jwt, err := token.NewToken(secret, "My Server", "User Idenfier", "My Website", "Unique ID for the JWT", "Key ID (to identify secret version used to encrypt signature")
+	jwt, err := token.NewToken(secret, "My Server", "User Idenfier", "My Website", "Unique ID for the JWT", "Key ID (to identify secret version used to encrypt signature", int64(10000000))
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}

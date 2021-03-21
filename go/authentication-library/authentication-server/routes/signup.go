@@ -7,6 +7,7 @@ import (
 
 	"github.com/markstanden/argonhasher"
 	"github.com/markstanden/authentication"
+	token "github.com/markstanden/authentication/tokenhandler"
 )
 
 // SignUp produces the signup route
@@ -76,15 +77,25 @@ func SignUp(us authentication.UserService) http.Handler {
 			if err != nil {
 				log.Println("failed to lookup created user account :\n", err)
 			}
-			fmt.Fprintf(w, `
-		User Account Created OK:
-		ID: %v
-		Name: %v
-		Email: %v
-		Hash: %v
-		Token: %v
-		Error: %v
-		`, userCheck.UniqueID, userCheck.Name, userCheck.Email, userCheck.HashedPassword, userCheck.Token, err)
+			/* fmt.Fprintf(w, `
+			User Account Created OK:
+			ID: %v
+			Name: %v
+			Email: %v
+			Hash: %v
+			Token: %v
+			Error: %v
+			`, userCheck.UniqueID, userCheck.Name, userCheck.Email, userCheck.HashedPassword, userCheck.Token, err)
+			*/
+			t, err := token.Create(userCheck, "secretcode")
+			if err != nil {
+				fmt.Fprint(w, err.Error())
+			}
+			dt, err := token.Decode(t, "secretcode")
+			if err != nil {
+				fmt.Fprint(w, err.Error())
+			}
+			fmt.Fprint(w, t, "\n", dt)
 			//http.RedirectHandler("/", http.StatusSeeOther)
 			// Create a unique token to represent the user
 			//t := jwt.NewToken()

@@ -44,6 +44,6 @@ type Deployment interface {
 }
 
 type TokenHandler interface {
-	Create(map[string]string) string;
-	Decode(string) (map[string]interface{}, error);
+	Create(u *User, secret string) (string, error)
+	Decode(jwt, secret string) (map[string]interface{}, error)
 }

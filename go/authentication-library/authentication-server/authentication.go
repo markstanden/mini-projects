@@ -35,10 +35,15 @@ type PasswordHash interface {
 
 // SecretStore is an interface for the secret storage logic to retrieve secrets,
 // which will be platform dependant.
-type SecretStore interface {
+type Deployment interface {
 	// Creates a map and fills it with the required information
 	//GetSecrets(keys []string) (map[string] string, error)
 
 	// Takes directly from the store
 	GetSecret(project, key, version string) (string, error)
+}
+
+type TokenHandler interface {
+	Create(map[string]string) string;
+	Decode(string) (map[string]interface{}, error);
 }

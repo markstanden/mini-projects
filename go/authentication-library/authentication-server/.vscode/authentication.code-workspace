@@ -7,7 +7,7 @@
 		"path": "../../argonhasher"
 	},
 	{
-		"path": "../../jwt"
+		"path": "../../token"
 	}
 ],
   "settings": {}

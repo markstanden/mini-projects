@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	cloud.google.com/go v0.79.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/lib/pq v1.10.0
 	github.com/markstanden/argonhasher v0.1.3
 	google.golang.org/genproto v0.0.0-20210311153111-e2979279ddde

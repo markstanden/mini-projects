@@ -61,7 +61,7 @@ func getPostgresEnvConfig() (config pgconfig) {
 }
 
 // NewConnection returns a new Postgres DB instance
-func NewConnection(secrets authentication.SecretStore) (us UserService, err error) {
+func NewConnection(secrets authentication.Deployment) (us UserService, err error) {
 
 	// create the config object, taking the non-secret info from the env variables
 	config := getPostgresEnvConfig()

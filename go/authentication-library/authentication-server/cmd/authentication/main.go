@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/markstanden/authentication/cache"
-	"github.com/markstanden/authentication/deploy/googlecloud"
-	"github.com/markstanden/authentication/postgres"
+	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
+	"github.com/markstanden/authentication/userstore/cache"
+	"github.com/markstanden/authentication/userstore/postgres"
 )
 
 func main() {

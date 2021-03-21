@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+// The allowable characters in a URL flavoured base64 encoded string.
+// shamelessly stolen from the base64 package, as it is not exported.
+const encodeURL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
 // Decode turns a signed JWT into a map[string]string (or returns an error)
 // but only after checking the validity of the token.
 func Decode(untrustedB64 string, secret string) (data map[string]string, err error) {
@@ -33,17 +37,24 @@ func Decode(untrustedB64 string, secret string) (data map[string]string, err err
 	var untrustedValidB64 = make([]string, 3)
 
 	for i, split := range splitUntrustedB64 {
+
 		// Trim the dot from the ends of the split base64 URL encoded string
 		// and add the cleaned up version to the base64 []string
-		s := strings.TrimSuffix(string(split), ".")
-		untrustedValidB64[i] = s
+		splitTrimmed := strings.TrimSuffix(string(split), ".")
+		untrustedValidB64[i] = splitTrimmed
+
+		// First check for invalid characters in the input string
+		if !checkValidity(splitTrimmed, encodeURL) {
+			return nil, fmt.Errorf("header contains invalid chars")
+		}
 
 		// Check that the header, payload, and signature are actually valid base64 strings
 		// if so decode and assign for later use in the [][]byte
-		decoded, err := decode(s)
+		decoded, err := decode(splitTrimmed)
 		if err != nil {
 			return nil, err
 		}
+		// Add the trimmed, validated, decoded []byte to the slice
 		untrustedValid = append(untrustedValid, decoded)
 	}
 
@@ -73,14 +84,6 @@ func Decode(untrustedB64 string, secret string) (data map[string]string, err err
 // decode checks the validity of the supplied string and if valid decodes to a []byte.
 func decode(untrusted string) (valid []byte, err error) {
 
-	// The allowable characters in a URL flavoured base64 encoded string.
-	// shamelessly stolen from the base64 package, as it is not exported.
-	const encodeURL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
-
-	// First check for invalid characters in the input string
-	if !checkValidity(untrusted, encodeURL) {
-		return nil, fmt.Errorf("header contains invalid chars")
-	}
 	valid, err = base64.RawURLEncoding.Strict().DecodeString(untrusted)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode JWT header :\n%v", err)

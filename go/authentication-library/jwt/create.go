@@ -9,7 +9,7 @@ import (
 )
 
 // NewToken creates a new token, with sane defaults
-func NewToken(secret, issuer, uniqueID, audience, tokenID, keyID string, validFor int64) (token string, err error) {
+func Create(secret, issuer, uniqueID, audience, tokenID, keyID string, validFor int64) (token string, err error) {
 
 	// Get the current time and convert to UTC and standardised JSON string
 	now := getUnixTime(time.Now())

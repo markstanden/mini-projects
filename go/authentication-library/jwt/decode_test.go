@@ -3,7 +3,6 @@ package token
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 type test []string
@@ -89,7 +88,7 @@ func TestDecode(t *testing.T) {
 func TestDecodeJWTIO(t *testing.T) {
 	// test with a valid SHA512 JWT created from jwt.io website
 	test := "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.HRpHR0crlulg0h0QlCEvILEb8HGlmj9t8KTHh6ZedffoHtoBYLRtrFsdLRqJshJOQEt0r60aAQP3Bd8MJuu2ag"
-	fmt.Println(getUnixTime(time.Now()))
+	
 	secret := "secretcode"
 	var want = make(map[string]interface{})
 	want["sub"] = "1234567890"
@@ -97,7 +96,9 @@ func TestDecodeJWTIO(t *testing.T) {
 	want["admin"] = true
 	want["iat"] = int64(1516239022)
 
-	got, _ := Decode(test, secret)
+	got, err := Decode(test, secret)
+
+	fmt.Println(err)
 
 	for k, v := range want {
 		if got[k] != v {

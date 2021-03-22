@@ -57,7 +57,7 @@ func Decode(untrustedB64 string, secret string) (trusted map[string]interface{},
 
 		// Check that the header, payload, and signature are actually valid base64 strings
 		// if so decode and assign for later use in the [][]byte
-		decoded, err := convertB64ToString(splitTrimmed)
+		decoded, err := decodeToString(splitTrimmed)
 		if err != nil {
 			return nil, err
 		}
@@ -87,6 +87,10 @@ func Decode(untrustedB64 string, secret string) (trusted map[string]interface{},
 		return nil, fmt.Errorf("error unmarshalling json: \n%v", err)
 	}
 
+	fmt.Println(trusted)
+
+	fmt.Printf("%T", trusted)
+
 	// the date fields (iat, nbf, exp) will unmarshall as float64
 	// convert to int64, and test validity
 	fields := []string{"iat", "nbf", "exp"}
@@ -103,6 +107,8 @@ func Decode(untrustedB64 string, secret string) (trusted map[string]interface{},
 		if exp.(int64) < now {
 			return nil, fmt.Errorf("token has expired")
 		}
+		
+	} else {
 		return nil, fmt.Errorf("token has no expiry date")
 	}
 
@@ -111,14 +117,13 @@ func Decode(untrustedB64 string, secret string) (trusted map[string]interface{},
 		if iat.(int64) > now || iat.(int64) < getUnixTime(time.Now().AddDate(-1, 0, 0)) {
 			return nil, fmt.Errorf("token creation date invalid")
 		}
-		return nil, fmt.Errorf("token has no expiry date")
 	}
 
 	return trusted, nil
 }
 
 // decode checks the validity of the supplied string and if valid decodes to a []byte.
-func convertB64ToString(untrusted string) (valid []byte, err error) {
+func decodeToString(untrusted string) (valid []byte, err error) {
 
 	valid, err = base64.RawURLEncoding.Strict().DecodeString(untrusted)
 	if err != nil {

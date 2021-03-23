@@ -80,7 +80,6 @@ func Decode(untrustedB64 string, secret string, trusted *Token) (err error) {
 	}
 
 	// Now we are satisfied the token is valid, we can extract the data
-
 	err = json.Unmarshal(untrustedValid[1], &trusted)
 	if err != nil {
 		return fmt.Errorf("error unmarshalling json: \n%v", err)
@@ -88,32 +87,22 @@ func Decode(untrustedB64 string, secret string, trusted *Token) (err error) {
 
 	// the date fields (iat, nbf, exp) will unmarshall as float64
 	// convert to int64, and test validity
-	fields := []string{"iat", "nbf", "exp"}
-	for _, f := range fields {
-		if _, ok := trusted[f]; ok {
-			trusted[f] = int64(trusted[f].(float64))
-		}
-	}
-
-	//now := getUnixTime(time.Now())
-
-	// check to see if the token has expired, if it exists
-	//if exp, ok := trusted["exp"]; ok {
-	//	if exp.(int64) < now {
-	//		return nil, fmt.Errorf("token has expired")
-	//	}
-
-	//} else {
-	//	return nil, fmt.Errorf("token has no expiry date")
-	//}
+	now := getUnixTime()
 
 	// check to see if the token has a valid creation date
-	//if iat, ok := trusted["iat"]; ok {
-	//	if iat.(int64) > now || iat.(int64) < getUnixTime(time.Now().AddDate(-1, 0, 0)) {
-	//		return nil, fmt.Errorf("token creation date invalid")
-	//	}
-	//}
+	if trusted.IssuedAtTime > now {
+		return fmt.Errorf("token creation date is in the future")
+	}
 
+	// check to see if the token has expired, if it exists
+	if trusted.ExpirationTime < now {
+		return fmt.Errorf("token has expired")
+	}
+
+	// check to see if the token has a valid not before date
+	if trusted.NotBeforeTime > now {
+		return fmt.Errorf("token not yet operational")
+	}
 	return nil
 }
 

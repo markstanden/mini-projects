@@ -21,7 +21,7 @@ func NewToken(issuer, uniqueID, audience, tokenID, keyID string, validFor int64)
 		TokenID:        tokenID,
 		KeyID:          keyID,
 	}
-	return &Token{h, p}
+	return &Token{h, p, int64(validFor)}
 }
 
 func getUnixTime() int64 {

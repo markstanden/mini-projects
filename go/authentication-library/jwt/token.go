@@ -4,6 +4,7 @@ package token
 type Token struct {
 	Header
 	Payload
+	lifespan int64
 }
 
 // Header contains the required standard JWT fields

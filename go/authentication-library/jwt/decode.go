@@ -75,8 +75,7 @@ func Decode(untrustedB64 string, secret string, trusted *Token) (err error) {
 	testBytes := h.Sum(nil)
 
 	// check that the hashed body is equal to the decoded signature supplied by the jwt
-	if hmac.Equal(testBytes, untrustedValid[2]) {
-	} else {
+	if !hmac.Equal(testBytes, untrustedValid[2]) {
 		return fmt.Errorf("signature invalid")
 	}
 
@@ -87,18 +86,14 @@ func Decode(untrustedB64 string, secret string, trusted *Token) (err error) {
 		return fmt.Errorf("error unmarshalling json: \n%v", err)
 	}
 
-	//fmt.Println(trusted)
-
-	//fmt.Printf("%T", trusted)
-
 	// the date fields (iat, nbf, exp) will unmarshall as float64
 	// convert to int64, and test validity
-	//fields := []string{"iat", "nbf", "exp"}
-	//for _, f := range fields {
-	//	if _, ok := trusted[f]; ok {
-	//		trusted[f] = int64(trusted[f].(float64))
-	//	}
-	//}
+	fields := []string{"iat", "nbf", "exp"}
+	for _, f := range fields {
+		if _, ok := trusted[f]; ok {
+			trusted[f] = int64(trusted[f].(float64))
+		}
+	}
 
 	//now := getUnixTime(time.Now())
 

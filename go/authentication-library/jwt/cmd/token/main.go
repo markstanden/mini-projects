@@ -25,11 +25,12 @@ func run(args []string, stdout io.Writer) error {
 	}
 	fmt.Println("Created Token: ", jwt)
 
-	data, err := token.Decode(jwt, secret)
+	tkn := token.Token{}
+	err = token.Decode(jwt, secret, &tkn)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
 
-	fmt.Println("Raw Data: ", data)
+	fmt.Println("Raw Data: ", tkn)
 	return nil
 }

@@ -1,7 +1,6 @@
 package argonhasher
 
 import (
-	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
 	"errors"
@@ -10,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/markstanden/securerandom"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -25,8 +25,8 @@ type KDFconfig struct {
 
 	// SaltLength
 	// length of random-generated salt
-	// (16 bytes recommended for password hashing)
-	SaltLength uint8
+	// (min 16 bytes recommended for password hashing)
+	SaltLength int
 
 	// Time (i.e. iterations) - t
 	// number of iterations or pass throughs to perform
@@ -55,7 +55,7 @@ func Encode(pw string) (hashWithConfig string, err error) {
 	}
 
 	// call our salt generator function to produce a salt the required length.
-	newArgon.Salt, err = createSalt(newArgon.SaltLength)
+	newArgon.Salt, err = securerandom.ByteSlice(newArgon.SaltLength)
 	if err != nil {
 		return "", err
 	}
@@ -144,27 +144,9 @@ func Compare(ptPassword string, hash string) (err error) {
 	// Shamefully stolen from the x/crypto/bcrypt source code, we want all comparisons to take equal time,
 	// whether it fails on the first bit or the last
 	if subtle.ConstantTimeCompare([]byte(hash), []byte(newHash)) == 1 {
+		// ptPassword hash equals hashedpassword
 		return nil
 	}
 
 	return fmt.Errorf("mismatched password")
-}
-
-// createSalt creates a random string of bytes of length saltLength
-// using the cryptographically secure crypto/rand package.
-func createSalt(saltLength uint8) (salt []byte, err error) {
-
-	//create an empty slice of bytes the required size of the salt
-	salt = make([]byte, saltLength)
-
-	// fill the slice of bytes with crypto randomness
-	_, err = rand.Read(salt)
-
-	// check for errors
-	if err != nil {
-		return nil, err
-	}
-
-	// return the salt if error free
-	return salt, nil
 }

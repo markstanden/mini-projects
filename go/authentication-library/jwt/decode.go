@@ -15,7 +15,7 @@ const encodeURL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345678
 
 // Decode turns a signed JWT into a map[string]interface (or returns an error)
 // but only after checking the validity of the token.
-func Decode(untrustedB64 string, secret string, trusted *Token) (err error) {
+func Decode(untrustedB64 string, passwordLookup func(key string) (secret string, err error), data *Token) (err error) {
 	//func Decode(untrustedB64 string, secret string) (trusted map[string]interface{}, err error) {
 
 	// untrustedB64 should be a two or three base64 URL encoded strings, separated by dots
@@ -66,7 +66,66 @@ func Decode(untrustedB64 string, secret string, trusted *Token) (err error) {
 	}
 
 	// now the data has had basic validation, recreate the body of the jwt to be tested
+
+	// We need the header and key ID from the payload so we extract the data
+	err = json.Unmarshal(untrustedValid[0], &data)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling json: \n%v", err)
+	}
+
+	//fmt.Println(data)
+
+	// check the alg
+	if data.Algorithm == "none" {
+		*data = Token{}
+		return fmt.Errorf(`"alg":"none" specified: %v`, data.Algorithm)
+	}
+
+	if data.Algorithm != "HS512" {
+		*data = Token{}
+		return fmt.Errorf("invalid encoding algorithm specified: %v", data.Algorithm)
+	}
+
+	if data.TokenType != "JWT" {
+		*data = Token{}
+		return fmt.Errorf("invalid token type: %v", data.TokenType)
+	}
+
+	// Header ok, unmarshal payload to check time fields and obtain keyID
+
+	err = json.Unmarshal(untrustedValid[1], &data.Payload)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling json: \n%v", err)
+	}
+
+	// current date/time
+	now := getUnixTime()
+
+	// check to see if the token has a valid creation date
+	if data.IssuedAtTime > now {
+		*data = Token{}
+		return fmt.Errorf("token creation date is in the future")
+	}
+
+	// check to see if the token has expired, if it exists
+	if data.ExpirationTime < now {
+		*data = Token{}
+		return fmt.Errorf("token has expired")
+	}
+
+	// check to see if the token has a valid not before date
+	if data.NotBeforeTime > now {
+		*data = Token{}
+		return fmt.Errorf("token not yet operational")
+	}
+
 	toEncode := []byte(untrustedValidB64[0] + "." + untrustedValidB64[1])
+
+	secret, err := passwordLookup(data.KeyID)
+	if err != nil {
+		*data = Token{}
+		return fmt.Errorf("failed to extract secret from callback")
+	}
 
 	// prep the hash
 	h := hmac.New(sha512.New, []byte(secret))
@@ -76,33 +135,10 @@ func Decode(untrustedB64 string, secret string, trusted *Token) (err error) {
 
 	// check that the hashed body is equal to the decoded signature supplied by the jwt
 	if !hmac.Equal(testBytes, untrustedValid[2]) {
+		*data = Token{}
 		return fmt.Errorf("signature invalid")
 	}
 
-	// Now we are satisfied the token is valid, we can extract the data
-	err = json.Unmarshal(untrustedValid[1], &trusted)
-	if err != nil {
-		return fmt.Errorf("error unmarshalling json: \n%v", err)
-	}
-
-	// the date fields (iat, nbf, exp) will unmarshall as float64
-	// convert to int64, and test validity
-	now := getUnixTime()
-
-	// check to see if the token has a valid creation date
-	if trusted.IssuedAtTime > now {
-		return fmt.Errorf("token creation date is in the future")
-	}
-
-	// check to see if the token has expired, if it exists
-	if trusted.ExpirationTime < now {
-		return fmt.Errorf("token has expired")
-	}
-
-	// check to see if the token has a valid not before date
-	if trusted.NotBeforeTime > now {
-		return fmt.Errorf("token not yet operational")
-	}
 	return nil
 }
 

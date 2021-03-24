@@ -13,8 +13,8 @@ type Token struct {
 // Header.CTY (Content Type) Used only in nested JWT operations
 // Header.TYP (Type) Set to "JWT" for JWT operations, allows for the use of encoding tokens for other uses.
 type Header struct {
-	Algorithm string `json:"alg,omitempty"`
-	TokenType string `json:"typ,omitempty"`
+	Algorithm string `json:"alg"`
+	TokenType string `json:"typ"`
 }
 
 // Payload contains the data stored within the JWT

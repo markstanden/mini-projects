@@ -5,9 +5,10 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 )
 
-func (t *Token) CreateJWT(secret string) (jwt string, err error) {
+func (t *Token) CreateJWT(passwordLookup func(keyID string) (string, error)) (jwt string, err error) {
 
 	jsonHeader, err := json.Marshal(t.Header)
 	if err != nil {
@@ -19,6 +20,11 @@ func (t *Token) CreateJWT(secret string) (jwt string, err error) {
 	}
 
 	jwtString := base64.RawURLEncoding.EncodeToString(jsonHeader) + "." + base64.RawURLEncoding.EncodeToString(jsonPayload)
+
+	secret, err := passwordLookup(t.KeyID)
+	if err != nil {
+		return "", fmt.Errorf("failed to obtain secret from callback")
+	}
 
 	sig64 := hash(jwtString, secret)
 

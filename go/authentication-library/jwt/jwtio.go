@@ -1,6 +1,10 @@
 package token
 
-const jwtioSecret = "secretcode"
+func jwtioSecret() func(KeyID string) (string, error) {
+	return func(key string) (string, error) {
+		return "secretcode", nil
+	}
+}
 
 const jwtioToken = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tL21hcmtzdGFuZGVuIiwic3ViIjoiMTIzNDU2Nzg5MCIsImF1ZCI6ImdpdGh1Yi5jb20vbWFya3N0YW5kZW4vYXV0aGVudGljYXRpb24iLCJleHAiOjE2NTAwMDAwMDAsIm5iZiI6MTYwMDAwMDAwMCwiaWF0IjoxNjAwMDAwMDAwLCJqdGkiOiJuVjFNMkIyWmwtU0MwNEdhWkpwN3FEcVA0M0duQzFaZ3R0VDBFOGR2aC1qc2VQRjBsNXAwRUVrS01IOHdJejVNMnpsenI1R0wzUi1UODltSy1OUndBUT09Iiwia2lkIjoiTVdJeFNZbl9RZFgybVBGRml3ZnUyTHVzT2lYaWRNUGpEX2lzMEtyNEJLdnZzYmdBQUUyM0xuVmRqSThVQUZXMUZ6LTlMSlBPcUs5TEFueldwWHBRcHc9PSJ9.tbQ5tU9f6TdKPwiftAAwbgst1fpqzT1kBQ2TU2d7ADt9AE632AhXVqSnAxFzET2wt6Nz47MJERCjvPVj_Pe2uQ"
 

@@ -11,8 +11,10 @@ func TestDecodeJWTIO(t *testing.T) {
 	//create an empty struct
 	got := Token{}
 
+	secret := jwtioSecret()
+
 	// Decode the test data
-	err := Decode(jwtioToken, jwtioSecret, &got)
+	err := Decode(jwtioToken, secret, &got)
 
 	if err != nil {
 		fmt.Printf("failed to decode JWT \n%t", err)

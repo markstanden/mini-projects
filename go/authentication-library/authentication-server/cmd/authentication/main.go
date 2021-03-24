@@ -10,6 +10,7 @@ import (
 
 	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
+	jwt "github.com/markstanden/authentication/tokenhandler"
 	"github.com/markstanden/authentication/userstore/cache"
 	"github.com/markstanden/authentication/userstore/postgres"
 )
@@ -32,10 +33,21 @@ func run(args []string, stdout io.Writer) error {
 	}
 
 	// create a secret store to pass to the UserStore
-	secrets := &googlecloud.SecretStore{}
+	gcloud := &googlecloud.DeploymentService{Project: "145660875199"}
+
+	userTokens := &jwt.TokenService{
+		Issuer:     "markstanden.dev",
+		Audience:   "markstanden.dev",
+		HoursValid: 24,
+		SecretKey:  "UserIdentifier",
+		Secrets:    gcloud,
+	}
+
+	// Prep the password lookup
+	getPGPass := gcloud.GetSecret("PGPASSWORD")
 
 	// open a connection to the database
-	db, err := postgres.NewConnection(secrets)
+	db, err := postgres.NewConnection(getPGPass)
 	if err != nil {
 		return fmt.Errorf("error establishing connection to database: /n %v", err)
 	}
@@ -50,7 +62,7 @@ func run(args []string, stdout io.Writer) error {
 	http.Handle("/", routes.Home(cache))
 	http.Handle("/create-users-table", routes.CreateUsersTable(cache))
 	http.Handle("/signin", routes.SignIn(cache))
-	http.Handle("/signup", routes.SignUp(cache))
+	http.Handle("/signup", routes.SignUp(cache, userTokens))
 
 	// start the server.
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

@@ -7,11 +7,10 @@ import (
 
 	"github.com/markstanden/argonhasher"
 	"github.com/markstanden/authentication"
-	token "github.com/markstanden/authentication/tokenhandler"
 )
 
 // SignUp produces the signup route
-func SignUp(us authentication.UserService) http.Handler {
+func SignUp(us authentication.UserService, ts authentication.TokenService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "GET" {
@@ -72,7 +71,7 @@ func SignUp(us authentication.UserService) http.Handler {
 				http.Redirect(w, r, "/", http.StatusSeeOther)
 				return
 			}
-			log.Println("User Account Created OK, Looking up user")
+			log.Println("User Account Created OK")
 			userCheck, err := us.Find("email", r.PostForm.Get("email"))
 			if err != nil {
 				log.Println("failed to lookup created user account :\n", err)
@@ -87,25 +86,15 @@ func SignUp(us authentication.UserService) http.Handler {
 			Error: %v
 			`, userCheck.UniqueID, userCheck.Name, userCheck.Email, userCheck.HashedPassword, userCheck.Token, err)
 			*/
-			t, err := token.Create(userCheck, "secretcode")
+			t, err := ts.Create(userCheck)
 			if err != nil {
 				fmt.Fprint(w, err.Error())
 			}
-			dt, err := token.Decode(t, "secretcode")
+			dt, err := ts.Decode(t)
 			if err != nil {
 				fmt.Fprint(w, err.Error())
 			}
 			fmt.Fprint(w, t, "\n", dt)
-			//http.RedirectHandler("/", http.StatusSeeOther)
-			// Create a unique token to represent the user
-			//t := jwt.NewToken()
-			// Create a JWT
-			//token := jwt.New()
-			//token.Payload.JTI = hash
-			//token.Encode()
-
-			//fmt.Println(token.Decode())
-			//
 		}
 	})
 }

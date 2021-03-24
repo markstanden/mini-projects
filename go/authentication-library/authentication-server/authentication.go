@@ -35,15 +35,12 @@ type PasswordHash interface {
 
 // SecretStore is an interface for the secret storage logic to retrieve secrets,
 // which will be platform dependant.
-type Deployment interface {
-	// Creates a map and fills it with the required information
-	//GetSecrets(keys []string) (map[string] string, error)
-
+type SecretService interface {
 	// Takes directly from the store
-	GetSecret(project, key, version string) (string, error)
+	GetSecret(key string) func(version string) (secret string, err error)
 }
 
-type TokenHandler interface {
-	Create(u *User, secret string) (string, error)
-	Decode(jwt, secret string) (map[string]interface{}, error)
+type TokenService interface {
+	Create(u *User) (string, error)
+	Decode(jwt string) (userTokenID string, err error)
 }

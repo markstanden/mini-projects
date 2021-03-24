@@ -12,30 +12,33 @@ import (
 
 // SecretStore is the base struct of our authentication.SecretStore interface implemetation
 // Basically a wrapper for the google cloud API
-type SecretStore struct {
+type DeploymentService struct {
 	// Wraps google API
-	// May add fields to this later
+	Project string
 }
 
 // GetSecret looks up the secret from the store and updates its value in the map
 // project is the project id (ours is a 12 digit int)
 // key is the name of the stored data
 // version is the fixed version number i.e. "5" or the current value "latest"
-func (secrets SecretStore) GetSecret(project, key, version string) (secret string, err error) {
+func (ds DeploymentService) GetSecret(key string) func(version string) (secret string, err error) {
 
 	// request string needs to look like this
 	// name := "projects/my-project/secrets/my-secret/versions/5"
 	// name := "projects/my-project/secrets/my-secret/versions/latest"
-	requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", project, key, version)
 
 	// create a new buffer to receive the secret
 	buf := new(bytes.Buffer)
 
-	err = accessSecretVersion(buf, requestString)
-	if err != nil {
-		return
+	// return the function that can choose the required version
+	return func(version string) (secret string, err error) {
+		requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", ds.Project, key, version)
+		err = accessSecretVersion(buf, requestString)
+		if err != nil {
+			return
+		}
+		return buf.String(), nil
 	}
-	return buf.String(), nil
 }
 
 // accessSecretVersion accesses the payload for the given secret version if one

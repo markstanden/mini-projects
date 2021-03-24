@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go v0.79.0
 	github.com/lib/pq v1.10.0
 	github.com/markstanden/argonhasher v0.1.3
-	github.com/markstanden/token v0.3.1
+	github.com/markstanden/securerandom v0.3.0
+	github.com/markstanden/token v0.5.0
 	google.golang.org/genproto v0.0.0-20210311153111-e2979279ddde
 )

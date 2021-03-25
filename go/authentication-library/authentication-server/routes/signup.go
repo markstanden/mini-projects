@@ -77,7 +77,7 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 				log.Println("failed to lookup created user account :\n", err)
 			}
 			log.Println("authentication/signup: created user read from store: \n", userCheck)
-			
+
 			t, err := ts.Create(userCheck)
 			if err != nil {
 				fmt.Fprintf(w, "authentication/signup: error creating jwt\n%v\nError:\n%v", t, err.Error())
@@ -90,7 +90,7 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			}
 			log.Println("authentication/signup: decoded jwt: \n", dt)
 			fmt.Fprintf(w, "authentication/signup: created and decoded jwt\n%v\nData:\n%v", t, dt)
-			
+
 		}
 	})
 }

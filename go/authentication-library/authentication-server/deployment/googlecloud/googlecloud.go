@@ -37,7 +37,7 @@ func (ds DeploymentService) GetSecret(key string) func(version string) (secret s
 		log.Printf("GetSecret ran looking for Version: %v\n", version)
 		requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", ds.Project, key, version)
 
-	log.Printf("the request string was: %v\n", requestString)
+		log.Printf("the request string was: %v\n", requestString)
 		err = accessSecretVersion(buf, requestString)
 		if err != nil {
 			return

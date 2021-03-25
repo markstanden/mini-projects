@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/markstanden/authentication"
 	"github.com/markstanden/securerandom"

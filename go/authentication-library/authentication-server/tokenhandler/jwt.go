@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/markstanden/authentication"
 	"github.com/markstanden/securerandom"
@@ -17,7 +18,8 @@ type TokenService struct {
 }
 
 func (ts *TokenService) passwordLookup() func(KeyID string) (secret string, err error) {
-	return ts.Secrets.GetSecret(ts.SecretKey)
+	//return ts.Secrets.GetSecret(ts.SecretKey)
+	return ts.Secrets.GetSecret("latest")
 }
 
 func (ts *TokenService) Create(u *authentication.User) (jwt string, err error) {

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
@@ -32,11 +33,17 @@ func (ds DeploymentService) GetSecret(key string) func(version string) (secret s
 
 	// return the function that can choose the required version
 	return func(version string) (secret string, err error) {
+
+		log.Printf("GetSecret ran looking for Version: %v\n", version)
 		requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", ds.Project, key, version)
+
+	log.Printf("the request string was: %v\n", requestString)
 		err = accessSecretVersion(buf, requestString)
 		if err != nil {
 			return
 		}
+
+		log.Printf("and it returned %v\n", buf.String())
 		return buf.String(), nil
 	}
 }

@@ -10,7 +10,7 @@ import (
 
 	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
-	jwt "github.com/markstanden/authentication/tokenhandler"
+	"github.com/markstanden/authentication/tokenservice"
 	"github.com/markstanden/authentication/userstore/cache"
 	"github.com/markstanden/authentication/userstore/postgres"
 )

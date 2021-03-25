@@ -100,7 +100,7 @@ func (us UserService) FullReset() (err error) {
 		return fmt.Errorf("authentication/postgres: Failed to drop users table:\n%v", err)
 	}
 
-	// Create the new table
+	// Create the new user table
 	_, err = us.DB.Exec(`CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name varchar(255) NOT NULL,
@@ -110,6 +110,17 @@ func (us UserService) FullReset() (err error) {
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}
+
+	// Create the new key table
+	_, err = us.DB.Exec(`CREATE TABLE keys (
+    id SERIAL PRIMARY KEY,
+    keyID varchar(64) UNIQUE NOT NULL,
+    value varchar(255) NOT NULL,
+    created integer UNIQUE NOT NULL);`)
+	if err != nil {
+		return fmt.Errorf("authentication/postgres: Failed to create keys table:\n%v", err)
+	}
+
 	log.Println("authentication/postgres: users table dropped and created ok")
 	return nil
 }

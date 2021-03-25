@@ -32,16 +32,16 @@ func (ts *TokenService) Create(u *authentication.User) (jwt string, err error) {
 
 	// The unique identifier for this token
 	tokenID, err := securerandom.String(64)
-	tokenID = "1"
 	if err != nil {
 		return "", fmt.Errorf("failed to create 'jti' :\n%v", err)
 	}
 
 	// the unique identifier for the secret
-	keyID, err := securerandom.String(64)
-	if err != nil {
-		return "", fmt.Errorf("failed to create 'kid' :\n%v", err)
-	}
+	// keyID, err := securerandom.String(64)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to create 'kid' :\n%v", err)
+	// }
+	keyID := "1"
 
 	// the number of seconds the token is valid for
 	validFor := hoursToSeconds(ts.HoursValid)

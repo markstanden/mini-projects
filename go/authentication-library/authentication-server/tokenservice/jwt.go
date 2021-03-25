@@ -20,7 +20,7 @@ type TokenService struct {
 func (ts *TokenService) passwordLookup() func(KeyID string) (secret string, err error) {
 	//return ts.Secrets.GetSecret(ts.SecretKey)
 	log.Println("tokenservice/jwt: password lookup called")
-	return ts.Secrets.GetSecret("latest")
+	return ts.Secrets.GetSecret(ts.SecretKey)
 }
 
 func (ts *TokenService) Create(u *authentication.User) (jwt string, err error) {

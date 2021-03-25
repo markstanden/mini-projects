@@ -32,6 +32,7 @@ func (ts *TokenService) Create(u *authentication.User) (jwt string, err error) {
 
 	// The unique identifier for this token
 	tokenID, err := securerandom.String(64)
+	tokenID = "1"
 	if err != nil {
 		return "", fmt.Errorf("failed to create 'jti' :\n%v", err)
 	}

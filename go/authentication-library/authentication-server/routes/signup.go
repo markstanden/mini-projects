@@ -88,8 +88,8 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			if err != nil {
 				fmt.Fprintf(w, "authentication/signup: error decoding jwt\n%v\nError:\n%v", t, err.Error())
 			}
-			log.Println("authentication/signup: decoded jwt: \n", dt)
-			u, err := us.Find("token", id)
+			log.Println("authentication/signup: decoded jwt: \n", id)
+			u, _ := us.Find("token", id)
 			fmt.Fprintf(w, "authentication/signup: created and decoded jwt\n%v\nUserData:\n%v", t, u)
 
 		}

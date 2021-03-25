@@ -1,5 +1,7 @@
 package authentication
 
+import "errors"
+
 //User is the base struct for our User model.
 //	UniqueID string
 //		Each user has a unique ID within the UserStore
@@ -44,3 +46,12 @@ type TokenService interface {
 	Create(u *User) (string, error)
 	Decode(jwt string) (userTokenID string, err error)
 }
+
+
+var (
+	// users
+	ErrUserNotFound = errors.New("user not found")
+	
+	// tokens
+	ErrExpiredToken = errors.New("expired token")
+)

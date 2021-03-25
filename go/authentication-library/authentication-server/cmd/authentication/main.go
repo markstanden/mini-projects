@@ -33,8 +33,11 @@ func run(args []string, stdout io.Writer) error {
 	}
 
 	// create a secret store to pass to the UserStore
-	gcloud := &googlecloud.DeploymentService{Project: "145660875199"}
+	gcloud := &googlecloud.DeploymentService{
+		Project: "145660875199",
+	}
 
+	// create a token service to create authentication tokens for users
 	userTokens := &jwt.TokenService{
 		Issuer:     "markstanden.dev",
 		Audience:   "markstanden.dev",
@@ -43,7 +46,7 @@ func run(args []string, stdout io.Writer) error {
 		Secrets:    gcloud,
 	}
 
-	// Prep the password lookup
+	// Prep the password lookup callback
 	getPGPass := gcloud.GetSecret("PGPASSWORD")
 
 	// open a connection to the database

@@ -53,9 +53,9 @@ func getPostgresEnvConfig() (config pgconfig) {
 		config.dbname = "authentication"
 	}
 
-	// User is the PostgreSQL user name to connect as. Defaults to be the same as the operating system name of the user running the application.
+	// password is the PostgreSQL user password to connect with. defaults to postgres
 	if config.password = os.Getenv("PGPASSWORD"); config.password == "" {
-		config.password = ""
+		config.password = "postgres"
 	}
 	return config
 }
@@ -86,6 +86,7 @@ func NewConnection(getPassword func(version string) (string, error)) (us UserSer
 
 	// Connect to postgres using the connection string
 	us.DB, err = sql.Open("postgres", connectionString)
+
 	if err != nil {
 		return us, err
 	}
@@ -111,17 +112,23 @@ func (us UserService) FullReset() (err error) {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}
 
+
+	// If the table already exists, drop it
+	_, err = us.DB.Exec(`DROP TABLE IF EXISTS keys;`)
+	if err != nil {
+		return fmt.Errorf("authentication/postgres: Failed to drop keys table:\n%v", err)
+	}
 	// Create the new key table
 	_, err = us.DB.Exec(`CREATE TABLE keys (
     id SERIAL PRIMARY KEY,
-    keyID varchar(64) UNIQUE NOT NULL,
+    keyid varchar(64) UNIQUE NOT NULL,
     value varchar(255) NOT NULL,
     created integer UNIQUE NOT NULL);`)
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to create keys table:\n%v", err)
 	}
 
-	log.Println("authentication/postgres: users table dropped and created ok")
+	log.Println("authentication/postgres: users & keys table dropped and created ok")
 	return nil
 }
 
@@ -180,4 +187,31 @@ func (us UserService) Add(u *authentication.User) (err error) {
 
 	//return the ID of the created user
 	return nil
+}
+	
+
+
+func (us *UserService) GetSecret(name string) func(version string) (secret string, err error) {
+
+	switch name {
+	case "SecretKey":
+		return func(keyID string) (secret string, err error) {
+			var (
+				row *sql.Row
+				value string
+				created int64
+			)
+
+			row = us.DB.QueryRow("SELECT value, created FROM keys WHERE keyid = $1", name)
+			err = row.Scan(&value, &created)
+			switch err {
+			case sql.ErrNoRows:
+				return 
+			}
+			return secret, err
+		}
+	}
+	return func(version string) (string, error) {
+		return "", fmt.Errorf("invalid secret name %v", name)
+	}
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/markstanden/argonhasher"
 	"github.com/markstanden/authentication"
+	"github.com/markstanden/securerandom"
 )
 
 // SignUp produces the signup route
@@ -54,17 +55,16 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 				log.Println("failed to create hash: ", err)
 			}
 
-			idkey := r.PostForm.Get("name") + r.PostForm.Get("email")
-			idHash, err := argonhasher.Encode(idkey)
+			idKey,err := securerandom.String(32)
 			if err != nil {
-				log.Println("failed to create token hash: ", err)
+				log.Println("routes/signup: error creating idKey")
 			}
 
 			err = us.Add(&authentication.User{
 				Name:           r.PostForm.Get("name"),
 				Email:          r.PostForm.Get("email"),
 				HashedPassword: passwordHash,
-				Token:          idHash,
+				Token:          idKey,
 			})
 			if err != nil {
 				log.Println("failed to create user account :\n", err)
@@ -84,12 +84,13 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			}
 			log.Println("authentication/signup: created jwt: \n", t)
 
-			dt, err := ts.Decode(t)
+			id, err := ts.Decode(t)
 			if err != nil {
 				fmt.Fprintf(w, "authentication/signup: error decoding jwt\n%v\nError:\n%v", t, err.Error())
 			}
 			log.Println("authentication/signup: decoded jwt: \n", dt)
-			fmt.Fprintf(w, "authentication/signup: created and decoded jwt\n%v\nData:\n%v", t, dt)
+			u, err := us.Find("token", id)
+			fmt.Fprintf(w, "authentication/signup: created and decoded jwt\n%v\nUserData:\n%v", t, u)
 
 		}
 	})

@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/markstanden/authentication"
 	"github.com/markstanden/securerandom"
@@ -18,6 +19,7 @@ type TokenService struct {
 
 func (ts *TokenService) passwordLookup() func(KeyID string) (secret string, err error) {
 	//return ts.Secrets.GetSecret(ts.SecretKey)
+	log.Println("tokenservice/jwt: password lookup called")
 	return ts.Secrets.GetSecret("latest")
 }
 

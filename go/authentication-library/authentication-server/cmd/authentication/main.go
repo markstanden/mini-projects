@@ -42,8 +42,7 @@ func run(args []string, stdout io.Writer) error {
 		Issuer:     "markstanden.dev",
 		Audience:   "markstanden.dev",
 		HoursValid: 24,
-		SecretKey:  "UserIdentifier",
-		Secrets:    gcloud,
+		GetSecret:	gcloud.GetSecret("UserIdentifier"),
 	}
 
 	// Prep the password lookup callback

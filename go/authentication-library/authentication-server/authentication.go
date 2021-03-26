@@ -43,8 +43,9 @@ type SecretService interface {
 }
 
 type TokenService interface {
-	Create(u *User) (string, error)
-	Decode(jwt string) (userTokenID string, err error)
+	Create(userID string) (jwt, jwtID string, err error)
+	Decode(jwt string) (userID, jwtID string, err error)
+	GetSecret (func(version string) (secret string, err error))
 }
 
 

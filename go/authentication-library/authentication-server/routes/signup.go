@@ -80,9 +80,9 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 
 			jwt, jwtid, err := ts.Create(userCheck.Token)
 			if err != nil {
-				fmt.Fprintf(w, "authentication/signup: error creating jwt\n%v\nError:\n%v", jwt, err.Error())
+				fmt.Fprintf(w, "/routes/signup: error creating jwt\n%v\nError:\n%v", jwt, err.Error())
 			}
-			log.Println("authentication/signup: created jwt: \n", jwt, "\njwtid: ", jwtid)
+			log.Println("/routes/signup: created jwt: \n", jwt, "\njwtid: ", jwtid)
 
 			userCheck.Token = jwtid
 			// update database
@@ -90,16 +90,19 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 
 			uid, jwtid, err := ts.Decode(jwt)
 			if err != nil {
-				fmt.Fprintf(w, "authentication/signup: error decoding jwt\n%v\nError:\n%v", jwt, err.Error())
+				log.Printf("/routes/signup: error decoding jwt\n%v\nError:\n%v", jwt, err.Error())
+			} else {
+				log.Println("/routes/signup: Decoded JWT OK")
+				
+
+				log.Println("/routes/signup: UserID: \n", uid)
+				log.Println("/routes/signup: jwtid: \n", jwtid)
+				log.Println("/routes/signup: jwt : \n", jwt)
+
+				u, _ := us.Find("token", uid)
+				fmt.Fprintf(w, "/routes/signup: created and decoded jwt\n%v\nUserData:\n%v", jwt, u)
 			}
-
-			log.Println("authentication/signup: decoded jwt\nUserID: ", uid)
-			log.Println("jwtid: ", jwtid)
-			log.Println("jwt :", jwt)
-
-			u, _ := us.Find("token", uid)
-			fmt.Fprintf(w, "authentication/signup: created and decoded jwt\n%v\nUserData:\n%v", jwt, u)
-
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
 	})
 }

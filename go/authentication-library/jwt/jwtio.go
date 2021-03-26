@@ -6,27 +6,32 @@ func jwtioSecret() func(KeyID string) (string, error) {
 	}
 }
 
-const jwtioToken = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tL21hcmtzdGFuZGVuIiwic3ViIjoiMTIzNDU2Nzg5MCIsImF1ZCI6ImdpdGh1Yi5jb20vbWFya3N0YW5kZW4vYXV0aGVudGljYXRpb24iLCJleHAiOjE2NTAwMDAwMDAsIm5iZiI6MTYwMDAwMDAwMCwiaWF0IjoxNjAwMDAwMDAwLCJqdGkiOiJuVjFNMkIyWmwtU0MwNEdhWkpwN3FEcVA0M0duQzFaZ3R0VDBFOGR2aC1qc2VQRjBsNXAwRUVrS01IOHdJejVNMnpsenI1R0wzUi1UODltSy1OUndBUT09Iiwia2lkIjoiTVdJeFNZbl9RZFgybVBGRml3ZnUyTHVzT2lYaWRNUGpEX2lzMEtyNEJLdnZzYmdBQUUyM0xuVmRqSThVQUZXMUZ6LTlMSlBPcUs5TEFueldwWHBRcHc9PSJ9.tbQ5tU9f6TdKPwiftAAwbgst1fpqzT1kBQ2TU2d7ADt9AE632AhXVqSnAxFzET2wt6Nz47MJERCjvPVj_Pe2uQ"
+const jwtioToken = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tL21hcmtzdGFuZGVuIiwiYXVkIjoiZ2l0aHViLmNvbS9tYXJrc3RhbmRlbi9hdXRoZW50aWNhdGlvbiIsInN1YiI6IjEyMzQ1Njc4OTAiLCJqdGkiOiJuVjFNMkIyWmwtU0MwNEdhWkpwN3FEcVA0M0duQzFaZ3R0VDBFOGR2aC1qc2VQRjBsNXAwRUVrS01IOHdJejVNMnpsenI1R0wzUi1UODltSy1OUndBUT09Iiwia2lkIjoiTVdJeFNZbl9RZFgybVBGRml3ZnUyTHVzT2lYaWRNUGpEX2lzMEtyNEJLdnZzYmdBQUUyM0xuVmRqSThVQUZXMUZ6LTlMSlBPcUs5TEFueldwWHBRcHc9PSIsImlhdCI6MTYwMDAwMDAwMCwibmJmIjoxNjAwMDAwMDAwLCJleHAiOjE2NTAwMDAwMDB9.HFX2e6yxMOgeife_-EAKr3Mgv03pFXB7TWb5M6aTwCpcT_oz3zBb67e-jIwKmd141JwAxuxanYG4eaErh014NA"
 
+/*  The JSON payload output from the jwt.io website for out token, with our secret
 const jwtioJSON = `
-{	
-	"iss":"github.com/markstanden",
-	"sub":"1234567890",
-	"aud":"github.com/markstanden/authentication",
-	"exp":1650000000,
-	"nbf":1600000000,
-	"iat":1600000000,
-	"jti":"nV1M2B2Zl-SC04GaZJp7qDqP43GnC1ZgttT0E8dvh-jsePF0l5p0EEkKMH8wIz5M2zlzr5GL3R-T89mK-NRwAQ==",
-	"kid":"MWIxSYn_QdX2mPFFiwfu2LusOiXidMPjD_is0Kr4BKvvsbgAAE23LnVdjI8UAFW1Fz-9LJPOqK9LAnzWpXpQpw=="
-}`
+{
+  "iss": "github.com/markstanden",
+  "aud": "github.com/markstanden/authentication",
+  "sub": "1234567890",
+  "jti": "nV1M2B2Zl-SC04GaZJp7qDqP43GnC1ZgttT0E8dvh-jsePF0l5p0EEkKMH8wIz5M2zlzr5GL3R-T89mK-NRwAQ==",
+  "kid": "MWIxSYn_QdX2mPFFiwfu2LusOiXidMPjD_is0Kr4BKvvsbgAAE23LnVdjI8UAFW1Fz-9LJPOqK9LAnzWpXpQpw==",
+  "iat": 1600000000,
+  "nbf": 1600000000,
+  "exp": 1650000000
+}
+`*/
 
 var jwtioStruct = Payload{
-	Issuer:         "github.com/markstanden",
-	Subject:        "1234567890",
-	Audience:       "github.com/markstanden/authentication",
-	ExpirationTime: 1650000000,
-	NotBeforeTime:  1600000000,
+	Issuer:   "github.com/markstanden",
+	Audience: "github.com/markstanden/authentication",
+
+	UserID: "1234567890",
+	JwtID:  "nV1M2B2Zl-SC04GaZJp7qDqP43GnC1ZgttT0E8dvh-jsePF0l5p0EEkKMH8wIz5M2zlzr5GL3R-T89mK-NRwAQ==",
+
+	KeyID: "MWIxSYn_QdX2mPFFiwfu2LusOiXidMPjD_is0Kr4BKvvsbgAAE23LnVdjI8UAFW1Fz-9LJPOqK9LAnzWpXpQpw==",
+
 	IssuedAtTime:   1600000000,
-	TokenID:        "nV1M2B2Zl-SC04GaZJp7qDqP43GnC1ZgttT0E8dvh-jsePF0l5p0EEkKMH8wIz5M2zlzr5GL3R-T89mK-NRwAQ==",
-	KeyID:          "MWIxSYn_QdX2mPFFiwfu2LusOiXidMPjD_is0Kr4BKvvsbgAAE23LnVdjI8UAFW1Fz-9LJPOqK9LAnzWpXpQpw==",
+	NotBeforeTime:  1600000000,
+	ExpirationTime: 1650000000,
 }

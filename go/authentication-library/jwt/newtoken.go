@@ -5,7 +5,7 @@ import (
 )
 
 // NewToken creates a new token, with sane defaults for header and payload time values,
-func NewToken(issuer, uniqueID, audience, tokenID, keyID string, validFor int64) (token *Token) {
+func NewToken(issuer, audience, userID, jwtID, keyID string, validFor int64) (token *Token) {
 
 	h := Header{
 		Algorithm: "HS512",
@@ -13,15 +13,15 @@ func NewToken(issuer, uniqueID, audience, tokenID, keyID string, validFor int64)
 	}
 	p := Payload{
 		Issuer:         issuer,
-		Subject:        uniqueID,
 		Audience:       audience,
-		ExpirationTime: getUnixTime() + validFor,
-		NotBeforeTime:  getUnixTime(),
-		IssuedAtTime:   getUnixTime(),
-		TokenID:        tokenID,
+		UserID:         userID,
+		JwtID:          jwtID,
 		KeyID:          keyID,
+		IssuedAtTime:   getUnixTime(),
+		NotBeforeTime:  getUnixTime(),
+		ExpirationTime: getUnixTime() + validFor,
 	}
-	return &Token{h, p, int64(validFor)}
+	return &Token{h, p, validFor}
 }
 
 func getUnixTime() int64 {

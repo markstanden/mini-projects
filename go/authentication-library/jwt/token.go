@@ -8,64 +8,60 @@ type Token struct {
 }
 
 // Header contains the required standard JWT fields
-// Header.ALG (Algorithm) The encoding type used within the JWT
-// It is important that the encoding method is checked to be as expected prior to decoding.
-// Header.CTY (Content Type) Used only in nested JWT operations
-// Header.TYP (Type) Set to "JWT" for JWT operations, allows for the use of encoding tokens for other uses.
 type Header struct {
+	// Algorithm - "alg" - The encoding algorithm used to sign the token
+	// This is "HS512" and is set automatically
 	Algorithm string `json:"alg"`
+
+	// TokenType - "typ" - The type of token to be produced
+	// This is set to "JWT" automatically
 	TokenType string `json:"typ"`
 }
 
 // Payload contains the data stored within the JWT
 // Note information stored here is not secure,
 // it will be transmitted encoded into URLBase64
-// ISS - issuer (string || URI),
-// SUB (subject) who the JWT was supplied to. (Should be a unique identifier),
-// AUD (audience).  Who the JWT is intended for,
-// EXP (expiration time) - the time the JWT ceases to be valid,
 type Payload struct {
 
 	// *** Registered Claims ***
 
-	// ISS - issuer (string || URI)
+	// Issuer - "iss" - issuer (string || URI)
+	// The top level domain that issues the token
 	Issuer string `json:"iss"`
 
-	// SUB - subject
-	// who the JWT was supplied to.
-	// Should be a unique identifier
-	Subject string `json:"sub"`
-
-	// AUD - audience
+	// Audience - "aud" - audience
 	// who the JWT is intended for.
-	// Should be rejected if the principal processing
+	// The token will be rejected if the principal processing
 	// the claim does not identify itself with
 	// the value listed here.
 	Audience string `json:"aud"`
 
-	// EXP - expiration time
-	// the time the JWT ceases to be valid
-	ExpirationTime int64 `json:"exp"`
+	// UserID - "sub" - subject
+	// who the JWT was supplied to.
+	// Should be a unique identifier
+	UserID string `json:"sub"`
 
-	// NBF - OPTIONAL - not before time
-	// the time the begins to be valid
-	NotBeforeTime int64 `json:"nbf"`
+	// JwtID - "jti" - JWT ID
+	// The unique identifier for this particular token
+	JwtID string `json:"jti"`
 
-	// IAT - OPTIONAL - issued at time
-	// the time the JWT was issued
-	IssuedAtTime int64 `json:"iat"`
-
-	// JTI - OPTIONAL - JWT ID
-	// The unique identifier for the JWT
-	TokenID string `json:"jti"`
-
-	// *** public claims ***
-	// Public claims are collision resistant (i.e. URI namespaced)
-	// or defined in the "IANA JSON Web Token Registry"
-	// https://www.iana.org/assignments/jwt/jwt.xhtml
+	// KeyID - "kid" - Key ID
+	// ** Public Claim **
+	// The version of the secret used to hash the signature.
 	KeyID string `json:"kid"`
 
-	// *** private claims ***
-	// Custom claims specific to our web app.
+	// IssuedAtTime - "iat" - issued at time
+	// the time the JWT was issued
+	// Represented as UNIX time int64 as seconds since the epoch
+	IssuedAtTime int64 `json:"iat"`
 
+	// NotBeforeTime - "nbf" - not before time
+	// the time the token begins to be valid
+	// Represented as UNIX time int64 as seconds since the epoch
+	NotBeforeTime int64 `json:"nbf"`
+
+	// ExpirationTime - "exp" - expiration time
+	// the time the JWT ceases to be valid
+	// Represented as UNIX time int64 as seconds since the epoch
+	ExpirationTime int64 `json:"exp"`
 }

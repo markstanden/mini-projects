@@ -9,7 +9,7 @@ func TestNewToken(t *testing.T) {
 	// create a JWT using data previously parsed on the jwt.io website
 	j := jwtioStruct
 	validFor := j.ExpirationTime - j.IssuedAtTime
-	test := NewToken(j.Issuer, j.Subject, j.Audience, j.TokenID, j.KeyID, validFor)
+	test := NewToken(j.Issuer, j.Audience, j.UserID, j.JwtID, j.KeyID, validFor)
 
 	// The NewToken func will generate time and expiry dates based on the current time,
 	// so check they are being set correctly then override to the supplied data used to

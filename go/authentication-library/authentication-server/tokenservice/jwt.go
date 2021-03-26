@@ -9,10 +9,10 @@ import (
 
 type TokenService struct {
 	// The Issuer's URL
-	Issuer     string
+	Issuer string
 
 	// The URL that the token is intended for
-	Audience   string
+	Audience string
 
 	// The number of hours until the JWT expires
 	HoursValid int
@@ -20,10 +20,8 @@ type TokenService struct {
 	// Callback to be invoked by the Create/Decode methods to obtain a specific version of the
 	// secret used to encode/decode the token.
 	// if err != nil the err should be returned, with empty data
-	SecretCallback    func(KeyID string) (secret string, err error)
+	SecretCallback func(KeyID string) (secret string, err error)
 }
-
-
 
 func (ts *TokenService) Create(userID string) (jwt, jwtID string, err error) {
 
@@ -46,12 +44,12 @@ func (ts *TokenService) Create(userID string) (jwt, jwtID string, err error) {
 
 	//create the token, and return
 	t := token.NewToken(ts.Issuer, ts.Audience, userID, jwtID, keyID, validFor)
-	
+
 	jwt, err = t.CreateJWT(ts.GetSecret)
 	if err != nil {
 		return "", "", err
 	}
-	
+
 	return jwt, jwtID, nil
 
 }
@@ -72,7 +70,7 @@ func (ts *TokenService) Decode(jwt string) (userID, jwtID string, err error) {
 	return data.UserID, data.JwtID, nil
 }
 
-func (ts *TokenService)GetSecret(KeyID string) (secret string, err error){
+func (ts *TokenService) GetSecret(KeyID string) (secret string, err error) {
 	return ts.SecretCallback(KeyID)
 }
 

@@ -45,14 +45,13 @@ type SecretService interface {
 type TokenService interface {
 	Create(userID string) (jwt, jwtID string, err error)
 	Decode(jwt string) (userID, jwtID string, err error)
-	GetSecret (func(version string) (secret string, err error))
+	GetSecret(func(version string) (secret string, err error))
 }
-
 
 var (
 	// users
 	ErrUserNotFound = errors.New("user not found")
-	
+
 	// tokens
 	ErrExpiredToken = errors.New("expired token")
 )

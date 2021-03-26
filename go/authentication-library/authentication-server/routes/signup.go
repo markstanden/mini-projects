@@ -55,7 +55,7 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 				log.Println("failed to create hash: ", err)
 			}
 
-			idKey,err := securerandom.String(32)
+			idKey, err := securerandom.String(32)
 			if err != nil {
 				log.Println("routes/signup: error creating idKey")
 			}
@@ -88,24 +88,10 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			// update database
 			//.....
 
-
-
-
-
-
-
-
-
-
-
-
-			
 			uid, jwtid, err := ts.Decode(jwt)
 			if err != nil {
 				fmt.Fprintf(w, "authentication/signup: error decoding jwt\n%v\nError:\n%v", jwt, err.Error())
 			}
-
-
 
 			log.Println("authentication/signup: decoded jwt\nUserID: ", uid)
 			log.Println("jwtid: ", jwtid)

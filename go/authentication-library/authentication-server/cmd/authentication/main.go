@@ -39,10 +39,10 @@ func run(args []string, stdout io.Writer) error {
 
 	// create a token service to create authentication tokens for users
 	userTokens := &jwt.TokenService{
-		Issuer:     "markstanden.dev",
-		Audience:   "markstanden.dev",
-		HoursValid: 24,
-		GetSecret:	gcloud.GetSecret("UserIdentifier"),
+		Issuer:         "markstanden.dev",
+		Audience:       "markstanden.dev",
+		HoursValid:     24,
+		SecretCallback: gcloud.GetSecret("UserIdentifier"),
 	}
 
 	// Prep the password lookup callback

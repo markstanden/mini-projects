@@ -112,7 +112,6 @@ func (us UserService) FullReset() (err error) {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}
 
-
 	// If the table already exists, drop it
 	_, err = us.DB.Exec(`DROP TABLE IF EXISTS keys;`)
 	if err != nil {
@@ -188,8 +187,6 @@ func (us UserService) Add(u *authentication.User) (err error) {
 	//return the ID of the created user
 	return nil
 }
-	
-
 
 func (us *UserService) GetSecret(name string) func(version string) (secret string, err error) {
 
@@ -197,8 +194,8 @@ func (us *UserService) GetSecret(name string) func(version string) (secret strin
 	case "SecretKey":
 		return func(keyID string) (secret string, err error) {
 			var (
-				row *sql.Row
-				value string
+				row     *sql.Row
+				value   string
 				created int64
 			)
 
@@ -206,7 +203,7 @@ func (us *UserService) GetSecret(name string) func(version string) (secret strin
 			err = row.Scan(&value, &created)
 			switch err {
 			case sql.ErrNoRows:
-				return 
+				return
 			}
 			return secret, err
 		}

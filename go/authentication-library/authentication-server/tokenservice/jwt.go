@@ -26,8 +26,8 @@ type TokenService struct {
 func (ts *TokenService) Create(userID string) (jwt, jwtID string, err error) {
 
 	// The unique identifier for this particular token
-	jwtID, err = securerandom.String(64)
-	if err != nil {
+	jwtID = securerandom.String(64)
+	if jwtID == "" {
 		return "", "", fmt.Errorf("failed to create 'jti' :\n%v", err)
 	}
 

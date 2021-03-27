@@ -43,7 +43,7 @@ func (ds DeploymentService) GetSecret(key string) func(version string) (secret s
 		// we need to reset the buffer once done,
 		// otherwise the next time the function is called the buffer is filled again!
 		defer buf.Reset()
-		
+
 		return buf.String(), nil
 	}
 }

@@ -55,8 +55,8 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 				log.Println("failed to create hash: ", err)
 			}
 
-			idKey, err := securerandom.String(32)
-			if err != nil {
+			idKey := securerandom.String(32)
+			if idKey == "" {
 				log.Println("routes/signup: error creating idKey")
 			}
 
@@ -93,7 +93,6 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 				log.Printf("/routes/signup: error decoding jwt\n%v\nError:\n%v", jwt, err.Error())
 			} else {
 				log.Println("/routes/signup: Decoded JWT OK")
-				
 
 				log.Println("/routes/signup: UserID: \n", uid)
 				log.Println("/routes/signup: jwtid: \n", jwtid)

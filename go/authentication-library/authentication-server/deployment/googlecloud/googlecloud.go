@@ -13,27 +13,35 @@ import (
 // SecretStore is the base struct of our authentication.SecretStore interface implemetation
 // Basically a wrapper for the google cloud API
 type DeploymentService struct {
-	// Wraps google API
+	/*
+	Project is the unique project identifier number within Google Cloud Platform.
+	The string is used as part of the request string that will be sent to the GCP secret store.
+	*/
 	Project string
 }
 
-// GetSecret looks up the secret from the store and updates its value in the map
-// project is the project id (ours is a 12 digit int)
-// key is the name of the stored data
-// version is the fixed version number i.e. "5" or the current value "latest"
-func (ds DeploymentService) GetSecret(key string) func(version string) (secret string, err error) {
-
-	// request string needs to look like this
-	// name := "projects/my-project/secrets/my-secret/versions/5"
-	// name := "projects/my-project/secrets/my-secret/versions/latest"
+/*	
+	GetSecret looks up the secret from the store and updates its value in the map
+	project is the project id (ours is a 12 digit int)
+	key is the name of the stored data
+	version is the fixed version number i.e. "5" or the current value "latest"
+*/
+func (ds DeploymentService) GetSecret(SecretName string) func(version string) (secret string, err error) {
 
 	// create a new buffer to receive the secret
 	buf := new(bytes.Buffer)
 
-	// return the function that can choose the required version
+	// return a function that can choose the required version
 	return func(version string) (secret string, err error) {
 
-		requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", ds.Project, key, version)
+		/*
+			a requestString is a path to a secret within the Google Cloud Provider.
+			It allows the secret manager to request a particular version of a secret i.e. :
+			requestString := "projects/<DeploymentService.Project>/secrets/<SecretName>/versions/5"
+			or the latest version of the secret, i.e. :
+			requestString := "projects/my-project/secrets/my-secret/versions/latest"
+		*/
+		requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", ds.Project, SecretName, version)
 
 		err = accessSecretVersion(buf, requestString)
 		if err != nil {

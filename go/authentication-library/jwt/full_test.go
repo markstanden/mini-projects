@@ -40,7 +40,7 @@ func TestDecode(t *testing.T) {
 		{jwtioToken[:len(jwtioToken)-1],
 			"Failed to return an error for a token with an invalid signature"},
 
-		// 	// test input string with "alg" set to "none" **Known Exploit**
+		// test input string with "alg" set to "none" **Known Exploit**
 		{"eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJpZCI6MSwiaWF0IjoxNTczMzU4Mzk2fQ.",
 			"Failed to return an error for a alg:none token"},
 
@@ -59,7 +59,7 @@ func TestDecode(t *testing.T) {
 		{"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3R5IE1jVGVzdGZhY2UiLCJpYXQiOjIwMDAwMDAwMDEsImV4cCI6MjAwMDAyMjIyMn0.XlF_dhnLt7tLc73_v7_T8LtFVVQMgJV3vy6tm9VoWF1BJVrit1CkyOlMzBQ2uz0iQs1Ggm7bw7JEK1l-t994Cw",
 			"Failed to return an error for an issued at time from the future"},
 
-		// 	// test input string with "nbf" valid from the future
+		// test input string with "nbf" valid from the future
 		{"eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3R5IE1jVGVzdGZhY2UiLCJpYXQiOjEwMDAwMDAwMDEsIm5iZiI6MjAwMDAwMDAwMSwiZXhwIjoyMDAwMDIyMjIyfQ.3iCZdcj4JC7Kbh8uG2GBmlRUCUkHNGPzLCc41ctZPn0mPx1As4XsEiDU4mzknCgEYUCJJ4NAuvea943RUrMOvw",
 			"Failed to return an error for a token with a not before time from the future"},
 	}

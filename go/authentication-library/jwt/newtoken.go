@@ -1,9 +1,5 @@
 package token
 
-import (
-	"time"
-)
-
 // NewToken creates a new token, with sane defaults for header and payload time values,
 func NewToken(issuer, audience, userID, jwtID, keyID string, validFor int64) (token *Token) {
 
@@ -22,8 +18,4 @@ func NewToken(issuer, audience, userID, jwtID, keyID string, validFor int64) (to
 		ExpirationTime: getUnixTime() + validFor,
 	}
 	return &Token{h, p, validFor}
-}
-
-func getUnixTime() int64 {
-	return time.Now().UTC().Unix()
 }

@@ -1,8 +1,6 @@
 package token
 
 import (
-	"crypto/hmac"
-	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -26,20 +24,9 @@ func (t *Token) CreateJWT(passwordLookup func(keyID string) (string, error)) (jw
 		return "", fmt.Errorf("failed to obtain secret from callback")
 	}
 
-	sig64 := hash(jwtString, secret)
+	sigBS := hash(jwtString, secret)
 
-	jwt = jwtString + "." + sig64
+	jwt = jwtString + "." + encodeBase64(sigBS)
 
 	return jwt, nil
-
-}
-
-// hash uses HMAC Sha512 to hash the provided message using
-// the provided secret.
-// the hash is returned as a URL encoded base64 string
-func hash(message, secret string) (hash string) {
-	hmac := hmac.New(sha512.New, []byte(secret))
-	hmac.Write([]byte(message))
-	bs := hmac.Sum(nil)
-	return base64.RawURLEncoding.EncodeToString(bs)
 }

@@ -14,4 +14,3 @@ func hash(message, secret string) (hash []byte) {
 	bs := hmac.Sum(nil)
 	return bs
 }
-

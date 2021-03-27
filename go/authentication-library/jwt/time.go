@@ -9,14 +9,14 @@ func getUnixTime() int64 {
 // withinRange checks the number lies between the low and high
 // withinRange returns false if the provided number is too low or too high
 func withinRange(num, low, high int64) bool {
-	
+
 	if num < low {
 		return false
 	}
-	
+
 	if num > high {
 		return false
 	}
-	
+
 	return true
 }

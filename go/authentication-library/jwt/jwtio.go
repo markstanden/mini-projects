@@ -1,8 +1,8 @@
 package token
 
-func jwtioSecret() func(KeyID string) (string, error) {
-	return func(key string) (string, error) {
-		return "secretcode", nil
+func jwtioSecret() func(KeyID string) string {
+	return func(key string) string {
+		return "secretcode"
 	}
 }
 

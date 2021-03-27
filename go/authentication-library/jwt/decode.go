@@ -9,7 +9,7 @@ import (
 
 // Decode turns a signed JWT into a map[string]interface (or returns an error)
 // but only after checking the validity of the token.
-func Decode(untrustedJWT string, passwordLookup func(key string) (secret string, err error), token *Token) (err error) {
+func Decode(untrustedJWT string, passwordLookup func(key string) (secret string), token *Token) (err error) {
 
 	ut := Token{}
 
@@ -43,23 +43,23 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string,
 	}
 
 	now := getUnixTime()
-	if !withinRange(ut.ExpirationTime, now, now + token.lifespan) {
+	if !withinRange(ut.ExpirationTime, now, now+token.lifespan) {
 		return ErrExpiredToken
 	}
 
-	if !withinRange(ut.IssuedAtTime, now - token.lifespan, now) {
+	if !withinRange(ut.IssuedAtTime, now-token.lifespan, now) {
 		return ErrExpiredToken
 	}
 
-	if !withinRange(ut.NotBeforeTime, now - token.lifespan, now) {
+	if !withinRange(ut.NotBeforeTime, now-token.lifespan, now) {
 		return ErrExpiredToken
 	}
 
-	secret, err := passwordLookup(ut.KeyID)
-	if err != nil {
+	secret := passwordLookup(ut.KeyID)
+	if secret == "" {
 		return ErrFailedSecret
 	}
-	
+
 	jwtBody := header + "." + payload
 
 	testBytes := hash(jwtBody, secret)
@@ -74,11 +74,10 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string,
 	return nil
 }
 
-
 // checkHeaderValid performs tests on the contents of the JWT header
 // returns true only if all tests pass
 func checkHeaderValid(h Header) bool {
-	
+
 	// jwt vulnerability where the signature can be
 	// bypassed by setting the alg to none.
 	// if this is attempted log it
@@ -101,8 +100,8 @@ func checkHeaderValid(h Header) bool {
 // checkJwtValid checks the basic make up of each part of the JWT
 // The idea is these are cheap checks, compared with >300ms for a hash check,
 // returns true only if all tests pass
-func checkJwtValid(jwt []string) (bool) {
-	
+func checkJwtValid(jwt []string) bool {
+
 	// The allowable characters in a URL flavoured base64 encoded string.
 	// shamelessly stolen from the base64 package, as it is not exported.
 	const encodeURL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
@@ -113,12 +112,12 @@ func checkJwtValid(jwt []string) (bool) {
 	}
 
 	for i := range jwt {
-		
+
 		// Check for invalid characters in the input string
 		if !checkRunes(jwt[i], encodeURL) {
 			return false
 		}
-		
+
 		// Check for empty sections
 		if len(jwt[i]) == 0 {
 			return false
@@ -148,7 +147,7 @@ func unmarshalJWT(jwtSection string, t *Token) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if err := json.Unmarshal(bytes, t); err != nil {
 		return ErrInvalidToken
 	}

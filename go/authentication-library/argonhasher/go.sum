@@ -1,5 +1,7 @@
 github.com/markstanden/securerandom v0.3.0 h1:8f4Nd1lPVO0BTuJfjqnMONicy5civNpgcRv2zp+Mtyo=
 github.com/markstanden/securerandom v0.3.0/go.mod h1:ud+3WsT+6z/tEoNIxt/nvhtMcakpmLUmkYXE/clg66k=
+github.com/markstanden/securerandom v0.4.0 h1:HOSvXx/L0K7ABbqk/bcf+YpxRgPPQ4g3tlRye+HBc5o=
+github.com/markstanden/securerandom v0.4.0/go.mod h1:ud+3WsT+6z/tEoNIxt/nvhtMcakpmLUmkYXE/clg66k=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 h1:/ZScEX8SfEmUGRHs0gxpqteO5nfNW6axyZbBdw9A12g=
 golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83/go.mod h1:jdWPYTVW3xRLrWPugEBEK3UY2ZEsg3UU495nc5E+M+I=

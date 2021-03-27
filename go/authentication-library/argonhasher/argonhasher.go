@@ -26,7 +26,7 @@ type KDFconfig struct {
 	// SaltLength
 	// length of random-generated salt
 	// (min 16 bytes recommended for password hashing)
-	SaltLength int
+	SaltLength uint
 
 	// Time (i.e. iterations) - t
 	// number of iterations or pass throughs to perform
@@ -55,9 +55,9 @@ func Encode(pw string) (hashWithConfig string, err error) {
 	}
 
 	// call our salt generator function to produce a salt the required length.
-	newArgon.Salt, err = securerandom.ByteSlice(newArgon.SaltLength)
-	if err != nil {
-		return "", err
+	newArgon.Salt = securerandom.ByteSlice(newArgon.SaltLength)
+	if newArgon.Salt == nil {
+		return "", fmt.Errorf("failed to produce salt")
 	}
 
 	// from "golang.org/x/crypto/argon2"

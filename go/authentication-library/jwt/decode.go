@@ -47,17 +47,34 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	}
 
 	now := time.GetUnix()
-	if !time.WithinRange(ut.ExpirationTime, now, now+token.lifespan) {
-		return ErrExpiredToken
+	min := now - token.lifespan
+	max := ut.IssuedAtTime + token.lifespan
+
+	tokenInvalid := false
+	tokenExpired := false
+
+	/*
+		if the expiry date is not between now
+		and point of expiry of the token it has either expired or
+		it is invalid.
+	*/
+	if !time.WithinRange(ut.ExpirationTime, now, max){
+		tokenExpired = tokenExpired || ut.ExpirationTime < now
+		tokenInvalid = tokenInvalid || ut.ExpirationTime > max
 	}
 
-	if !time.WithinRange(ut.IssuedAtTime, now-token.lifespan, now) {
-		return ErrExpiredToken
+	/*
+		if the issued at time is in the future,
+		or so far in the past that the token would have expired anyway
+	*/
+	!time.WithinRange(ut.IssuedAtTime, min, now)
+		/*
+			if the 
+		*/
+		!time.WithinRange(ut.NotBeforeTime, min, now) 	{
+			return ErrExpiredToken
 	}
-
-	if !time.WithinRange(ut.NotBeforeTime, now-token.lifespan, now) {
-		return ErrExpiredToken
-	}
+}
 
 	secret := passwordLookup(ut.KeyID)
 	if secret == "" {

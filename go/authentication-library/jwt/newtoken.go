@@ -1,4 +1,4 @@
-package token
+package jwt
 
 // NewToken creates a new token, with sane defaults for header and payload time values,
 func NewToken(issuer, audience, userID, jwtID, keyID string, validFor int64) (token *Token) {

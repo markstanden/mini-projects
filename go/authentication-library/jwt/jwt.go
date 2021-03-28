@@ -1,4 +1,4 @@
-package token
+package jwt
 
 // Token is the struct that holds all of the data to be written to the JWT
 type Token struct {

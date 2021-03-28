@@ -1,4 +1,4 @@
-package token
+package jwt
 
 import (
 	"crypto/hmac"
@@ -8,7 +8,7 @@ import (
 )
 
 // Decode turns a signed JWT into a map[string]interface (or returns an error)
-// but only after checking the validity of the token.
+// but only after checking the validity of the jwt.
 func Decode(untrustedJWT string, passwordLookup func(key string) (secret string), token *Token) (err error) {
 
 	ut := Token{}

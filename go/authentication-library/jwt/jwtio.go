@@ -1,4 +1,4 @@
-package token
+package jwt
 
 func jwtioSecret() func(KeyID string) string {
 	return func(key string) string {

@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha512"
 	"fmt"
+	"log"
 	"testing"
 )
 
@@ -55,7 +56,7 @@ func ExampleByteSlice() {
 	pw = nil
 
 	// Use the key and hashedPW
-	fmt.Printf("Password: \n%v\nSecure Key: \n%v\nHashed Password:\n%v", pw, key, hashedPW)
+	log.Printf("Password: \n%v\nSecure Key: \n%v\nHashed Password:\n%v", pw, key, hashedPW)
 }
 
 func ExampleString() {
@@ -68,10 +69,10 @@ func ExampleString() {
 	}
 
 	// The size of our identifier
-	idLen := 128 //bytes
+	var idLen uint = 128 //characters
 
 	// String requires uint value for length
-	key := String(uint(idLen))
+	key := String(idLen)
 
 	// We now have a 128 character URL safe string to add to our user
 	u := user{

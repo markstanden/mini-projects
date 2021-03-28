@@ -1,11 +1,13 @@
 package jwt
 
 import (
-	"encoding/base64"
 	"encoding/json"
+
+	"github.com/markstanden/jwt/b64"
+	"github.com/markstanden/jwt/hash"
 )
 
-func (t *Token) CreateJWT(passwordLookup func(keyID string) string) (jwt string, err error) {
+func (t *Token) CreateJWT(getRemoteSecret func(keyID string) string) (jwt string, err error) {
 
 	jsonHeader, err := json.Marshal(t.Header)
 	if err != nil {
@@ -16,16 +18,16 @@ func (t *Token) CreateJWT(passwordLookup func(keyID string) string) (jwt string,
 		return "", err
 	}
 
-	jwtString := base64.RawURLEncoding.EncodeToString(jsonHeader) + "." + base64.RawURLEncoding.EncodeToString(jsonPayload)
+	jwtBody := b64.FromBytes(jsonHeader) + "." + b64.FromBytes(jsonPayload)
 
-	secret := passwordLookup(t.KeyID)
+	secret := getRemoteSecret(t.KeyID)
 	if secret == "" {
 		return "", ErrFailedSecret
 	}
 
-	sigBS := hash(jwtString, secret)
+	sigBS := hash.HS512(jwtBody, secret)
 
-	jwt = jwtString + "." + encodeBase64(sigBS)
+	jwt = jwtBody + "." + b64.FromBytes(sigBS)
 
 	return jwt, nil
 }

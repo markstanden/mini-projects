@@ -1,4 +1,4 @@
-package jwt
+package hash
 
 import (
 	"crypto/hmac"
@@ -8,7 +8,7 @@ import (
 // hash uses HMAC Sha512 to hash the provided message using
 // the provided secret.
 // the hash is returned as a URL encoded base64 string
-func hash(message, secret string) (hash []byte) {
+func HS512(message, secret string) (hash []byte) {
 	hmac := hmac.New(sha512.New, []byte(secret))
 	hmac.Write([]byte(message))
 	bs := hmac.Sum(nil)

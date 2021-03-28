@@ -1,13 +1,23 @@
 package jwt
 
-// Token is the struct that holds all of the data to be written to the JWT
+/*
+	Token is the struct that holds all of the data to be written to the JWT
+	Header is an embedded struct containing the header section of the JWT (alg, typ)
+	Payload is an embedded struct containing the indentifying information of issuer (iss), user (sub), jwt (jti), and secret key (kid)
+	lifespan (int64) is the duration (in seconds) that the token will be valid for.
+	Negative values for lifespan result in an immediately expired token.
+*/
 type Token struct {
 	Header
 	Payload
 	lifespan int64
 }
 
-// Header contains the required standard JWT fields
+/*
+	Header contains the required standard JWT header fields
+	They are used when decoding to identify the algorithm used to sign the token,
+	and the token type which in other circumstances may not be a jwt
+*/
 type Header struct {
 	// Algorithm - "alg" - The encoding algorithm used to sign the token
 	// This is "HS512" and is set automatically

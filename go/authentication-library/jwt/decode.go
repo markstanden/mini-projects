@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+
+	"github.com/markstanden/jwt/b64"
+	"github.com/markstanden/jwt/hash"
+	"github.com/markstanden/jwt/time"
 )
 
 // Decode turns a signed JWT into a map[string]interface (or returns an error)
@@ -23,7 +27,7 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	header := jwtSection[0]
 	payload := jwtSection[1]
 
-	signature, err := decodeBase64(jwtSection[2])
+	signature, err := b64.ToBytes(jwtSection[2])
 	if err != nil {
 		return ErrInvalidToken
 	}
@@ -42,16 +46,16 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 		return ErrInvalidToken
 	}
 
-	now := getUnixTime()
-	if !withinRange(ut.ExpirationTime, now, now+token.lifespan) {
+	now := time.GetUnix()
+	if !time.WithinRange(ut.ExpirationTime, now, now+token.lifespan) {
 		return ErrExpiredToken
 	}
 
-	if !withinRange(ut.IssuedAtTime, now-token.lifespan, now) {
+	if !time.WithinRange(ut.IssuedAtTime, now-token.lifespan, now) {
 		return ErrExpiredToken
 	}
 
-	if !withinRange(ut.NotBeforeTime, now-token.lifespan, now) {
+	if !time.WithinRange(ut.NotBeforeTime, now-token.lifespan, now) {
 		return ErrExpiredToken
 	}
 
@@ -62,7 +66,7 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 
 	jwtBody := header + "." + payload
 
-	testBytes := hash(jwtBody, secret)
+	testBytes := hash.HS512(jwtBody, secret)
 	// check that the hashed body is equal to the decoded signature supplied by the jwt
 	if !hmac.Equal(testBytes, signature) {
 		return ErrInvalidToken
@@ -143,9 +147,9 @@ func checkRunes(toCheck, validRunes string) (valid bool) {
 // unmarshals the JSON data into the provided *Token
 func unmarshalJWT(jwtSection string, t *Token) error {
 
-	bytes, err := decodeBase64(jwtSection)
+	bytes, err := b64.ToBytes(jwtSection)
 	if err != nil {
-		return err
+		return ErrInvalidToken
 	}
 
 	if err := json.Unmarshal(bytes, t); err != nil {

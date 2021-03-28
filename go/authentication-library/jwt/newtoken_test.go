@@ -3,19 +3,21 @@ package jwt
 import (
 	"fmt"
 	"testing"
+
+	"github.com/markstanden/jwt/time"
 )
 
 func TestNewToken(t *testing.T) {
 	// create a JWT using data previously parsed on the jwt.io website
 	j := jwtioStruct
 	validFor := j.ExpirationTime - j.IssuedAtTime
-	test := NewToken(j.Issuer, j.Audience, j.UserID, j.JwtID, j.KeyID, validFor)
+	test := NewToken(j.Issuer, j.Audience, j.UserID, j.JwtID, j.KeyID, int64(validFor))
 
 	// The NewToken func will generate time and expiry dates based on the current time,
 	// so check they are being set correctly then override to the supplied data used to
 	// create the jwt.io jwt
 
-	now := getUnixTime()
+	now := time.GetUnix()
 	if now-test.Payload.IssuedAtTime > 1 || now-test.Payload.IssuedAtTime < 0 {
 		t.Errorf("issued at time not set correctly: Wanted %v\t Got %v\n", now, test.IssuedAtTime)
 	}

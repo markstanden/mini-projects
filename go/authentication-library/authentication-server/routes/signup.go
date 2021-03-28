@@ -50,8 +50,8 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			}
 
 			// hash the password
-			passwordHash, err := argonhasher.Encode(r.PostForm.Get("password"))
-			if err != nil {
+			passwordHash := argonhasher.Encode(r.PostForm.Get("password"), 0)
+			if passwordHash == "" {
 				log.Println("failed to create hash: ", err)
 			}
 

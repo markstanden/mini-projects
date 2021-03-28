@@ -33,8 +33,8 @@ func SignIn(us authentication.UserService) http.Handler {
 
 			// Initialise a boolean variable that hold whether the password matches the stored, hashed password.
 			compareOK := false
-			err = argonhasher.Compare(r.PostForm.Get("password"), user.HashedPassword)
-			if err != nil {
+			valid := argonhasher.Confirm(r.PostForm.Get("password"), user.HashedPassword)
+			if !valid {
 				fmt.Fprintln(w, getHTML("Sign In - Invalid Password", r.PostForm.Get("email")))
 			} else {
 				compareOK = true
@@ -52,14 +52,6 @@ func SignIn(us authentication.UserService) http.Handler {
 			Error: %v
 			`, user.UniqueID, user.Name, user.Email, user.Token, err)
 			}
-
-			// Create a JWT
-			//token := jwt.New()
-			//token.Payload.JTI = hash
-			//token.Encode()
-
-			//fmt.Println(token.Decode())
-			//
 		}
 	})
 }

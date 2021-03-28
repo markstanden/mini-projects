@@ -32,7 +32,7 @@ type UserService interface {
 // PasswordHash specifies the requirements of the passord hashing module
 type PasswordHash interface {
 	Encode(plainTextPassword string) string
-	Compare(plainTextPassword, hashedPassword string) error
+	Compare(plainTextPassword, hashedPassword string) bool
 }
 
 // SecretStore is an interface for the secret storage logic to retrieve secrets,
@@ -45,7 +45,7 @@ type SecretService interface {
 type TokenService interface {
 	Create(userID string) (jwt, jwtID string, err error)
 	Decode(jwt string) (userID, jwtID string, err error)
-	GetSecret(version string) (secret string, err error)
+	GetSecret(version string) (secret string)
 }
 
 var (

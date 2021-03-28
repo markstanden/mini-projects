@@ -14,25 +14,25 @@ import (
 // Basically a wrapper for the google cloud API
 type DeploymentService struct {
 	/*
-	Project is the unique project identifier number within Google Cloud Platform.
-	The string is used as part of the request string that will be sent to the GCP secret store.
+		Project is the unique project identifier number within Google Cloud Platform.
+		The string is used as part of the request string that will be sent to the GCP secret store.
 	*/
 	Project string
 }
 
-/*	
+/*
 	GetSecret looks up the secret from the store and updates its value in the map
 	project is the project id (ours is a 12 digit int)
 	key is the name of the stored data
 	version is the fixed version number i.e. "5" or the current value "latest"
 */
-func (ds DeploymentService) GetSecret(SecretName string) func(version string) (secret string, err error) {
+func (ds DeploymentService) GetSecret(SecretName string) func(version string) (secret string) {
 
 	// create a new buffer to receive the secret
 	buf := new(bytes.Buffer)
 
 	// return a function that can choose the required version
-	return func(version string) (secret string, err error) {
+	return func(version string) (secret string) {
 
 		/*
 			a requestString is a path to a secret within the Google Cloud Provider.
@@ -43,16 +43,15 @@ func (ds DeploymentService) GetSecret(SecretName string) func(version string) (s
 		*/
 		requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", ds.Project, SecretName, version)
 
-		err = accessSecretVersion(buf, requestString)
-		if err != nil {
-			return
+		if err := accessSecretVersion(buf, requestString); err != nil {
+			return ""
 		}
 
 		// we need to reset the buffer once done,
 		// otherwise the next time the function is called the buffer is filled again!
 		defer buf.Reset()
 
-		return buf.String(), nil
+		return buf.String()
 	}
 }
 

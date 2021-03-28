@@ -61,15 +61,15 @@ func getPostgresEnvConfig() (config pgconfig) {
 }
 
 // NewConnection returns a new Postgres DB instance
-func NewConnection(getPassword func(version string) (string, error)) (us UserService, err error) {
+func NewConnection(getPassword func(version string) string) (us UserService, err error) {
 
 	// create the config object, taking the non-secret info from the env variables
 	config := getPostgresEnvConfig()
 
 	// Password is the password to be used if the server demands password authentication.
 	//secretPW, err := us.secrets.GetSecret("145660875199", "PGPASSWORD", "latest")
-	secretPW, err := getPassword("latest")
-	if err != nil {
+	secretPW := getPassword("latest")
+	if secretPW == "" {
 		log.Println("authentication/postgres: PGPASSWORD secret variable not available, using ENV or default instead", err)
 	} else {
 		// set the config password to the password from the secret store

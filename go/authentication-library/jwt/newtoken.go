@@ -35,5 +35,8 @@ func NewToken(issuer, audience, userID, jwtID, keyID string, validFor int64) (to
 		NotBeforeTime:  time.GetUnix(),
 		ExpirationTime: time.GetUnix() + validFor,
 	}
-	return &Token{h, p, validFor}
+	c := Config{
+		lifespan: validFor,
+	}
+	return &Token{h, p, c}
 }

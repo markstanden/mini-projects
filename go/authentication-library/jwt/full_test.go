@@ -12,7 +12,7 @@ func TestDecode(t *testing.T) {
 	// create a JWT using data previously parsed on the jwt.io website
 	j := jwtioStruct
 	validFor := j.ExpirationTime - j.IssuedAtTime
-	token := NewToken(j.Issuer, j.Audience, j.UserID, j.JwtID, j.KeyID, int64(validFor))
+	token := NewToken(j.Issuer, j.Audience, j.UserID, j.JwtID, j.KeyID, validFor)
 	jwt, err := token.CreateJWT(jwtioSecret())
 	if err != nil {
 		t.Fail()
@@ -72,7 +72,7 @@ func TestDecode(t *testing.T) {
 		err := Decode(test[0], jwtioSecret(), &got)
 
 		// if the struct is not empty OR no errors
-		if (got != Token{}) || err == nil {
+		if (got.Payload != Payload{}) || err == nil {
 			t.Error("test ", i, ":\n", test[1])
 		}
 	}

@@ -4,13 +4,11 @@ package jwt
 	Token is the struct that holds all of the data to be written to the JWT
 	Header is an embedded struct containing the header section of the JWT (alg, typ)
 	Payload is an embedded struct containing the indentifying information of issuer (iss), user (sub), jwt (jti), and secret key (kid)
-	lifespan (int64) is the duration (in seconds) that the token will be valid for.
-	Negative values for lifespan result in an immediately expired token.
 */
 type Token struct {
 	Header
 	Payload
-	lifespan int64
+	Config
 }
 
 /*
@@ -74,4 +72,18 @@ type Payload struct {
 	// the time the JWT ceases to be valid
 	// Represented as UNIX time int64 as seconds since the epoch
 	ExpirationTime int64 `json:"exp"`
+}
+
+type Config struct {
+	/*
+		validFrom is the Unix time representation of the point the server started issuing tokens
+		therefore any token with a timestamp earlier than this should be rejected.
+		Defaults to the 1st Jan 2021
+	*/
+	ValidFrom int64
+	/*
+		lifespan (int64) is the duration (in seconds) that the token will be valid for.
+		Negative values for lifespan result in an immediately expired token.
+	*/
+	lifespan int64
 }

@@ -1,11 +1,10 @@
 package time
 
-import "time"
-
-ProjectStart = 
+import (
+	"time"
+)
 
 func GetUnix() int64 {
-	fmt.Println(time.Now().UTC().Unix())
 	return time.Now().UTC().Unix()
 }
 

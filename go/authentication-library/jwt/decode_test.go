@@ -10,7 +10,10 @@ func TestDecodeJWTIO(t *testing.T) {
 
 	//create an empty struct
 	got := Token{
-		lifespan: 100000000,
+		Config: Config{
+			ValidFrom: 1600000000,
+			lifespan:  100000000,
+		},
 	}
 
 	secret := jwtioSecret()

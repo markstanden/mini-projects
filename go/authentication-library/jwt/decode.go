@@ -3,6 +3,7 @@ package jwt
 import (
 	"crypto/hmac"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 
@@ -24,7 +25,7 @@ import (
 		- ErrFailedSecret if the callback failed to return a secret, or the secret was an empty string
 */
 func Decode(untrustedJWT string, passwordLookup func(key string) (secret string), token *Token) (err error) {
-
+	fmt.Println(passwordLookup("1"))
 	/*
 		ValidFrom is the official time that the server started issuing tokens.
 		Any tokens with an time stamp before this will be discarded as invalid, since
@@ -92,6 +93,7 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	/*
 		Check Signature
 	*/
+	fmt.Println(passwordLookup(ut.KeyID))
 	if err := signatureValid(header, payload, signature, passwordLookup(ut.KeyID)); err != nil {
 		return err
 	}

@@ -56,7 +56,7 @@ type Payload struct {
 	// KeyID - "kid" - Key ID
 	// ** Public Claim **
 	// The version of the secret used to hash the signature.
-	KeyID string `json:"kid"`
+	KeyID string `json:"kid,string"`
 
 	// IssuedAtTime - "iat" - issued at time
 	// the time the JWT was issued

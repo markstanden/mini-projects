@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.80.0
 	github.com/lib/pq v1.10.0
 	github.com/markstanden/argonhasher v0.3.0
-	github.com/markstanden/jwt v0.7.2
+	github.com/markstanden/jwt v0.8.2
 	github.com/markstanden/securerandom v0.4.1
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
 	golang.org/x/net v0.0.0-20210326220855-61e056675ecf // indirect

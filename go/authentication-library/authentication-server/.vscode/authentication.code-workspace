@@ -7,10 +7,10 @@
 		"path": "../../argonhasher"
 	},
 	{
-		"path": "../../token"
+		"path": "../../securerandom"
 	},
 	{
-		"path": "../../securerandom"
+		"path": "../../jwt"
 	}
 ],
   "settings": {}

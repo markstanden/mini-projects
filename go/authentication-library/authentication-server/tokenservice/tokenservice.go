@@ -1,4 +1,4 @@
-package jwt
+package tokenservice
 
 import (
 	"fmt"
@@ -62,7 +62,7 @@ func (ts *TokenService) Create(userID string) (jwtString, jwtID string, err erro
 	//create the token, and return
 	t := jwt.NewToken(ts.Issuer, ts.Audience, userID, jwtID, keyID, validFor)
 
-	jwtString, err = t.CreateJWT(ts.GetSecret)
+	jwtString, err = t.CreateJWT(ts.SecretCallback)
 	if err != nil {
 		return "", "", err
 	}
@@ -73,7 +73,7 @@ func (ts *TokenService) Create(userID string) (jwtString, jwtID string, err erro
 
 func (ts *TokenService) Decode(jwtString string) (userID, jwtID string, err error) {
 	data := &jwt.Token{}
-	err = jwt.Decode(jwtString, ts.GetSecret, data)
+	err = jwt.Decode(jwtString, ts.SecretCallback, data)
 	if err != nil {
 		return "", "", fmt.Errorf("authentication/tokenhandler/token: Failed to decode JWT: \n%v", err)
 	}
@@ -85,10 +85,6 @@ func (ts *TokenService) Decode(jwtString string) (userID, jwtID string, err erro
 	}
 
 	return data.UserID, data.JwtID, nil
-}
-
-func (ts *TokenService) GetSecret(KeyID string) (secret string) {
-	return ts.SecretCallback(KeyID)
 }
 
 // returns hours in seconds

@@ -10,7 +10,7 @@ import (
 
 	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
-	jwt "github.com/markstanden/authentication/tokenservice"
+	"github.com/markstanden/authentication/tokenservice"
 	"github.com/markstanden/authentication/userstore/cache"
 	"github.com/markstanden/authentication/userstore/postgres"
 )
@@ -37,32 +37,33 @@ func run(args []string, stdout io.Writer) error {
 		Project: "145660875199",
 	}
 
+	// open a connection to the database
+	db, err := postgres.NewConnection(gcloud.GetSecret("PGPASSWORD"))
+	if err != nil {
+		return fmt.Errorf("error establishing connection to database: /n %v", err)
+	}
+
+	us := postgres.UserService{DB: db}
+	ss := postgres.SecretService{DB: db}
+
 	// create a token service to create authentication tokens for users
-	userTokens := &jwt.TokenService{
+	userTokens := &tokenservice.TokenService{
 		Issuer:         "markstanden.dev",
 		Audience:       "markstanden.dev",
 		HoursValid:     24,
-		SecretCallback: gcloud.GetSecret("UserIdentifier"),
-	}
-
-	// Prep the password lookup callback
-	getPGPass := gcloud.GetSecret("PGPASSWORD")
-
-	// open a connection to the database
-	db, err := postgres.NewConnection(getPGPass)
-	if err != nil {
-		return fmt.Errorf("error establishing connection to database: /n %v", err)
+		SecretCallback: ss.GetSecret("SecretKey"),
 	}
 
 	// Close the database when the server ends
 	defer db.DB.Close()
 
 	// Create a user cache and shadow the db
-	cache := cache.NewUserCache(db)
+	cache := cache.NewUserCache(us)
 
 	// Create a handler for our routes, pass in the cache
 	http.Handle("/", routes.Home(cache))
-	http.Handle("/create-users-table", routes.CreateUsersTable(cache))
+	http.Handle("/reset-users-table", routes.ResetUsersTable(cache))
+	http.Handle("/reset-secrets-table", routes.ResetSecretsTable(ss))
 	http.Handle("/signin", routes.SignIn(cache))
 	http.Handle("/signup", routes.SignUp(cache, userTokens))
 

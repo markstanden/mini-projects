@@ -91,7 +91,7 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 		ut.NotBeforeTime,
 		ut.ExpirationTime,
 		token.ValidFrom,
-		token.lifespan)
+		token.Lifespan)
 
 	if tokenInvalid {
 		return addError(err, "Failed checkTimeValidity")
@@ -233,6 +233,19 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 	fmt.Println("now", now)
 	fmt.Println("min", min)
 	fmt.Println("max", max)
+
+	/*
+		iat 1617018301
+		nbf 1617018301
+		exp 1617104701
+		now 1617018301
+		min 1617018301
+		max 1617018301
+		tokenExpired: false tokenInvalid false
+		tokenExpired: false tokenInvalid true
+		tokenExpired: false tokenInvalid true
+		tokenExpired: false tokenInvalid true
+	*/
 
 	/*
 		the IssuedAtTime must be verified first as the value is used

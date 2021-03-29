@@ -82,8 +82,8 @@ type Config struct {
 	*/
 	ValidFrom int64
 	/*
-		lifespan (int64) is the duration (in seconds) that the token will be valid for.
+		Lifespan (int64) is the duration (in seconds) that the token will be valid for.
 		Negative values for lifespan result in an immediately expired token.
 	*/
-	lifespan int64
+	Lifespan int64
 }

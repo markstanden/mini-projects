@@ -12,7 +12,7 @@ func TestDecodeJWTIO(t *testing.T) {
 	got := Token{
 		Config: Config{
 			ValidFrom: 1600000000,
-			lifespan:  100000000,
+			Lifespan:  100000000,
 		},
 	}
 

@@ -223,12 +223,9 @@ func unmarshalJWT(jwtSection string, t *Token) error {
 */
 func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenInvalid, tokenExpired bool) {
 
-	
-
 	now := time.GetUnix()
 	min := now - lifespan
 	max := iat + lifespan
-
 
 	fmt.Println("iat", iat)
 	fmt.Println("nbf", nbf)

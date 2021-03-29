@@ -12,11 +12,11 @@ func GetUnix() int64 {
 // withinRange returns false if the provided number is too low or too high
 func WithinRange(num, low, high int64) bool {
 
-	if num < low {
+	if num <= low {
 		return false
 	}
 
-	if num > high {
+	if num >= high {
 		return false
 	}
 

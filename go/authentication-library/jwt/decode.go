@@ -223,7 +223,7 @@ func unmarshalJWT(jwtSection string, t *Token) error {
 */
 func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenInvalid, tokenExpired bool) {
 
-	now := time.GetUnix()
+	now := time.GetUnix() 
 	min := now - lifespan
 	max := iat + lifespan
 
@@ -237,16 +237,19 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 	fmt.Println("lifespan", lifespan)
 
 	/*
-		iat 1617020114
-		nbf 1617020114
-		exp 1617106514
-		now 1617020114
-		min 1616933714
-		max 1617106514
+		iat 1617020845
+		nbf 1617020845
+		exp 1617107245
+		now 1617020845
+		min 1616934445
+		max 1617107245
+		firstIssuedToken 1617020114
+		lifespan 86400
 		tokenExpired: false tokenInvalid false
 		tokenExpired: false tokenInvalid true
 		tokenExpired: false tokenInvalid true
 		tokenExpired: false tokenInvalid true
+
 	*/
 
 	/*

@@ -7,7 +7,10 @@ import (
 	"github.com/markstanden/jwt/hash"
 )
 
-func (t *Token) CreateJWT(getRemoteSecret func(keyID string) string) (jwt string, err error) {
+/*
+	Create creates a JWT token from a token object
+*/
+func (t *Token) Create(getRemoteSecret func(keyID string) string) (jwt string, err error) {
 
 	jsonHeader, err := json.Marshal(t.Header)
 	if err != nil {

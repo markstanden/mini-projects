@@ -11,7 +11,7 @@ func TestCreateJWT(t *testing.T) {
 		Payload: jwtioStruct,
 	}
 
-	jwt, err := test.CreateJWT(jwtioSecret())
+	jwt, err := test.Create(jwtioSecret())
 	if err != nil {
 		t.FailNow()
 	}

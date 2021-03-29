@@ -38,8 +38,8 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 		token.Log = append(token.Log, "ValidFrom field not set, setting to default")
 	}
 
-	token.Log = append(token.Log, "ValidFrom field set as: " + fmt.Sprintf("%d", token.Config.ValidFrom))
-	token.Log = append(token.Log, "Lifespan field set as: "+ fmt.Sprintf("%d", token.Config.Lifespan))
+	token.Log = append(token.Log, "ValidFrom field set as: "+fmt.Sprintf("%d", token.Config.ValidFrom))
+	token.Log = append(token.Log, "Lifespan field set as: "+fmt.Sprintf("%d", token.Config.Lifespan))
 
 	ut := Token{}
 

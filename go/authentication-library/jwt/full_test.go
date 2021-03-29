@@ -13,7 +13,7 @@ func TestDecode(t *testing.T) {
 	j := jwtioStruct
 	validFor := j.ExpirationTime - j.IssuedAtTime
 	token := NewToken(j.Issuer, j.Audience, j.UserID, j.JwtID, j.KeyID, validFor)
-	jwt, err := token.CreateJWT(jwtioSecret())
+	jwt, err := token.Create(jwtioSecret())
 	if err != nil {
 		t.Fail()
 	}
@@ -67,6 +67,8 @@ func TestDecode(t *testing.T) {
 	for i, test := range testsShouldError {
 		// create an empty Token struct to put the data in
 		got := Token{}
+
+		got.Lifespan = int64(60 * 60)
 
 		// run the decoder for this test
 		err := Decode(test[0], jwtioSecret(), &got)

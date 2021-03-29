@@ -233,14 +233,16 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 	fmt.Println("now", now)
 	fmt.Println("min", min)
 	fmt.Println("max", max)
+	fmt.Println("firstIssuedToken", firstIssuedToken)
+	fmt.Println("lifespan", lifespan)
 
 	/*
-		iat 1617018301
-		nbf 1617018301
-		exp 1617104701
-		now 1617018301
-		min 1617018301
-		max 1617018301
+		iat 1617020114
+		nbf 1617020114
+		exp 1617106514
+		now 1617020114
+		min 1616933714
+		max 1617106514
 		tokenExpired: false tokenInvalid false
 		tokenExpired: false tokenInvalid true
 		tokenExpired: false tokenInvalid true

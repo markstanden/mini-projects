@@ -3,7 +3,6 @@ package jwt
 import (
 	"crypto/hmac"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -12,10 +11,6 @@ import (
 	"github.com/markstanden/jwt/hash"
 	"github.com/markstanden/jwt/time"
 )
-
-func addError(err error, new string) error {
-	return errors.New(err.Error() + "\n" + new)
-}
 
 /*
 	Decode takes an untrusted JWT and checks it for validity:
@@ -31,8 +26,6 @@ func addError(err error, new string) error {
 */
 func Decode(untrustedJWT string, passwordLookup func(key string) (secret string), token *Token) (err error) {
 
-	err = errors.New("decoding JWT")
-
 	/*
 		ValidFrom is the official time that the server started issuing tokens.
 		Any tokens with an time stamp before this will be discarded as invalid, since
@@ -42,7 +35,11 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	if token.Config.ValidFrom == 0 {
 		/* 01 Jan 2021 00:00 UTC */
 		token.Config.ValidFrom = 1609459200
+		token.Log = append(token.Log, "ValidFrom field not set, setting to default")
 	}
+
+	token.Log = append(token.Log, "ValidFrom field set as: " + fmt.Sprintf("%d", token.Config.ValidFrom))
+	token.Log = append(token.Log, "Lifespan field set as: "+ fmt.Sprintf("%d", token.Config.Lifespan))
 
 	ut := Token{}
 
@@ -54,7 +51,8 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	jwtSection := strings.Split(untrustedJWT, ".")
 
 	if !checkJwtValid(jwtSection) {
-		return addError(err, "Failed checkJwtValid")
+		token.Log = append(token.Log, "Failed checkJwtValid")
+		return ErrInvalidToken
 	}
 
 	/*
@@ -71,11 +69,13 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	*/
 
 	if err := unmarshalJWT(header, &ut); err != nil {
-		return addError(err, "Failed to unmarshalJWT header")
+		token.Log = append(token.Log, "Failed to unmarshalJWT header")
+		return ErrInvalidToken
 	}
 
 	if !checkHeaderValid(ut.Header) {
-		return addError(err, "Failed checkHeaderValid")
+		token.Log = append(token.Log, "Failed checkHeaderValid")
+		return ErrInvalidToken
 	}
 
 	/*
@@ -83,7 +83,8 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	*/
 
 	if err := unmarshalJWT(payload, &ut); err != nil {
-		return addError(err, "Failed to unmarshalJWT payload")
+		token.Log = append(token.Log, "Failed to unmarshalJWT payload")
+		return ErrInvalidToken
 	}
 
 	tokenInvalid, tokenExpired := checkTimeValidity(
@@ -94,14 +95,15 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 		token.Lifespan)
 
 	if tokenInvalid {
-		return addError(err, "Failed checkTimeValidity")
+		token.Log = append(token.Log, "Failed checkTimeValidity")
+		return ErrInvalidToken
 	}
 
 	/*
 		Check Signature
 	*/
-	fmt.Println(passwordLookup(ut.KeyID))
 	if err := signatureValid(header, payload, signature, passwordLookup(ut.KeyID)); err != nil {
+		token.Log = append(token.Log, "Failed Signature Validation")
 		return err
 	}
 
@@ -116,6 +118,7 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 		Token is valid but expired, so return data with expiry error
 	*/
 	if tokenExpired {
+		token.Log = append(token.Log, "Token Has Expired")
 		return ErrExpiredToken
 	}
 
@@ -206,13 +209,14 @@ func unmarshalJWT(jwtSection string, t *Token) error {
 
 	bytes, err := b64.ToBytes(jwtSection)
 	if err != nil {
+		t.Log = append(t.Log, "Failed convert Base64 string to bytes")
 		return ErrInvalidToken
 	}
 
 	if err := json.Unmarshal(bytes, t); err != nil {
+		t.Log = append(t.Log, "Failed to json.Unmarshal JWT section")
 		return ErrInvalidToken
 	}
-	fmt.Println(t.KeyID)
 	return nil
 }
 
@@ -223,34 +227,9 @@ func unmarshalJWT(jwtSection string, t *Token) error {
 */
 func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenInvalid, tokenExpired bool) {
 
-	now := time.GetUnix() 
+	now := time.GetUnix()
 	min := now - lifespan
 	max := iat + lifespan
-
-	fmt.Println("iat", iat)
-	fmt.Println("nbf", nbf)
-	fmt.Println("exp", exp)
-	fmt.Println("now", now)
-	fmt.Println("min", min)
-	fmt.Println("max", max)
-	fmt.Println("firstIssuedToken", firstIssuedToken)
-	fmt.Println("lifespan", lifespan)
-
-	/*
-		iat 1617020845
-		nbf 1617020845
-		exp 1617107245
-		now 1617020845
-		min 1616934445
-		max 1617107245
-		firstIssuedToken 1617020114
-		lifespan 86400
-		tokenExpired: false tokenInvalid false
-		tokenExpired: false tokenInvalid true
-		tokenExpired: false tokenInvalid true
-		tokenExpired: false tokenInvalid true
-
-	*/
 
 	/*
 		the IssuedAtTime must be verified first as the value is used
@@ -260,7 +239,7 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 		if the time so far in the past that the token would have expired anyway, but not
 		before the project started the token should be marked valid but expired
 	*/
-	fmt.Println("tokenExpired:", tokenExpired, "tokenInvalid", tokenInvalid)
+
 	if time.WithinRange(iat, firstIssuedToken, now) {
 		if iat < min {
 			/*
@@ -276,7 +255,7 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 		*/
 		tokenInvalid = true
 	}
-	fmt.Println("tokenExpired:", tokenExpired, "tokenInvalid", tokenInvalid)
+
 	/*
 		The not before time restricts access until a point in time has been reached,
 		so if that time has not been reached yet, the token is invalid.
@@ -294,7 +273,7 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 		*/
 		tokenInvalid = true
 	}
-	fmt.Println("tokenExpired:", tokenExpired, "tokenInvalid", tokenInvalid)
+
 	/*
 		First check that the token could have been made by the server,
 		and that the expiry date is not too far in the future
@@ -312,7 +291,6 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 		*/
 		tokenInvalid = true
 	}
-	fmt.Println("tokenExpired:", tokenExpired, "tokenInvalid", tokenInvalid)
 	return tokenInvalid, tokenExpired
 }
 

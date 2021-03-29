@@ -9,6 +9,7 @@ type Token struct {
 	Header
 	Payload
 	Config
+	Log Log
 }
 
 /*
@@ -56,7 +57,7 @@ type Payload struct {
 	// KeyID - "kid" - Key ID
 	// ** Public Claim **
 	// The version of the secret used to hash the signature.
-	KeyID string `json:"kid,string"`
+	KeyID string `json:"kid"`
 
 	// IssuedAtTime - "iat" - issued at time
 	// the time the JWT was issued
@@ -87,3 +88,10 @@ type Config struct {
 	*/
 	Lifespan int64
 }
+
+/*
+	Log is an array of messages added to as the
+	token moves through creation or verification.
+	Used mainly for fault finding
+*/
+type Log []string

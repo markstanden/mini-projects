@@ -17,7 +17,7 @@ func TestCreateJWT(t *testing.T) {
 	}
 
 	if jwt != jwtioToken {
-		t.Errorf("Failed to create the expected token: \nGot \n%v\nWanted \n%v\n", jwt, jwtioToken)
+		t.Fatalf("Failed to create the expected token: \nGot \n%v\nWanted \n%v\n", jwt, jwtioToken)
 	}
 
 	fmt.Println("Created jwt.io test token OK.")

@@ -1,6 +1,10 @@
 package jwt
 
-import "github.com/markstanden/jwt/time"
+import (
+	"fmt"
+
+	"github.com/markstanden/jwt/time"
+)
 
 /*
 	NewToken creates a new jwt token struct, with sane defaults for header and payload time values.
@@ -38,5 +42,6 @@ func NewToken(issuer, audience, userID, jwtID, keyID string, validFor int64) (to
 	c := Config{
 		Lifespan: validFor,
 	}
-	return &Token{h, p, c}
+	l := Log{fmt.Sprintf("%d", time.GetUnix()) + " Token Created"}
+	return &Token{h, p, c, l}
 }

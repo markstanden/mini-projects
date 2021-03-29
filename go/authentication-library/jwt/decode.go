@@ -223,9 +223,19 @@ func unmarshalJWT(jwtSection string, t *Token) error {
 */
 func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenInvalid, tokenExpired bool) {
 
+	
+
 	now := time.GetUnix()
 	min := now - lifespan
 	max := iat + lifespan
+
+
+	fmt.Println("iat", iat)
+	fmt.Println("nbf", nbf)
+	fmt.Println("exp", exp)
+	fmt.Println("now", now)
+	fmt.Println("min", min)
+	fmt.Println("max", max)
 
 	/*
 		the IssuedAtTime must be verified first as the value is used
@@ -235,6 +245,7 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 		if the time so far in the past that the token would have expired anyway, but not
 		before the project started the token should be marked valid but expired
 	*/
+	fmt.Println("tokenExpired:", tokenExpired, "tokenInvalid", tokenInvalid)
 	if time.WithinRange(iat, firstIssuedToken, now) {
 		if iat < min {
 			/*
@@ -250,7 +261,7 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 		*/
 		tokenInvalid = true
 	}
-
+	fmt.Println("tokenExpired:", tokenExpired, "tokenInvalid", tokenInvalid)
 	/*
 		The not before time restricts access until a point in time has been reached,
 		so if that time has not been reached yet, the token is invalid.
@@ -268,7 +279,7 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 		*/
 		tokenInvalid = true
 	}
-
+	fmt.Println("tokenExpired:", tokenExpired, "tokenInvalid", tokenInvalid)
 	/*
 		First check that the token could have been made by the server,
 		and that the expiry date is not too far in the future
@@ -286,7 +297,7 @@ func checkTimeValidity(iat, nbf, exp, firstIssuedToken, lifespan int64) (tokenIn
 		*/
 		tokenInvalid = true
 	}
-
+	fmt.Println("tokenExpired:", tokenExpired, "tokenInvalid", tokenInvalid)
 	return tokenInvalid, tokenExpired
 }
 

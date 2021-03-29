@@ -31,7 +31,7 @@ func addError(err error, new string) error {
 */
 func Decode(untrustedJWT string, passwordLookup func(key string) (secret string), token *Token) (err error) {
 
-	err = addError(err, "Decoding JWT...")
+	err = errors.New("decoding JWT")
 
 	/*
 		ValidFrom is the official time that the server started issuing tokens.

@@ -3,6 +3,7 @@ package jwt
 import (
 	"crypto/hmac"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -11,6 +12,10 @@ import (
 	"github.com/markstanden/jwt/hash"
 	"github.com/markstanden/jwt/time"
 )
+
+func addError(err error, new string) error {
+	return errors.New(err.Error() + "\n" + new)
+}
 
 /*
 	Decode takes an untrusted JWT and checks it for validity:
@@ -25,7 +30,9 @@ import (
 		- ErrFailedSecret if the callback failed to return a secret, or the secret was an empty string
 */
 func Decode(untrustedJWT string, passwordLookup func(key string) (secret string), token *Token) (err error) {
-	fmt.Println(passwordLookup("1"))
+
+	err = addError(err, "Decoding JWT...")
+
 	/*
 		ValidFrom is the official time that the server started issuing tokens.
 		Any tokens with an time stamp before this will be discarded as invalid, since
@@ -47,7 +54,7 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	jwtSection := strings.Split(untrustedJWT, ".")
 
 	if !checkJwtValid(jwtSection) {
-		return ErrInvalidToken
+		return addError(err, "Failed checkJwtValid")
 	}
 
 	/*
@@ -64,11 +71,11 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	*/
 
 	if err := unmarshalJWT(header, &ut); err != nil {
-		return ErrInvalidToken
+		return addError(err, "Failed to unmarshalJWT header")
 	}
 
 	if !checkHeaderValid(ut.Header) {
-		return ErrInvalidToken
+		return addError(err, "Failed checkHeaderValid")
 	}
 
 	/*
@@ -76,7 +83,7 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 	*/
 
 	if err := unmarshalJWT(payload, &ut); err != nil {
-		return ErrInvalidToken
+		return addError(err, "Failed to unmarshalJWT payload")
 	}
 
 	tokenInvalid, tokenExpired := checkTimeValidity(
@@ -87,7 +94,7 @@ func Decode(untrustedJWT string, passwordLookup func(key string) (secret string)
 		token.lifespan)
 
 	if tokenInvalid {
-		return ErrInvalidToken
+		return addError(err, "Failed checkTimeValidity")
 	}
 
 	/*
@@ -136,7 +143,6 @@ func checkHeaderValid(h Header) bool {
 	if h.TokenType != "JWT" {
 		return false
 	}
-
 	return true
 }
 
@@ -206,7 +212,7 @@ func unmarshalJWT(jwtSection string, t *Token) error {
 	if err := json.Unmarshal(bytes, t); err != nil {
 		return ErrInvalidToken
 	}
-
+	fmt.Println(t.KeyID)
 	return nil
 }
 

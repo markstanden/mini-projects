@@ -11,7 +11,7 @@ import (
 */
 var ErrNotUrlB64 error = errors.New("provided string is not URL encoded b64")
 
-/* 
+/*
 	FromBytes converts a []byte into a URL encoded base64 string
 */
 func FromBytes(bs []byte) (b64 string) {

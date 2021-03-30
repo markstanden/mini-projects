@@ -45,6 +45,9 @@ type SecretService interface {
 	GetKeyID(keyName string) (keyID string)
 }
 
+/* 
+	A DataStore holds a connection to a datastore
+*/
 type DataStore interface {
 	FullReset() (err error)
 }

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -48,7 +49,10 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, tokenid FROM users WHERE email = $1", value)
 	case "tokenid":
 		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, tokenid FROM users WHERE tokenid = $1", value)
+	default:
+		return nil , errors.New("user not found")
 	}
+
 
 	uid := 0
 	name := ""

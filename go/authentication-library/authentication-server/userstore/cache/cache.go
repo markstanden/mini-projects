@@ -15,7 +15,7 @@ import (
 	UserCache is the base struct for the cache,
 */
 type userCache struct {
-	emailCache map[string]*authentication.User
+	emailCache   map[string]*authentication.User
 	tokenIDCache map[string]*authentication.User
 }
 
@@ -26,13 +26,13 @@ type CachedStore struct {
 }
 
 func (c CachedStore) LogStatus(message string) {
-	log.Println(message + " - Current Cache Values:\nEmail Cache:\n\t", c.cache.emailCache, "\nTokenID Cache:\n\t", c.cache.tokenIDCache)
+	log.Println(message+" - Current Cache Values:\nEmail Cache:\n\t", c.cache.emailCache, "\nTokenID Cache:\n\t", c.cache.tokenIDCache)
 }
 
 // NewUserCache returns a new read-through cache for service.
 func NewUserCache(us authentication.UserService) *CachedStore {
 	cache := userCache{
-		emailCache: make(map[string]*authentication.User),
+		emailCache:   make(map[string]*authentication.User),
 		tokenIDCache: make(map[string]*authentication.User),
 	}
 	return &CachedStore{
@@ -86,7 +86,7 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 // Add passes the Add request to the wrapped store
 func (c CachedStore) Add(u *authentication.User) (err error) {
 	c.LogStatus("cache/Add Called")
-	/* 
+	/*
 		add the user to the main store as
 		we only add to the cache on read.
 	*/
@@ -101,14 +101,14 @@ func (c CachedStore) Add(u *authentication.User) (err error) {
 */
 func (c CachedStore) Update(u *authentication.User) (err error) {
 	c.LogStatus("cache/Update Called")
-	
-	/* 	
+
+	/*
 		delete the user from all caches as
 		information may now be out of date
 	*/
 	c.deleteFromAll(u)
 
-	/* 
+	/*
 		update the user in the main store,
 		return any errors directly
 	*/
@@ -116,12 +116,12 @@ func (c CachedStore) Update(u *authentication.User) (err error) {
 	return c.store.Update(u)
 }
 
-/* 
+/*
 	deleteFromAll is intended as a single function to delete the current
 	user from the cache, useful for deleting and updating users.
 */
 func (c CachedStore) deleteFromAll(u *authentication.User) {
-	
+
 	/*
 		Built in function delete only deletes the record if it exists,
 		so no requirement for a comma ok.

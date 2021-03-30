@@ -10,7 +10,7 @@ require (
 	github.com/markstanden/jwt v0.9.2
 	github.com/markstanden/securerandom v0.4.1
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
-	golang.org/x/net v0.0.0-20210329181859-df645c7b52b1 // indirect
+	golang.org/x/net v0.0.0-20210330142815-c8897c278d10 // indirect
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
 	golang.org/x/sys v0.0.0-20210326220804-49726bf1d181 // indirect
 	google.golang.org/api v0.43.0 // indirect

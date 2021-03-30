@@ -41,7 +41,7 @@ func (us UserService) Add(u *authentication.User) (err error) {
 	return nil
 }
 
-/* 
+/*
 	**  Delete  **
 	deletes a user from the Database
 */
@@ -49,15 +49,13 @@ func (us UserService) Delete(u *authentication.User) (err error) {
 	return nil
 }
 
-
-
 /*
 	**  Find  **
 	finds the first instance of the key value pair in the database.
 	it is intended to search unique keys only.
 	valid options for key:
 		email 	- The user's entered email address
-		tokenid	- The 
+		tokenid	- The
 */
 func (us UserService) Find(key, value string) (u *authentication.User, err error) {
 	var row *sql.Row
@@ -68,9 +66,8 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 	case "tokenid":
 		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, tokenid FROM users WHERE tokenid = $1", value)
 	default:
-		return nil , errors.New("user not found")
+		return nil, errors.New("user not found")
 	}
-
 
 	uid := 0
 	name := ""
@@ -98,8 +95,7 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 
 }
 
-
-/* 
+/*
 	**  Update  **
 	updates a user in the Database
 */
@@ -107,10 +103,9 @@ func (us UserService) Update(u *authentication.User) (err error) {
 	return nil
 }
 
-
 /*
-	************** DEVELOPMENT USE ONLY!!! ***************
-*/
+************** DEVELOPMENT USE ONLY!!! ***************
+ */
 /*
 	**  FullReset  **
 	drops and re-Creates the user table

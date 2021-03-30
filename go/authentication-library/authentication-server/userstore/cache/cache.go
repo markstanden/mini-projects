@@ -35,7 +35,7 @@ func NewUserCache(us authentication.UserService) *CachedStore {
 
 func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 
-	var cache map[string]*authentication.User
+	var cache = make(map[string]*authentication.User)
 
 	switch key {
 	case "email":

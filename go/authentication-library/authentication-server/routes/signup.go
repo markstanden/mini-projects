@@ -98,7 +98,8 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 				log.Printf("/routes/signup: error looking up user\n%v\nError:\n%v", jwt, err.Error())
 			}
 			fmt.Fprintf(w, "/routes/signup: created and decoded jwt.\nJWT String:\n%v\nUserData:\n%v", jwt, u)
-		}
 
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})
 }

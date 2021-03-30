@@ -16,31 +16,49 @@ type UserService struct {
 	DB DataStore
 }
 
-// Drop drops the user table
-func (us UserService) FullReset() (err error) {
-	// If the table already exists, drop it
-	_, err = us.DB.Exec(`DROP TABLE IF EXISTS users;`)
+/*
+	**  Add  **
+	adds the user to the Database
+*/
+func (us UserService) Add(u *authentication.User) (err error) {
+	if u.Name == "" || u.Email == "" || u.HashedPassword == "" || u.TokenID == "" {
+		return errors.New("missing user data")
+	}
+	var id int
+	query := "INSERT INTO users (name, email, hashedpassword, tokenid) VALUES ($1, $2, $3, $4) RETURNING id"
+	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenID).Scan(&id)
 	if err != nil {
-		return fmt.Errorf("authentication/postgres: Failed to drop users table:\n%v", err)
+		return err
 	}
 
-	// Create the new user table
-	_, err = us.DB.Exec(`CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name varchar(255) NOT NULL,
-    email varchar(255) UNIQUE NOT NULL,
-    hashedpassword varchar(160) NOT NULL,
-    tokenid varchar(160) UNIQUE NOT NULL);`)
-	if err != nil {
-		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
-	}
+	// The current user doesn't have an id set yet, so set it now.
+	u.UniqueID = id
 
-	log.Println("authentication/postgres: users & keys table dropped and created ok")
+	// Log addition to database.
+	log.Printf("authentication/postgres: user (%d) added to db", id)
+
+	//return the ID of the created user
 	return nil
 }
 
-// Find returns the first instance of the key value pair in the database.
-// it is intended to search unique keys only.
+/* 
+	**  Delete  **
+	deletes a user from the Database
+*/
+func (us UserService) Delete(u *authentication.User) (err error) {
+	return nil
+}
+
+
+
+/*
+	**  Find  **
+	finds the first instance of the key value pair in the database.
+	it is intended to search unique keys only.
+	valid options for key:
+		email 	- The user's entered email address
+		tokenid	- The 
+*/
 func (us UserService) Find(key, value string) (u *authentication.User, err error) {
 	var row *sql.Row
 
@@ -80,21 +98,41 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 
 }
 
-// Add adds the user to the database
-func (us UserService) Add(u *authentication.User) (err error) {
-	var id int
-	query := "INSERT INTO users (name, email, hashedpassword, tokenid) VALUES ($1, $2, $3, $4) RETURNING id"
-	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenID).Scan(&id)
+
+/* 
+	**  Update  **
+	updates a user in the Database
+*/
+func (us UserService) Update(u *authentication.User) (err error) {
+	return nil
+}
+
+
+/*
+	************** DEVELOPMENT USE ONLY!!! ***************
+*/
+/*
+	**  FullReset  **
+	drops and re-Creates the user table
+*/
+func (us UserService) FullReset() (err error) {
+	// If the table already exists, drop it
+	_, err = us.DB.Exec(`DROP TABLE IF EXISTS users;`)
 	if err != nil {
-		return err
+		return fmt.Errorf("authentication/postgres: Failed to drop users table:\n%v", err)
 	}
 
-	// The current user doesn't have an id set yet, so set it now.
-	u.UniqueID = id
+	// Create the new user table
+	_, err = us.DB.Exec(`CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name varchar(255) NOT NULL,
+    email varchar(255) UNIQUE NOT NULL,
+    hashedpassword varchar(160) NOT NULL,
+    tokenid varchar(160) UNIQUE NOT NULL);`)
+	if err != nil {
+		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
+	}
 
-	// Log addition to database.
-	log.Printf("authentication/postgres: user (%d) added to db", id)
-
-	//return the ID of the created user
+	log.Println("authentication/postgres: users & keys table dropped and created ok")
 	return nil
 }

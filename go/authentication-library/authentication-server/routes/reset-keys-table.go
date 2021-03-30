@@ -11,7 +11,7 @@ import (
 // CreateUsersTable drops the existing user table if it exists and creates a
 // new fresh table. Obviously this is for use in development only, to allow quick changes to
 // the database structure / authentication.User struct object.
-func ResetSecretsTable(ss authentication.SecretService) http.Handler {
+func ResetKeysTable(ss authentication.SecretService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "GET" {
@@ -19,8 +19,8 @@ func ResetSecretsTable(ss authentication.SecretService) http.Handler {
 			w.Header().Set("type", "html")
 			fmt.Fprintln(w, `
 				<h1> Game Over </h1>
-				<form action="/reset-secrets-table" method="POST">
-					<input value="Reset the Secrets table and start again?" type="submit" />
+				<form action="/reset-keys-table" method="POST">
+					<input value="Reset the Keys table and start again?" type="submit" />
 				</form>
 			`)
 		}
@@ -28,11 +28,11 @@ func ResetSecretsTable(ss authentication.SecretService) http.Handler {
 			log.Println("authentication/routes: Request to drop table received")
 			w.Header().Set("type", "html")
 			if err := ss.FullReset(); err != nil {
-				log.Println("authentication/routes: Failed to Reset Secrets table database:\n\t", err)
+				log.Println("authentication/routes: Failed to Reset keys table database:\n\t", err)
 			}
 
 			// Table has been dropped and recreated, so log and redirect to root route.
-			log.Println("authentication/routes: Table dropped and created ok")
+			log.Println("authentication/routes: Keys table dropped and created ok")
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 
 		}

@@ -31,9 +31,10 @@ type Secret struct {
 // UserService specifies the requred functions of the user store
 type UserService interface {
 	DataStore
-	Find(key, value string) (*User, error)
 	Add(user *User) error
-	//Delete(*User)
+	Find(key, value string) (*User, error)
+	Update(user *User) error
+	Delete(user *User) error
 }
 
 // SecretService is an interface for the secret storage logic to retrieve secrets,

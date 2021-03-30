@@ -64,7 +64,7 @@ func run(args []string, stdout io.Writer) error {
 	// Create a handler for our routes, pass in the cache
 	http.Handle("/", routes.Home(cache))
 	http.Handle("/reset-users-table", routes.ResetUsersTable(cache))
-	http.Handle("/reset-secrets-table", routes.ResetSecretsTable(ss))
+	http.Handle("/reset-keys-table", routes.ResetKeysTable(ss))
 	http.Handle("/signin", routes.SignIn(cache))
 	http.Handle("/signup", routes.SignUp(cache, userTokens))
 

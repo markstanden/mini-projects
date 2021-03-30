@@ -41,7 +41,11 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			}
 
 			// Check the form data
-
+			if r.PostForm.Get("name") == "" || r.PostForm.Get("email") == "" || r.PostForm.Get("password") == "" || r.PostForm.Get("confirmpassword") == "" {
+				log.Println("empty field(s) in form")
+				http.Redirect(w, r, "/signup", http.StatusSeeOther)
+				return
+			}
 			// Check that the passwords match
 			if r.PostForm.Get("password") != r.PostForm.Get("confirmpassword") {
 				log.Println("Passwords do not match, Cannot create account")
@@ -97,9 +101,9 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			if err != nil {
 				log.Printf("/routes/signup: error looking up user\n%v\nError:\n%v", jwt, err.Error())
 			}
-			fmt.Fprintf(w, "/routes/signup: created and decoded jwt.\nJWT String:\n%v\nUserData:\n%v", jwt, u)
-
+			log.Printf("/routes/signup: created and decoded jwt.\nJWT String:\n%v\nUserData:\n%v", jwt, u)
+			http.Redirect(w, r, "/", http.StatusSeeOther)		
 		}
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		
 	})
 }

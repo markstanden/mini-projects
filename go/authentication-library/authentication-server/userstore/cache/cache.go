@@ -45,7 +45,7 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 	}
 
 	// Check the local cache first.
-	if u := cache[value]; u != nil {
+	if u, ok := cache[value]; ok {
 		log.Printf(
 			"authentication/cache: user (%d) read from %#v, current size: %v Users",
 			u.UniqueID, cache, len(cache))

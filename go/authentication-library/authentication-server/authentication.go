@@ -11,22 +11,21 @@ import "errors"
 //		The user's email, for communication and ID at login
 //	hashedPassword string
 //		The hashed password string.  This must never be used to store a plain text password
-//	Token string
+//	TokenID string
 //		The generated identification token stored within the ID token
 type User struct {
 	UniqueID       int
 	Name           string
 	Email          string
 	HashedPassword string
-	Token          string
+	TokenID        string
 }
 
 type Secret struct {
-	UniqueID int
-	KeyName  string
-	KeyID    string
-	Value    string
-	Created  int64
+	KeyName string
+	KeyID   string
+	Value   string
+	Created int64
 }
 
 // UserService specifies the requred functions of the user store
@@ -42,7 +41,8 @@ type UserService interface {
 type SecretService interface {
 	DataStore
 	// Takes directly from the store
-	GetSecret(key string) func(version string) (secret string)
+	GetSecret(keyName string) func(keyID string) (secret string)
+	GetKeyID(keyName string) (keyID string)
 }
 
 type DataStore interface {

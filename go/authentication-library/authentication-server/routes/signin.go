@@ -48,9 +48,9 @@ func SignIn(us authentication.UserService) http.Handler {
 			ID: %v
 			Name: %v
 			Email: %v
-			Token: %v
+			TokenID: %v
 			Error: %v
-			`, user.UniqueID, user.Name, user.Email, user.Token, err)
+			`, user.UniqueID, user.Name, user.Email, user.TokenID, err)
 			}
 		}
 	})

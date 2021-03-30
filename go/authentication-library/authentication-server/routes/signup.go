@@ -55,16 +55,11 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 				log.Println("failed to create hash: ", err)
 			}
 
-			idKey := securerandom.String(32)
-			if idKey == "" {
-				log.Println("routes/signup: error creating idKey")
-			}
-
 			err = us.Add(&authentication.User{
 				Name:           r.PostForm.Get("name"),
 				Email:          r.PostForm.Get("email"),
 				HashedPassword: passwordHash,
-				Token:          idKey,
+				TokenID:        securerandom.String(32),
 			})
 			if err != nil {
 				log.Println("failed to create user account :\n", err)
@@ -78,30 +73,30 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			}
 			log.Println("authentication/signup: created user read from store: \n", userCheck)
 
-			jwt, jwtid, err := ts.Create(userCheck.Token)
+			jwt, jwtid, err := ts.Create(userCheck.TokenID)
 			if err != nil {
 				fmt.Fprintf(w, "/routes/signup: error creating jwt\n%v\nError:\n%v", jwt, err.Error())
 			}
 			log.Println("/routes/signup: created jwt: \n", jwt, "\njwtid: ", jwtid)
 
-			userCheck.Token = jwtid
-			// update database
+			userCheck.TokenID = jwtid
+			// update user table
 			//.....
 
 			uid, jwtid, err := ts.Decode(jwt)
 			if err != nil {
 				log.Printf("/routes/signup: error decoding jwt\n%v\nError:\n%v", jwt, err.Error())
-			} else {
-				log.Println("/routes/signup: Decoded JWT OK")
-
-				log.Println("/routes/signup: UserID: \n", uid)
-				log.Println("/routes/signup: jwtid: \n", jwtid)
-				log.Println("/routes/signup: jwt : \n", jwt)
-
-				u, _ := us.Find("token", uid)
-				fmt.Fprintf(w, "/routes/signup: created and decoded jwt\n%v\nUserData:\n%v", jwt, u)
+				http.Redirect(w, r, "/", http.StatusSeeOther)
 			}
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+
+			log.Println("/routes/signup: Decoded JWT OK")
+			log.Println("\n/routes/signup:\nUserID: \n", uid)
+			log.Println("\n/routes/signup:\njwtid: \n", jwtid)
+			log.Println("\n/routes/signup:\njwt : \n", jwt)
+
+			u, _ := us.Find("token", uid)
+			fmt.Fprintf(w, "/routes/signup: created and decoded jwt.\nJWT String:\n%v\nUserData:\n%v", jwt, u)
 		}
+
 	})
 }

@@ -7,51 +7,80 @@ import (
 	"time"
 
 	"github.com/markstanden/authentication"
+	"github.com/markstanden/securerandom"
 )
 
 type SecretService struct {
 	DB DataStore
+
+	Lifespan int64
+}
+
+/*
+	GetKeyID returns the latest KeyID provided there is one within the validity window.
+	Valid Key present:
+		- Returns the KeyID with the largest creation date within the validy window
+	Valid Key not found:
+		- Triggers the creation of a new key, and returns the created Key ID
+*/
+func (ss SecretService) GetKeyID(keyName string) (keyID string) {
+	now := time.Now().UTC().Unix()
+	earliestValid := now - ss.Lifespan
+	fmt.Println("SecretService/GetKeyID: earliestValid", earliestValid)
+	query := `SELECT keyid FROM keys WHERE keyname = $1 AND created <= $2 GROUP BY keyid HAVING MAX(created) > $3`
+	row := ss.DB.QueryRow(query, keyName, now, earliestValid)
+	err := row.Scan(&keyID)
+	log.Println("SecretService/GetKeyID:\n\tkeyID:\n\t", keyID)
+	switch err {
+	case sql.ErrNoRows:
+		log.Println("SecretService/GetKeyID:\n\tErrNoRows Reached")
+		s := authentication.Secret{
+			KeyName: keyName,
+			KeyID:   securerandom.String(16),
+			Value:   securerandom.String(128),
+			Created: now}
+		err := ss.AddSecret(s)
+		if err != nil {
+			return ""
+		}
+		return s.KeyID
+	default:
+		return keyID
+	}
 }
 
 func (ss SecretService) AddSecret(s authentication.Secret) (err error) {
-	var id int
-	now := time.Now().UTC().Unix()
-	sql := "INSERT INTO keys (keyname, keyid, value, created) VALUES ($1, $2, $3, $4) RETURNING id"
-	err = ss.DB.QueryRow(sql, s.KeyName, s.KeyID, s.Value, now).Scan(&id)
+	fmt.Println("SecretService/AddSecret:\n\tRequest to add secret made.\n\tSecret:\n\t", s)
+	query := "INSERT INTO keys (keyname, keyid, value, created) VALUES ($1, $2, $3, $4)"
+	_, err = ss.DB.Exec(query, s.KeyName, s.KeyID, s.Value, s.Created)
 	if err != nil {
+		log.Println("SecretService/AddSecret:\n\terr:\n\t", err)
 		return err
 	}
 
 	// Log addition to database.
-	log.Printf("authentication/postgres: id (%d) key (%v) added to db", id, s.KeyName)
+	log.Printf("SecretService/AddSecret:\n\tKeyName %v\n\tKeyID %v\nSuccessfully added to db", s.KeyName, s.KeyID)
 
-	//return the ID of the created user
 	return nil
 }
 
-func (ss SecretService) GetSecret(name string) func(version string) (secret string) {
+func (ss SecretService) GetSecret(keyName string) func(keyID string) (value string) {
 
-	switch name {
-	case "SecretKey":
-		return func(keyID string) (secret string) {
-			var (
-				row     *sql.Row
-				value   string
-				created int64
-			)
-
-			row = ss.DB.QueryRow("SELECT value, created FROM keys WHERE keyid = $1", keyID)
-			err := row.Scan(&value, &created)
+	switch keyName {
+	case "JWT":
+		return func(keyID string) (value string) {
+			row := ss.DB.QueryRow("SELECT value FROM keys WHERE keyid = $1", keyID)
+			err := row.Scan(&value)
 			switch err {
 			case sql.ErrNoRows:
 				return
 			}
-			fmt.Println("secretservice/GetSecret KeyID: ", keyID)
-			fmt.Println("secretservice/GetSecret Value: ", value)
+			log.Println("secretservice/GetSecret Secret Request Made:\nKeyID: ", keyID)
+			log.Println("secretservice/GetSecret Value: ", value)
 			return value
 		}
 	}
-	return func(version string) string {
+	return func(keyID string) string {
 		return ""
 	}
 }

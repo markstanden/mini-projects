@@ -44,14 +44,15 @@ func run(args []string, stdout io.Writer) error {
 	}
 
 	us := postgres.UserService{DB: db}
-	ss := postgres.SecretService{DB: db}
+	ss := postgres.SecretService{DB: db, Lifespan: 3600}
 
 	// create a token service to create authentication tokens for users
 	userTokens := &tokenservice.TokenService{
-		Issuer:         "markstanden.dev",
-		Audience:       "markstanden.dev",
-		HoursValid:     24,
-		SecretCallback: ss.GetSecret("SecretKey"),
+		Issuer:     "markstanden.dev",
+		Audience:   "markstanden.dev",
+		HoursValid: 24,
+		Secret:     ss,
+		StartTime:  1617020114,
 	}
 
 	// Close the database when the server ends

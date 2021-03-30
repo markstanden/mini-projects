@@ -29,7 +29,7 @@ func (us UserService) FullReset() (err error) {
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
     hashedpassword varchar(160) NOT NULL,
-    token varchar(160) UNIQUE NOT NULL);`)
+    tokenid varchar(160) UNIQUE NOT NULL);`)
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}
@@ -39,23 +39,23 @@ func (us UserService) FullReset() (err error) {
 }
 
 // Find returns the first instance of the key value pair in the database.
-// it is intended to search unique keys only (id, email, token)
+// it is intended to search unique keys only.
 func (us UserService) Find(key, value string) (u *authentication.User, err error) {
 	var row *sql.Row
 
 	switch key {
 	case "email":
-		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE email = $1", value)
-	case "token":
-		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, token FROM users WHERE token = $1", value)
+		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, tokenid FROM users WHERE email = $1", value)
+	case "tokenid":
+		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, tokenid FROM users WHERE tokenid = $1", value)
 	}
 
 	uid := 0
 	name := ""
 	email := ""
 	hashedPassword := ""
-	token := ""
-	err = row.Scan(&uid, &name, &email, &hashedPassword, &token)
+	tokenID := ""
+	err = row.Scan(&uid, &name, &email, &hashedPassword, &tokenID)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -67,7 +67,7 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 			Name:           name,
 			Email:          email,
 			HashedPassword: hashedPassword,
-			Token:          token,
+			TokenID:        tokenID,
 		}, nil
 	default:
 		log.Println("authentication/sql: user lookup error")
@@ -79,8 +79,8 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 // Add adds the user to the database
 func (us UserService) Add(u *authentication.User) (err error) {
 	var id int
-	sql := "INSERT INTO users (name, email, hashedpassword, token) VALUES ($1, $2, $3, $4) RETURNING id"
-	err = us.DB.QueryRow(sql, u.Name, u.Email, u.HashedPassword, u.Token).Scan(&id)
+	query := "INSERT INTO users (name, email, hashedpassword, tokenid) VALUES ($1, $2, $3, $4) RETURNING id"
+	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenID).Scan(&id)
 	if err != nil {
 		return err
 	}

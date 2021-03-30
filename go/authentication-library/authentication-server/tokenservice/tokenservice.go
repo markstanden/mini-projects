@@ -3,6 +3,7 @@ package tokenservice
 import (
 	"fmt"
 
+	"github.com/markstanden/authentication"
 	"github.com/markstanden/jwt"
 	"github.com/markstanden/securerandom"
 )
@@ -37,7 +38,13 @@ type TokenService struct {
 		secret used to encode/decode the token.
 		if err != nil the err should be returned, with empty data
 	*/
-	SecretCallback func(KeyID string) (secret string)
+	//SecretCallback func(KeyID string) (secret string)
+	Secret authentication.SecretService
+
+	/*
+		StartTime is the time the server was started, in Unix time UTC
+	*/
+	StartTime int64
 }
 
 func (ts *TokenService) Create(userID string) (jwtString, jwtID string, err error) {
@@ -49,12 +56,9 @@ func (ts *TokenService) Create(userID string) (jwtString, jwtID string, err erro
 	}
 
 	// the unique identifier for the secret
-	// keyID, err := securerandom.String(64)
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to create 'kid' :\n%v", err)
-	// }
-	// Temp override until keystore is implemented
-	keyID := "1"
+	//keyID := securerandom.String(64)
+
+	keyID := ts.Secret.GetKeyID("JWT")
 
 	// the number of seconds the token is valid for
 	validFor := hoursToSeconds(ts.HoursValid)
@@ -62,7 +66,7 @@ func (ts *TokenService) Create(userID string) (jwtString, jwtID string, err erro
 	//create the token, and return
 	t := jwt.NewToken(ts.Issuer, ts.Audience, userID, jwtID, keyID, validFor)
 
-	jwtString, err = t.CreateJWT(ts.SecretCallback)
+	jwtString, err = t.Create(ts.Secret.GetSecret("JWT"))
 	if err != nil {
 		return "", "", err
 	}
@@ -73,7 +77,10 @@ func (ts *TokenService) Create(userID string) (jwtString, jwtID string, err erro
 
 func (ts *TokenService) Decode(jwtString string) (userID, jwtID string, err error) {
 	data := &jwt.Token{}
-	err = jwt.Decode(jwtString, ts.SecretCallback, data)
+	data.Config.Lifespan = hoursToSeconds(ts.HoursValid)
+	//data.Config.ValidFrom = ts.StartTime
+
+	err = jwt.Decode(jwtString, ts.Secret.GetSecret("JWT"), data)
 	if err != nil {
 		return "", "", fmt.Errorf("authentication/tokenhandler/token: Failed to decode JWT: \n%v", err)
 	}

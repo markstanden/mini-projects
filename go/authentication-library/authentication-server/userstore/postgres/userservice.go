@@ -17,6 +17,16 @@ type UserService struct {
 }
 
 /*
+	NewUserService returns a new UserService object with the
+	supplied datastore.
+*/
+func NewUserService(db DataStore) (us UserService) {
+	return UserService{
+		DB: db,
+	}
+}
+
+/*
 	**  Add  **
 	adds the user to the Database
 */

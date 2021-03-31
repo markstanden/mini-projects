@@ -16,6 +16,13 @@ type SecretService struct {
 	Lifespan int64
 }
 
+func NewSecretService(db DataStore, lifespan int64) (ss SecretService) {
+	return SecretService{
+		DB:       db,
+		Lifespan: lifespan,
+	}
+}
+
 /*
 	GetKeyID returns the latest KeyID provided there is one within the validity window.
 	Valid Key present:

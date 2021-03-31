@@ -17,7 +17,13 @@ type DeploymentService struct {
 		Project is the unique project identifier number within Google Cloud Platform.
 		The string is used as part of the request string that will be sent to the GCP secret store.
 	*/
-	Project string
+	ProjectID string
+}
+
+func NewSecretHandler() (ds *DeploymentService) {
+	return &DeploymentService{
+		ProjectID: "145660875199",
+	}
 }
 
 /*
@@ -31,7 +37,9 @@ func (ds DeploymentService) GetSecret(SecretName string) func(version string) (s
 	// create a new buffer to receive the secret
 	buf := new(bytes.Buffer)
 
-	// return a function that can choose the required version
+	/*
+		return a function that can choose the required version
+	*/
 	return func(version string) (secret string) {
 
 		/*
@@ -41,14 +49,16 @@ func (ds DeploymentService) GetSecret(SecretName string) func(version string) (s
 			or the latest version of the secret, i.e. :
 			requestString := "projects/my-project/secrets/my-secret/versions/latest"
 		*/
-		requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", ds.Project, SecretName, version)
+		requestString := fmt.Sprintf("projects/%v/secrets/%v/versions/%v", ds.ProjectID, SecretName, version)
 
 		if err := accessSecretVersion(buf, requestString); err != nil {
 			return ""
 		}
 
-		// we need to reset the buffer once done,
-		// otherwise the next time the function is called the buffer is filled again!
+		/*
+			we need to reset the buffer once done,
+			otherwise the next time the function is called the buffer is filled again!
+		*/
 		defer buf.Reset()
 
 		return buf.String()

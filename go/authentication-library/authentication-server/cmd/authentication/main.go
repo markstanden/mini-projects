@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 
 	"net/http"
 	"os"
@@ -24,24 +23,52 @@ func main() {
 
 func run(args []string, stdout io.Writer) error {
 
-	// Attempt to get port to listen on from ENV variables
-	port := os.Getenv("PORT")
-	if port == "" {
-		// $PORT env variable not set, assume local dev environment
-		log.Printf("authentication/main: $PORT Env Variable not set, setting to default")
-		port = "8080"
+	/*
+		Set default port for server to listen on
+	*/
+	port := "8080"
+
+	/*
+		Attempt to get port to listen on from ENV variables
+	*/
+	if portENV, ok := os.LookupEnv("PORT"); ok {
+		/* $PORT env variable set */
+		fmt.Fprintf(stdout, "authentication/main: $PORT Env Variable set, setting to %v", portENV)
+		port = portENV
 	}
 
-	// create a secret store to pass to the UserStore
+	/*
+		create a secret store to pass to the UserStore
+	*/
 	gcloud := &googlecloud.DeploymentService{
-		Project: "145660875199",
+		ProjectID: "145660875199",
 	}
 
-	// open a connection to the database
-	db, err := postgres.NewConnection(gcloud.GetSecret("PGPASSWORD"))
+	/*
+		initialise and build the PGConfig configuration struct.
+		set the default DB name to authentication, and then add the FromEnv
+		to override the defaults if required
+	*/
+	pgConfig := postgres.NewConfig().DBName("authentication").FromEnv()
+	/*
+		Attempt to retrieve a password from the GCP password store.
+		If this fails it returns a empty string
+	*/
+	if dbPW := gcloud.GetSecret("PGPASSWORD")("latest"); dbPW != "" {
+		pgConfig = pgConfig.Password(dbPW)
+	}
+	/*
+		Use the config and connect to the database
+	*/
+	db, err := pgConfig.Connect()
 	if err != nil {
 		return fmt.Errorf("error establishing connection to database: /n %v", err)
 	}
+
+	/*
+		Close the database when the server ends
+	*/
+	defer db.DB.Close()
 
 	us := postgres.UserService{DB: db}
 	ss := postgres.SecretService{DB: db, Lifespan: 3600}
@@ -54,9 +81,6 @@ func run(args []string, stdout io.Writer) error {
 		Secret:     ss,
 		StartTime:  1617020114,
 	}
-
-	// Close the database when the server ends
-	defer db.DB.Close()
 
 	// Create a user cache and shadow the db
 	cache := cache.NewUserCache(us)
@@ -72,6 +96,7 @@ func run(args []string, stdout io.Writer) error {
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		return fmt.Errorf("failed to start HTTP server: /n %v", err)
 	}
+	fmt.Fprintf(stdout, "HTTP Server listening on port :%v", port)
 
 	// return no errors if the app closes normally
 	return nil

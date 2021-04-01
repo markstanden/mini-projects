@@ -174,6 +174,3 @@ func (config PGConfig) Password(password string) PGConfig {
 	config.password = password
 	return config
 }
-
-
-

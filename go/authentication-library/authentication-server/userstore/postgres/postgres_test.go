@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"os"
 	"testing"
 
 	"github.com/markstanden/authentication/deployment/googlecloud"
@@ -56,8 +57,8 @@ func TestNewConfig(t *testing.T) {
 
 func TestHost(t *testing.T) {
 	testCases := []struct {
-		desc string
-		host string
+		desc  string
+		host  string
 		valid bool
 	}{
 		{desc: "Test host from string", host: "testhost", valid: true},
@@ -79,8 +80,8 @@ func TestHost(t *testing.T) {
 
 func TestPort(t *testing.T) {
 	testCases := []struct {
-		desc string
-		port string
+		desc  string
+		port  string
 		valid bool
 	}{
 		{desc: "Test port 0", port: "0", valid: false},
@@ -105,8 +106,8 @@ func TestPort(t *testing.T) {
 
 func TestUser(t *testing.T) {
 	testCases := []struct {
-		desc string
-		user string
+		desc  string
+		user  string
 		valid bool
 	}{
 		{desc: "Test user from string", user: "testuser", valid: true},
@@ -127,9 +128,9 @@ func TestUser(t *testing.T) {
 
 func TestDBName(t *testing.T) {
 	testCases := []struct {
-		desc string
+		desc   string
 		dbname string
-		valid bool
+		valid  bool
 	}{
 		{desc: "Test dbname from string", dbname: "testdbname", valid: true},
 		/* empty dbname should definitely fail */
@@ -150,9 +151,9 @@ func TestDBName(t *testing.T) {
 
 func TestPassword(t *testing.T) {
 	testCases := []struct {
-		desc string
+		desc     string
 		password string
-		valid bool
+		valid    bool
 	}{
 		{desc: "Test password from string", password: "testpassword", valid: true},
 		/*
@@ -176,57 +177,199 @@ func TestPassword(t *testing.T) {
 
 func TestFromEnv(t *testing.T) {
 	testCases := []struct {
-		desc string
-		host string
-		hostshouldupdate bool
-		port string
-		portshouldupdate bool
-		user string
-		usershouldupdate bool
-		dbname string
-		dbnameshouldupdate bool
-		password string
+		desc                 string
+		host                 string
+		hostshouldupdate     bool
+		port                 string
+		portshouldupdate     bool
+		user                 string
+		usershouldupdate     bool
+		dbname               string
+		dbnameshouldupdate   bool
+		password             string
 		passwordshouldupdate bool
 	}{
 		{
-			desc: "Test full config from env",
-			host: "hostfrom env",
-			hostshouldupdate: true,
-			port:"10001",
-			portshouldupdate: true,
-			user: "fromenv",
-			usershouldupdate: true,
-			dbname: "dbfromenv",
-			dbnameshouldupdate: true,
-			password: "passwordfromenv",
-			passwordshouldupdate: true
+			desc:                 "Test full config from env",
+			host:                 "hostfrom env",
+			hostshouldupdate:     true,
+			port:                 "10001",
+			portshouldupdate:     true,
+			user:                 "fromenv",
+			usershouldupdate:     true,
+			dbname:               "dbfromenv",
+			dbnameshouldupdate:   true,
+			password:             "passwordfromenv",
+			passwordshouldupdate: true,
 		},
-		{desc: "Test config from env", host: "hostfrom env", port:"10001", user: "fromenv", dbname: "dbfromenv", password: "passwordfromenv", valid: true},
-		/*
-			Might be required to override with a blank password, so valid.
-			Can't imagine it would be a good idea though
-		*/
-		{desc: "Test empty password from string", password: "", valid: true},
+		{
+			desc:                 "Just Host",
+			host:                 "hostfrom env",
+			hostshouldupdate:     true,
+			port:                 "",
+			portshouldupdate:     false,
+			user:                 "",
+			usershouldupdate:     false,
+			dbname:               "",
+			dbnameshouldupdate:   false,
+			password:             "",
+			passwordshouldupdate: false,
+		},
+		{
+			desc:                 "Just Port",
+			host:                 "",
+			hostshouldupdate:     false,
+			port:                 "10001",
+			portshouldupdate:     true,
+			user:                 "",
+			usershouldupdate:     false,
+			dbname:               "",
+			dbnameshouldupdate:   false,
+			password:             "",
+			passwordshouldupdate: false,
+		},
+		{
+			desc:                 "Just User",
+			host:                 "",
+			hostshouldupdate:     false,
+			port:                 "",
+			portshouldupdate:     false,
+			user:                 "fromenv",
+			usershouldupdate:     true,
+			dbname:               "",
+			dbnameshouldupdate:   false,
+			password:             "",
+			passwordshouldupdate: false,
+		},
+		{
+			desc:                 "Just dbname",
+			host:                 "",
+			hostshouldupdate:     false,
+			port:                 "",
+			portshouldupdate:     false,
+			user:                 "",
+			usershouldupdate:     false,
+			dbname:               "dbfromenv",
+			dbnameshouldupdate:   true,
+			password:             "",
+			passwordshouldupdate: false,
+		},
+		{
+			desc:                 "Just password",
+			host:                 "",
+			hostshouldupdate:     false,
+			port:                 "",
+			portshouldupdate:     false,
+			user:                 "",
+			usershouldupdate:     false,
+			dbname:               "",
+			dbnameshouldupdate:   false,
+			password:             "passwordfromenv",
+			passwordshouldupdate: true,
+		},
 	}
 	for _, test := range testCases {
 		t.Run(test.desc, func(t *testing.T) {
-			config := GetTestConfig().Password(test.password)
-			if test.valid && config.password != test.password {
-				t.Errorf("Failed to set password using builder function")
+			/*
+				Take the current values of the env variables and reassign them once the test is complete, as they may be needed.
+			*/
+			envlist := []string{"PGHOST", "PGPORT", "PGUSER", "PGDATABASE", "PGPASSWORD"}
+			for _, name := range envlist {
+				value, ok := os.LookupEnv(name)
+				if ok {
+					defer os.Setenv(name, value)
+				}
 			}
-			if !test.valid && config.password == test.password {
-				t.Errorf("Override of known invalid password made")
+
+			if test.host != "" {
+				os.Setenv("PGHOST", test.host)
 			}
+			if test.port != "" {
+				os.Setenv("PGPORT", test.port)
+			}
+			if test.user != "" {
+				os.Setenv("PGUSER", test.user)
+			}
+			if test.dbname != "" {
+				os.Setenv("PGDATABASE", test.dbname)
+			}
+			if test.password != "" {
+				os.Setenv("PGPASSWORD", test.password)
+			}
+
+			config := GetTestConfig().FromEnv()
+
+			t.Run("Host Test", func(t *testing.T) {
+				if test.hostshouldupdate && config.host != test.host {
+					t.Errorf("Failed to set host using builder function")
+				}
+				if !test.hostshouldupdate && config.host == test.host {
+					t.Errorf("unexpected override host made")
+				}
+			})
+			t.Run("Port Test", func(t *testing.T) {
+				if test.portshouldupdate && config.port != test.port {
+					t.Errorf("Failed to set port using builder function")
+				}
+				if !test.portshouldupdate && config.port == test.port {
+					t.Errorf("unexpected override port made")
+				}
+			})
+			t.Run("User Test", func(t *testing.T) {
+				if test.usershouldupdate && config.user != test.user {
+					t.Errorf("Failed to set user using builder function")
+				}
+				if !test.usershouldupdate && config.user == test.user {
+					t.Errorf("unexpected override user made")
+				}
+			})
+			t.Run("DBName Test", func(t *testing.T) {
+				if test.dbnameshouldupdate && config.dbname != test.dbname {
+					t.Errorf("Failed to set dbname using builder function")
+				}
+				if !test.dbnameshouldupdate && config.dbname == test.dbname {
+					t.Errorf("unexpected override dbname made")
+				}
+			})
+			t.Run("Password Test", func(t *testing.T) {
+				if test.passwordshouldupdate && config.password != test.password {
+					t.Errorf("Failed to set password using builder function")
+				}
+				if !test.passwordshouldupdate && config.password == test.password {
+					t.Errorf("unexpected override password made")
+				}
+			})
 		})
 	}
 }
 
-
+func TestConnect(t *testing.T) {
+	db, err := GetTestConfig().Connect()
+	if err != nil {
+		t.Errorf("Failed to connect to test database.")
+	}
+	
+	err = db.Ping()
+	if err != nil {
+		t.Errorf("Test DB Failed Ping test\n%v", err)
+	}
+}
 
 /*
 TODO
 Test
 	(config PGConfig) Connect() (ds DataStore, err error)
-	(config PGConfig) FromEnv() PGConfig
+	func (config PGConfig) Connect() (ds DataStore, err error) {
 
+
+	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable",
+		config.host, config.port, config.user, config.dbname)
+
+	if config.password != "" {
+		connectionString = fmt.Sprintf("%s password=%s", connectionString, config.password)
+	}
+
+	ds.DB, err = sql.Open("postgres", connectionString)
+	return ds, err
+}
 */

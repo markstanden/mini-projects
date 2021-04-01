@@ -85,6 +85,8 @@ func NewConfig() PGConfig {
 
 /*
 	FromEnv attempts to take the connnection options from the ENV variables.  if not set, the values remain as previously set.  This enables the function to be placed wherever most convenient in the builder chain.
+	The values are taken from the ENV variables and added to the config via the builder methods to keep one source of truth for the validation logic for each field.
+
 */
 func (config PGConfig) FromEnv() PGConfig {
 
@@ -92,7 +94,7 @@ func (config PGConfig) FromEnv() PGConfig {
 		PGHOST is the name of host to connect to
 	*/
 	if host, ok := os.LookupEnv("PGHOST"); ok {
-		config.host = host
+		config = config.Host(host)
 	} else {
 		log.Println("authentication/postgres: PGHOST environment variable not set, host unchanged")
 	}
@@ -102,7 +104,8 @@ func (config PGConfig) FromEnv() PGConfig {
 	*/
 	if port, ok := os.LookupEnv("PGPORT"); ok {
 		if _, err := strconv.ParseInt(port, 10, 32); err == nil {
-			config.port = port
+			//config.port = port
+			config = config.Port(port)
 		} else {
 			log.Println("authentication/postgres: invalid PGPORT environment variable, port unchanged")
 		}
@@ -114,7 +117,7 @@ func (config PGConfig) FromEnv() PGConfig {
 		PGUSER is the PostgreSQL user name to connect as. Defaults to be the same as the operating system name of the user running the application.
 	*/
 	if user, ok := os.LookupEnv("PGUSER"); ok {
-		config.user = user
+		config = config.User(user)
 	} else {
 		log.Println("authentication/postgres: PGUSER environment variable not set, username unchanged")
 	}
@@ -123,7 +126,7 @@ func (config PGConfig) FromEnv() PGConfig {
 		PGDATABASE is the database name to connect to
 	*/
 	if db, ok := os.LookupEnv("PGDATABASE"); ok {
-		config.dbname = db
+		config = config.DBName(db)
 	} else {
 		log.Println("authentication/postgres: PGDATABASE environment variable not set, database name unchanged")
 	}
@@ -132,7 +135,7 @@ func (config PGConfig) FromEnv() PGConfig {
 		PGPASSWORD is the PostgreSQL user password to connect with.
 	*/
 	if pw, ok := os.LookupEnv("PGPASSWORD"); ok {
-		config.password = pw
+		config = config.Password(pw)
 	} else {
 		log.Println("authentication/postgres: PGPASSWORD environment variable not set, password unchanged")
 	}

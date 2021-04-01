@@ -29,29 +29,13 @@ func GetTestConfig() PGConfig {
 }
 
 func TestNewConfig(t *testing.T) {
-	testCases := []struct {
-		desc string
-	}{
-		{desc: "Test host from env"},
-		{desc: "Test port from env"},
-		{desc: "Test user from env"},
-		{desc: "Test database from env"},
-		{desc: "Test password from env"},
-		{desc: "Test password from callback"},
-		{desc: "Test empty host from env"},
-		{desc: "Test empty port from env"},
-		{desc: "Test empty user from env"},
-		{desc: "Test empty database from env"},
-		{desc: "Test empty password from env"},
-		{desc: "Test empty password from callback"},
-		{
-			desc: "",
-		},
-	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-
-		})
+	config := GetTestConfig()
+	if config.host == "" ||
+		config.port == "" ||
+		config.dbname == "" ||
+		config.user == "" ||
+		config.password == "" {
+		t.Error("failed to set config to defaults")
 	}
 }
 

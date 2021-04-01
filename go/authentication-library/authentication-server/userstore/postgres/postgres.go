@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 )
 
 type DataStore struct {
@@ -100,7 +101,11 @@ func (config PGConfig) FromEnv() PGConfig {
 		PGPORT is the port number to connect to at the server host, or socket file name extension for Unix-domain connections.
 	*/
 	if port, ok := os.LookupEnv("PGPORT"); ok {
-		config.port = port
+		if _, err := strconv.ParseInt(port, 10, 32); err == nil {
+			config.port = port
+		} else {
+			log.Println("authentication/postgres: invalid PGPORT environment variable, port unchanged")
+		}
 	} else {
 		log.Println("authentication/postgres: PGPORT environment variable not set, port unchanged")
 	}
@@ -139,7 +144,9 @@ func (config PGConfig) FromEnv() PGConfig {
 	Host changes the config hostname to the supplied string.
 */
 func (config PGConfig) Host(host string) PGConfig {
-	config.host = host
+	if host != "" {
+		config.host = host
+	}
 	return config
 }
 
@@ -147,7 +154,16 @@ func (config PGConfig) Host(host string) PGConfig {
 	Host changes the config port to the supplied string.
 */
 func (config PGConfig) Port(port string) PGConfig {
-	config.port = port
+	if num, err := strconv.ParseInt(port, 10, 32); err == nil {
+		if num < 1 || num > 65535 {
+			log.Println("authentication/postgres: port override value is outside valid range, port number unchanged")
+			return config
+		}
+
+		config.port = port
+	} else {
+		log.Println("authentication/postgres: invalid port override, port unchanged")
+	}
 	return config
 }
 
@@ -155,7 +171,9 @@ func (config PGConfig) Port(port string) PGConfig {
 	Host changes the config user to the supplied string.
 */
 func (config PGConfig) User(user string) PGConfig {
-	config.user = user
+	if user != "" {
+		config.user = user
+	}
 	return config
 }
 
@@ -163,7 +181,9 @@ func (config PGConfig) User(user string) PGConfig {
 	Host changes the config database name to the supplied string.
 */
 func (config PGConfig) DBName(dbname string) PGConfig {
-	config.dbname = dbname
+	if dbname != "" {
+		config.dbname = dbname
+	}
 	return config
 }
 

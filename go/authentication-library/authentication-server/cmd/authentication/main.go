@@ -62,7 +62,7 @@ func run(args []string, stdout io.Writer) error {
 	*/
 	db, err := pgConfig.Connect()
 	if err != nil {
-		return fmt.Errorf("error establishing connection to database: /n %v", err)
+		panic(err)
 	}
 
 	/*

@@ -17,3 +17,6 @@
 
 # local config
 .config
+
+# debug
+__debug_bin*

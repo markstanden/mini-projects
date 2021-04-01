@@ -24,11 +24,13 @@ func SignIn(us authentication.UserService) http.Handler {
 			// Check for errors in the parsing
 			if err != nil {
 				log.Println("Failed to Parse Form: ", err)
+				return
 			}
 
 			user, err := us.Find("email", r.PostForm.Get("email"))
 			if err != nil {
 				fmt.Fprintln(w, getHTML("Sign In - Invalid UserName", r.PostForm.Get("email")))
+				return
 			}
 
 			// Initialise a boolean variable that hold whether the password matches the stored, hashed password.
@@ -36,6 +38,7 @@ func SignIn(us authentication.UserService) http.Handler {
 			valid := argonhasher.Confirm(r.PostForm.Get("password"), user.HashedPassword)
 			if !valid {
 				fmt.Fprintln(w, getHTML("Sign In - Invalid Password", r.PostForm.Get("email")))
+				return
 			} else {
 				compareOK = true
 			}

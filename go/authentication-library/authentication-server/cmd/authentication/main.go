@@ -49,7 +49,8 @@ func run(args []string, stdout io.Writer) error {
 		set the default DB name to authentication, and then add the FromEnv
 		to override the defaults if required
 	*/
-	pgConfig := postgres.NewConfig().DBName("authentication").FromEnv()
+	pgConfig := postgres.NewConfig().FromEnv()
+
 	/*
 		Attempt to retrieve a password from the GCP password store.
 		If this fails it returns a empty string
@@ -57,24 +58,29 @@ func run(args []string, stdout io.Writer) error {
 	if dbPW := gcloud.GetSecret("PGPASSWORD")("latest"); dbPW != "" {
 		pgConfig = pgConfig.Password(dbPW)
 	}
-	/*
-		Use the config and connect to the database
-	*/
-	db, err := pgConfig.Connect()
-	if err != nil {
-		panic(err)
-	}
 
 	/*
+		Use the config and connect to the database.
+		Panic on failure to connect.
 		Close the database when the server ends
 	*/
-	defer db.DB.Close()
+	authdb, err := pgConfig.DBName("authentication").Connect()
+	if err != nil {
+		return fmt.Errorf("failed to connect to the DataStore...\n %v", err)
+	}
+	defer authdb.DB.Close()
 
-	us := postgres.UserService{DB: db}
-	ss := postgres.SecretService{DB: db, Lifespan: 3600}
+	/* Create a UserService to handle our user database */
+	us := postgres.UserService{DB: authdb}
 
-	// create a token service to create authentication tokens for users
-	userTokens := &tokenservice.TokenService{
+	/* Create a SecretService to handle our rotating keys */
+	ss := postgres.SecretService{DB: authdb, Lifespan: 3600}
+
+	/* Create a userservice cache and shadow the db */
+	usc := cache.NewUserCache(us)
+
+	/* create a token service to create authentication tokens for users */
+	ts := &tokenservice.TokenService{
 		Issuer:     "markstanden.dev",
 		Audience:   "markstanden.dev",
 		HoursValid: 24,
@@ -82,22 +88,19 @@ func run(args []string, stdout io.Writer) error {
 		StartTime:  1617020114,
 	}
 
-	// Create a user cache and shadow the db
-	cache := cache.NewUserCache(us)
-
-	// Create a handler for our routes, pass in the cache
-	http.Handle("/", routes.Home(cache))
-	http.Handle("/reset-users-table", routes.ResetUsersTable(cache))
+	/* Create a handler for our routes, pass in the cache */
+	http.Handle("/", routes.Home(usc))
+	http.Handle("/reset-users-table", routes.ResetUsersTable(usc))
 	http.Handle("/reset-keys-table", routes.ResetKeysTable(ss))
-	http.Handle("/signin", routes.SignIn(cache))
-	http.Handle("/signup", routes.SignUp(cache, userTokens))
+	http.Handle("/signin", routes.SignIn(usc))
+	http.Handle("/signup", routes.SignUp(usc, ts))
 
-	// start the server.
+	/* start the server. */
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		return fmt.Errorf("failed to start HTTP server: /n %v", err)
 	}
 	fmt.Fprintf(stdout, "HTTP Server listening on port :%v", port)
 
-	// return no errors if the app closes normally
+	/* return no errors if the app closes normally */
 	return nil
 }

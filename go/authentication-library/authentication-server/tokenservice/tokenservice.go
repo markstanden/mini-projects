@@ -36,9 +36,8 @@ type TokenService struct {
 		SecretCallback is the callback function to be invoked by the
 		Create/Decode methods to obtain a specific version of the
 		secret used to encode/decode the token.
-		if err != nil the err should be returned, with empty data
+		if err != nil the secret should be returned empty
 	*/
-	//SecretCallback func(KeyID string) (secret string)
 	Secret authentication.SecretService
 
 	/*

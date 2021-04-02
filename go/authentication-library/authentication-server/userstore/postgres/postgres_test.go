@@ -3,30 +3,7 @@ package postgres
 import (
 	"os"
 	"testing"
-
-	"github.com/markstanden/authentication/deployment/googlecloud"
 )
-
-func GetTestConfig() PGConfig {
-	/*
-		create a new default config but with the dbname "test"
-	*/
-	config := NewConfig().DBName("test")
-
-	/*
-		attempt to to connect to the google secret store (if possible) to retreive secret for production tests
-	*/
-	pw := googlecloud.NewSecretHandler().GetSecret("PGTESTPASSWORD")("latest")
-	/*
-		GetSecret returns an empty string on failure, and will fail if in development env
-	*/
-	if pw == "" {
-		/* if the GCP password fails, or is empty just use defaults */
-		return config
-	}
-	/* override default password with gcp password */
-	return config.Password(pw)
-}
 
 func TestNewConfig(t *testing.T) {
 	config := GetTestConfig()
@@ -338,22 +315,3 @@ func TestConnect(t *testing.T) {
 		t.Errorf("Test DB Failed Ping test\n%v", err)
 	}
 }
-
-/*
-TODO
-Test
-	(config PGConfig) Connect() (ds DataStore, err error)
-	func (config PGConfig) Connect() (ds DataStore, err error) {
-
-
-	connectionString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable",
-		config.host, config.port, config.user, config.dbname)
-
-	if config.password != "" {
-		connectionString = fmt.Sprintf("%s password=%s", connectionString, config.password)
-	}
-
-	ds.DB, err = sql.Open("postgres", connectionString)
-	return ds, err
-}
-*/

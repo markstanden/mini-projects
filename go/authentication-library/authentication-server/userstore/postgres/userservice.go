@@ -7,6 +7,7 @@ import (
 	"log"
 
 	// This is the required postgres driver for the database/sql package
+
 	_ "github.com/lib/pq"
 	"github.com/markstanden/authentication"
 )
@@ -35,7 +36,7 @@ func (us UserService) Add(u *authentication.User) (err error) {
 		return errors.New("missing user data")
 	}
 	var id int
-	query := "INSERT INTO users (name, email, hashedpassword, tokenid) VALUES ($1, $2, $3, $4) RETURNING id"
+	query := "INSERT INTO users (name, email, hashedpassword, tokenid) VALUES ($1, $2, $3, $4) RETURNING uniqueid"
 	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenID).Scan(&id)
 	if err != nil {
 		return err
@@ -45,7 +46,7 @@ func (us UserService) Add(u *authentication.User) (err error) {
 	u.UniqueID = id
 
 	// Log addition to database.
-	log.Printf("authentication/postgres: user (%d) added to db", id)
+	//log.Printf("authentication/postgres: user (%d) added to db", id)
 
 	//return the ID of the created user
 	return nil
@@ -56,7 +57,8 @@ func (us UserService) Add(u *authentication.User) (err error) {
 	deletes a user from the Database
 */
 func (us UserService) Delete(u *authentication.User) (err error) {
-	return nil
+	_, err = us.DB.Exec("DELETE FROM users WHERE email = $1", u.Email)
+	return err
 }
 
 /*
@@ -72,27 +74,26 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 
 	switch key {
 	case "email":
-		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, tokenid FROM users WHERE email = $1", value)
+		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenid FROM users WHERE email = $1", value)
 	case "tokenid":
-		row = us.DB.QueryRow("SELECT id, name, email, hashedpassword, tokenid FROM users WHERE tokenid = $1", value)
+		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenid FROM users WHERE tokenid = $1", value)
 	default:
 		return nil, errors.New("user not found")
 	}
 
-	uid := 0
+	uniqueID := 0
 	name := ""
 	email := ""
 	hashedPassword := ""
 	tokenID := ""
-	err = row.Scan(&uid, &name, &email, &hashedPassword, &tokenID)
+	err = row.Scan(&uniqueID, &name, &email, &hashedPassword, &tokenID)
 
 	switch err {
 	case sql.ErrNoRows:
-		log.Println("authentication/sql: user not found")
 		return nil, fmt.Errorf("user not found")
 	case nil:
 		return &authentication.User{
-			UniqueID:       uid,
+			UniqueID:       uniqueID,
 			Name:           name,
 			Email:          email,
 			HashedPassword: hashedPassword,
@@ -108,9 +109,41 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 /*
 	**  Update  **
 	updates a user in the Database
+	This definitely needs refactoring!
 */
-func (us UserService) Update(u *authentication.User) (err error) {
-	return nil
+func (us UserService) Update(u *authentication.User, updatedFields authentication.User) (err error) {
+
+	if updatedFields.Name != "" && updatedFields.Name != u.Name {
+		us.updateName(u.UniqueID, updatedFields.Name)
+	}
+	if updatedFields.Email != "" && updatedFields.Email != u.Email {
+		us.updateEmail(u.UniqueID, updatedFields.Email)
+	}
+	if updatedFields.HashedPassword != "" && updatedFields.HashedPassword != u.HashedPassword {
+		us.updateHashedPW(u.UniqueID, updatedFields.HashedPassword)
+	}
+	if updatedFields.TokenID != "" && updatedFields.TokenID != u.TokenID {
+		us.updateTokenID(u.UniqueID, updatedFields.TokenID)
+	}
+
+	return err
+}
+
+func (us UserService) updateName(uniqueID int, name string) (err error) {
+	_, err = us.DB.Exec("UPDATE users SET name = $1 WHERE uniqueid = $2", name, uniqueID)
+	return err
+}
+func (us UserService) updateEmail(uniqueID int, email string) (err error) {
+	_, err = us.DB.Exec("UPDATE users SET email = $1 WHERE uniqueid = $2", email, uniqueID)
+	return err
+}
+func (us UserService) updateHashedPW(uniqueID int, hashedPW string) (err error) {
+	_, err = us.DB.Exec("UPDATE users SET hashedpassword = $1 WHERE uniqueid = $2", hashedPW, uniqueID)
+	return err
+}
+func (us UserService) updateTokenID(uniqueID int, tokenID string) (err error) {
+	_, err = us.DB.Exec("UPDATE users SET tokenid = $1 WHERE uniqueid = $2", tokenID, uniqueID)
+	return err
 }
 
 /*
@@ -129,7 +162,7 @@ func (us UserService) FullReset() (err error) {
 
 	// Create the new user table
 	_, err = us.DB.Exec(`CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    uniqueid SERIAL PRIMARY KEY,
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
     hashedpassword varchar(160) NOT NULL,
@@ -138,6 +171,6 @@ func (us UserService) FullReset() (err error) {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}
 
-	log.Println("authentication/postgres: users & keys table dropped and created ok")
+	//log.Println("authentication/postgres: users table dropped and created ok")
 	return nil
 }

@@ -110,6 +110,6 @@ func (ss SecretService) FullReset() (err error) {
 		return fmt.Errorf("authentication/postgres: Failed to create keys table:\n%v", err)
 	}
 
-	log.Println("authentication/postgres: keys table dropped and created ok")
+	//log.Println("authentication/postgres: keys table dropped and created ok")
 	return nil
 }

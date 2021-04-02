@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/markstanden/authentication"
@@ -19,45 +20,63 @@ type userCache struct {
 	tokenIDCache map[string]*authentication.User
 }
 
-// UserCache wraps a UserService to provide an in-memory cache.
-type CachedStore struct {
+/*
+	UserCache wraps a UserService to provide an in-memory cache.
+	The idea being to save database reads for basic	user authentication
+*/
+type UserServiceCache struct {
 	cache userCache
 	store authentication.UserService
 }
 
-func (c CachedStore) LogStatus(message string) {
-	log.Println(message+" - Current Cache Values:\nEmail Cache:\n\t", c.cache.emailCache, "\nTokenID Cache:\n\t", c.cache.tokenIDCache)
+/*
+	LogStatus takes a message and prefixes it to the start of a cache status log
+	Helpful to ensure that the cache is acting as expected.
+*/
+func (usc UserServiceCache) LogStatus(message string) {
+	log.Println(
+		message+" - Current Cache Values:\nEmail Cache:\n\t",
+		usc.cache.emailCache,
+		"\nTokenID Cache:\n\t",
+		usc.cache.tokenIDCache,
+	)
 }
 
-// NewUserCache returns a new read-through cache for service.
-func NewUserCache(us authentication.UserService) *CachedStore {
-	cache := userCache{
+/*
+	NewUserCache returns an empty new read-through cache for the wrapped UserService.
+*/
+func NewUserCache(us authentication.UserService) *UserServiceCache {
+	uc := userCache{
 		emailCache:   make(map[string]*authentication.User),
 		tokenIDCache: make(map[string]*authentication.User),
 	}
-	return &CachedStore{
-		cache: cache,
+	return &UserServiceCache{
+		cache: uc,
 		store: us,
 	}
 }
 
-func (c CachedStore) Find(key, value string) (*authentication.User, error) {
+/*
+	Find looks up a user in the cache first,
+	and if not present consults the wrapped UserService
+*/
+func (usc UserServiceCache) Find(key, value string) (*authentication.User, error) {
 
 	var cache = make(map[string]*authentication.User)
 
 	switch key {
 	case "email":
-		cache = c.cache.emailCache
+		cache = usc.cache.emailCache
 	case "tokenid":
-		cache = c.cache.tokenIDCache
+		cache = usc.cache.tokenIDCache
+	default:
+		return nil, fmt.Errorf("authentication/cache:find - lookup key not found in switch statement")
 	}
-
-	c.LogStatus("cache/Find Called")
 
 	// Check the local cache first.
 	if u, ok := cache[value]; ok {
 		log.Printf(
-			"authentication/cache: user (%d) read from %#v, current size: %v Users",
+			"authentication/cache:find - user (%d) read from %#v, current size: %v Users",
 			u.UniqueID, cache, len(cache))
 
 		// We have found a user in the cache
@@ -66,7 +85,7 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 	}
 
 	// User not found in the cache, so check in the wrapped service.
-	u, err := c.store.Find(key, value)
+	u, err := usc.store.Find(key, value)
 
 	// If the user is not found return nil user, error
 	if err != nil {
@@ -83,14 +102,20 @@ func (c CachedStore) Find(key, value string) (*authentication.User, error) {
 
 }
 
-// Add passes the Add request to the wrapped store
-func (c CachedStore) Add(u *authentication.User) (err error) {
-	c.LogStatus("cache/Add Called")
+/*
+	Add passes the Add request to the wrapped store.
+	Since the cache is only meant to speed up duplicate reads,
+	and not replace the main UserService, this is a passthough method.
+	This means the main UserService can perform any validation required
+	(duplicate keys etc), and there is no need to duplicate here, or have
+	potentially invald users stored in the cache.
+*/
+func (usc UserServiceCache) Add(u *authentication.User) (err error) {
 	/*
 		add the user to the main store as
 		we only add to the cache on read.
 	*/
-	return c.store.Add(u)
+	return usc.store.Add(u)
 
 }
 
@@ -99,43 +124,39 @@ func (c CachedStore) Add(u *authentication.User) (err error) {
 	It is now possible that the cache will hold out of date information
 	so we will need to delete the entry from the cache(s).
 */
-func (c CachedStore) Update(u *authentication.User) (err error) {
-	c.LogStatus("cache/Update Called")
+func (usc UserServiceCache) Update(u *authentication.User, fields authentication.User) (err error) {
 
 	/*
 		delete the user from all caches as
 		information may now be out of date
 	*/
-	c.deleteFromAll(u)
+	usc.deleteFromAll(u)
 
 	/*
 		update the user in the main store,
 		return any errors directly
 	*/
-	c.LogStatus("cache/Update Complete, passing to datastore...")
-	return c.store.Update(u)
+	return usc.store.Update(u, fields)
 }
 
 /*
 	deleteFromAll is intended as a single function to delete the current
 	user from the cache, useful for deleting and updating users.
 */
-func (c CachedStore) deleteFromAll(u *authentication.User) {
+func (usc UserServiceCache) deleteFromAll(u *authentication.User) {
 
 	/*
 		Built in function delete only deletes the record if it exists,
 		so no requirement for a comma ok.
 	*/
-	delete(c.cache.tokenIDCache, u.TokenID)
-	delete(c.cache.emailCache, u.Email)
+	delete(usc.cache.tokenIDCache, u.TokenID)
+	delete(usc.cache.emailCache, u.Email)
 }
 
-func (c CachedStore) Delete(u *authentication.User) (err error) {
-	c.LogStatus("cache/Delete Called")
-	c.deleteFromAll(u)
+func (usc UserServiceCache) Delete(u *authentication.User) (err error) {
+	usc.deleteFromAll(u)
 
-	c.LogStatus("cache/Delete Complete passing to datastore...")
-	return c.store.Delete(u)
+	return usc.store.Delete(u)
 }
 
 /*
@@ -145,17 +166,15 @@ func (c CachedStore) Delete(u *authentication.User) (err error) {
 	the database structure / authentication.User struct object while still experimenting with the
 	naming and number of required fields.
 */
-func (c CachedStore) FullReset() (err error) {
-	c.LogStatus("cache/FullReset Called")
+func (usc UserServiceCache) FullReset() (err error) {
 	/*
 		Reset the current user cache, otherwise previous user entries will persist.
 	*/
-	c.cache.emailCache = make(map[string]*authentication.User)
-	c.cache.tokenIDCache = make(map[string]*authentication.User)
+	usc.cache.emailCache = make(map[string]*authentication.User)
+	usc.cache.tokenIDCache = make(map[string]*authentication.User)
 
 	/*
 		reset the main DataStore and return any errors.
 	*/
-	c.LogStatus("cache/FullReset Complete, Passing to datastore")
-	return c.store.FullReset()
+	return usc.store.FullReset()
 }

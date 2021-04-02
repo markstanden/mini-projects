@@ -95,22 +95,13 @@ func (config PGConfig) FromEnv() PGConfig {
 	*/
 	if host, ok := os.LookupEnv("PGHOST"); ok {
 		config = config.Host(host)
-	} else {
-		log.Println("authentication/postgres: PGHOST environment variable not set, host unchanged")
 	}
 
 	/*
 		PGPORT is the port number to connect to at the server host, or socket file name extension for Unix-domain connections.
 	*/
 	if port, ok := os.LookupEnv("PGPORT"); ok {
-		if _, err := strconv.ParseInt(port, 10, 32); err == nil {
-			//config.port = port
-			config = config.Port(port)
-		} else {
-			log.Println("authentication/postgres: invalid PGPORT environment variable, port unchanged")
-		}
-	} else {
-		log.Println("authentication/postgres: PGPORT environment variable not set, port unchanged")
+		config = config.Port(port)
 	}
 
 	/*
@@ -118,8 +109,6 @@ func (config PGConfig) FromEnv() PGConfig {
 	*/
 	if user, ok := os.LookupEnv("PGUSER"); ok {
 		config = config.User(user)
-	} else {
-		log.Println("authentication/postgres: PGUSER environment variable not set, username unchanged")
 	}
 
 	/*
@@ -127,8 +116,6 @@ func (config PGConfig) FromEnv() PGConfig {
 	*/
 	if db, ok := os.LookupEnv("PGDATABASE"); ok {
 		config = config.DBName(db)
-	} else {
-		log.Println("authentication/postgres: PGDATABASE environment variable not set, database name unchanged")
 	}
 
 	/*
@@ -136,8 +123,6 @@ func (config PGConfig) FromEnv() PGConfig {
 	*/
 	if pw, ok := os.LookupEnv("PGPASSWORD"); ok {
 		config = config.Password(pw)
-	} else {
-		log.Println("authentication/postgres: PGPASSWORD environment variable not set, password unchanged")
 	}
 
 	return config
@@ -154,7 +139,11 @@ func (config PGConfig) Host(host string) PGConfig {
 }
 
 /*
-	Host changes the config port to the supplied string.
+	Host changes the config port to the supplied string,
+	provided the input string is integer in the valid range.
+	if the input is invalid -
+	the config is not updated,
+	and the original config is returned unchanged.
 */
 func (config PGConfig) Port(port string) PGConfig {
 	if num, err := strconv.ParseInt(port, 10, 32); err == nil {
@@ -171,7 +160,11 @@ func (config PGConfig) Port(port string) PGConfig {
 }
 
 /*
-	Host changes the config user to the supplied string.
+	Host changes the config user to the supplied string,
+	provided the string input is not empty.
+	If an empty string is provided -
+	the config is not updated,
+	and the original config returned unchanged.
 */
 func (config PGConfig) User(user string) PGConfig {
 	if user != "" {
@@ -181,7 +174,11 @@ func (config PGConfig) User(user string) PGConfig {
 }
 
 /*
-	Host changes the config database name to the supplied string.
+	Host changes the config database name to the supplied string -
+	provided the string input is not empty.
+	If an empty string is provided -
+	the config is not updated,
+	and the original config returned unchanged.
 */
 func (config PGConfig) DBName(dbname string) PGConfig {
 	if dbname != "" {
@@ -192,6 +189,8 @@ func (config PGConfig) DBName(dbname string) PGConfig {
 
 /*
 	Host changes the config password to the supplied string.
+	Empty strings are valid, as this may be the case in development,
+	but is not recommended.
 */
 func (config PGConfig) Password(password string) PGConfig {
 	config.password = password

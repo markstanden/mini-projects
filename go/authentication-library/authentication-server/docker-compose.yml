@@ -25,18 +25,19 @@ services:
     ports:
       - 8080:8081
 
-  # server:
-  #   build:
-  #     context: .
-  #     dockerfile: ./Dockerfile
-  #   # volumes:
-  #   #   - ./server:/app
-  #   environment:
-  #     - PGUSER=postgres
-  #     - PGHOST=postgres
-  #     - PGDATABASE=authentication
-  #     - PGPASSWORD=postgres
-  #     - PGPORT=5432
-  #   depends_on:
-  #     - test
-  #     - postgres
+  server:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    # volumes:
+    #   - ./server:/app
+    environment:
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=authentication
+      - PGPASSWORD=postgres
+      - PGPORT=5432
+      - PGTESTHOST=test
+    depends_on:
+      - test
+      - postgres

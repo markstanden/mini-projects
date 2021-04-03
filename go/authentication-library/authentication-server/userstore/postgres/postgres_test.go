@@ -305,7 +305,7 @@ func TestFromEnv(t *testing.T) {
 }
 
 func TestConnect(t *testing.T) {
-	db, err := GetTestConfig().Connect()
+	_, err := GetTestConfig().Connect()
 	if err != nil {
 		t.Errorf("Failed to connect to test database.")
 	}

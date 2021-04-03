@@ -62,6 +62,8 @@ func (config PGConfig) Connect() (ds DataStore, err error) {
 		connectionString = fmt.Sprintf("%s password=%s", connectionString, config.password)
 	}
 
+	fmt.Println(connectionString)
+
 	/*
 		Connect to postgres using the connection string
 	*/

@@ -1,0 +1,38 @@
+version: '2'
+services:
+  # db:
+  #   image: postgres
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: authentication
+  #     PGDATA: /app/pgdata
+  #   ports:
+  #     - "5433:5432"
+
+  test:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test
+      PGDATA: /test/pgdata
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8081
+
+  server:
+      build: .
+        environment:
+          POSTGRES_USER: postgres
+      #context: .
+      #dockerfile: Dockerfile
+      ports:
+      - 8080:8080

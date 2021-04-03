@@ -1,7 +1,8 @@
-FROM golang:1.16.3-alpine AS buildstep
+FROM golang:1.16.3 AS buildstep
 
 # install git to pull down repo
-RUN apk add --no-cache git
+RUN apt-get install git
+#RUN psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" --port "9000" -c "test"
 
 # clone the repo
 WORKDIR /app
@@ -11,7 +12,7 @@ RUN git clone https://github.com/markstanden/authentication.git /app
 RUN go mod download
 
 # Run our tests, verbose output
-RUN CGO_ENABLED=0 go test ./... -v CGO
+RUN CGO_ENABLED=0 go test ./...
 
 # Build the executable
 RUN go build -o ./build .

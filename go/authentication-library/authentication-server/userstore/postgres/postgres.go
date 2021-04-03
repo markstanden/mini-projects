@@ -67,9 +67,9 @@ func (config PGConfig) Connect() (ds DataStore, err error) {
 	/*
 		Connect to postgres using the connection string
 	*/
-	//ds.DB, err = sql.Open("postgres", connectionString)
+	ds.DB, err = sql.Open("postgres", connectionString)
 	//ds.DB, err = sql.Open("postgres", "postgresql://user:password@ip:port/database")
-	ds.DB, err = sql.Open("postgres", "postgresql://postgres:postgres@test:9000/test")
+	//ds.DB, err = sql.Open("postgres", "postgresql://postgres:postgres@test:9000/test")
 	return ds, err
 }
 

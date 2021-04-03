@@ -6,24 +6,24 @@ networks:
       true
   backend:
     external:
-      false
+      true
   test:
     external:
       false
 
 services:
-  postgres:
-    image: postgres:latest
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: authentication
-      POSTGRES_PORT: 5432
-      PGDATA: /app/pgdata
-    networks:
-      - backend
-    expose:
-      - 5432
+  # postgres:
+  #   image: postgres:latest
+  #   restart: always
+  #   environment:
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: authentication
+  #     POSTGRES_PORT: 5432
+  #   expose:
+  #     - 5432
+    #ports:
+    #  - 5432:5432
+    #network_mode: bridge
 
   test:
     image: postgres:latest
@@ -39,19 +39,19 @@ services:
 
 
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8081
-    networks:
-      - test
-      - backend
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8080:8081
+  #   # networks:
+  #   #   - test
+  #   #   - backend
+  #   network_mode: bridge
 
   server:
     build:
-      network:
-        test
+      network: test
       context:
         .
       dockerfile:
@@ -66,9 +66,9 @@ services:
       - PGPORT=5432
     networks:
       - test
-      - backend
+    #   - backend
     depends_on:
       - test
-      - postgres
+  #    - postgres
     ports:
-      - 8080:8080
+      - 3000:3000

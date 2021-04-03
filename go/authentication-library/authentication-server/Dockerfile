@@ -17,7 +17,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 go test ./...
 
 # Build the executable
-RUN go build -o ./build .
+RUN go build -o ./build/ ./cmd/authentication
 
 
 #
@@ -32,7 +32,7 @@ RUN go build -o ./build .
 #COPY --from=buildstep /app/build/ /app
 
 # This container exposes port 8080 to the outside world
-EXPOSE 8080
-
+#EXPOSE 8080
+ENV port=3000
 # Run the binary program produced by `go install`
-CMD ["/build/authentication"]
+CMD ["./build/authentication"]

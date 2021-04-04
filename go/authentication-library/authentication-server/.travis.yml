@@ -6,6 +6,10 @@ language: generic
 services:
   - docker
 
-script:
+before_install:
 #  - docker-compose -f docker-compose.yml up --force-recreate --exit-code-from testserver --abort-on-container-exit --build testserver
   - docker-compose -f docker-compose.yml up --build testserver
+
+  script:
+  - docker-compose -f docker-compose.yml run testserver go test /app/...
+  

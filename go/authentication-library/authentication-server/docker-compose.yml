@@ -13,9 +13,14 @@ services:
 
 
   test:
-    image: postgres:latest
+    image: postgres
     healthcheck:
       test: "exit 0"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test
+      POSTGRES_PORT: 5432
 
   testserver:
     build:
@@ -24,12 +29,6 @@ services:
       dockerfile:
         #https://www.github.com/markstanden/authentication/Dockerfile.testing
         Dockerfile.testing
-    environment:
-      - PGUSER=postgres
-      - PGHOST=postgres
-      - PGDATABASE=test
-      - PGPASSWORD=postgres
-      - PGPORT=5432
     depends_on:
       test:
         condition: service_healthy
@@ -39,7 +38,7 @@ services:
       context:
         .
       dockerfile:
-        #https://www.github.com/markstanden/authentication/Dockerfile.build
+        https://www.github.com/markstanden/authentication/Dockerfile.build
         Dockerfile.build
     environment:
       - PGUSER=postgres

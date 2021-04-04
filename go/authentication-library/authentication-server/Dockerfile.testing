@@ -1,0 +1,19 @@
+FROM golang:1.16.3 AS tester
+
+# install git to pull down repo
+RUN apt-get install git -y
+
+# clone the repo
+WORKDIR /app
+RUN git clone https://github.com/markstanden/authentication.git /app
+
+# download the dependancies
+RUN go mod download
+
+# Set our ENV variables to aim at our test DB,
+# and run our tests, verbose output
+ENV CGO_ENABLED=0
+ENV PGTESTHOST=test
+ENV PGTESTPORT=5432
+ENV PGTESTDB=postgres
+CMD go test ./... -v

@@ -22,7 +22,8 @@ services:
       context:
         .
       dockerfile:
-        github.com/markstanden/authentication/Dockerfile.test
+        #https://www.github.com/markstanden/authentication/Dockerfile.testing
+        Dockerfile.testing
     environment:
       - PGUSER=postgres
       - PGHOST=postgres
@@ -38,7 +39,8 @@ services:
       context:
         .
       dockerfile:
-        github.com/markstanden/authentication/Dockerfile.build
+        #https://www.github.com/markstanden/authentication/Dockerfile.build
+        Dockerfile.build
     environment:
       - PGUSER=postgres
       - PGHOST=postgres

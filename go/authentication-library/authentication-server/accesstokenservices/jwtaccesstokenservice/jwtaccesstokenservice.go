@@ -24,13 +24,13 @@ type JWTAccessTokenService struct {
 	Audience string
 
 	/*
-		HoursValid is the number of hours until the JWT expires.
+		MinsValid is the number of mins until the JWT expires.
 		This value is used in both creating and verifying tokens,
 		and tokens *made* "iat" or *not before* "nbf" outside of this range will be rejected.
 		Its primary role is to set the expiry date/time "exp" field on the JWT which defaults
-		to the current time plus the value of HoursValid (in Hours)
+		to the current time plus the value of MinsValid (in mins)
 	*/
-	HoursValid int
+	MinsValid int
 
 	/*
 		SecretCallback is the callback function to be invoked by the
@@ -59,7 +59,7 @@ func (ts *JWTAccessTokenService) Create(userID string) (jwtString, jwtID string,
 	keyID := ts.Secret.GetKeyID("JWT")
 
 	// the number of seconds the token is valid for
-	validFor := hoursToSeconds(ts.HoursValid)
+	validFor := minsToSeconds(ts.MinsValid)
 
 	//create the token, and return
 	t := jwt.NewToken(ts.Issuer, ts.Audience, userID, jwtID, keyID, validFor)
@@ -75,7 +75,7 @@ func (ts *JWTAccessTokenService) Create(userID string) (jwtString, jwtID string,
 
 func (ts *JWTAccessTokenService) Decode(jwtString string) (userID, jwtID string, err error) {
 	data := &jwt.Token{}
-	data.Config.Lifespan = hoursToSeconds(ts.HoursValid)
+	data.Config.Lifespan = minsToSeconds(ts.MinsValid)
 	//data.Config.ValidFrom = ts.StartTime
 
 	err = jwt.Decode(jwtString, ts.Secret.GetSecret("JWT"), data)
@@ -93,6 +93,6 @@ func (ts *JWTAccessTokenService) Decode(jwtString string) (userID, jwtID string,
 }
 
 // returns hours in seconds
-func hoursToSeconds(hours int) (secs int64) {
-	return int64(hours * 60 * 60)
+func minsToSeconds(mins int) (secs int64) {
+	return int64(mins * 60)
 }

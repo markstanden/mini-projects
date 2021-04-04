@@ -12,7 +12,7 @@ var testuser1 = authentication.User{
 	Name:           "Test",
 	Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCoIbfKlI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 	HashedPassword: "28ZuYpwprirXKRvnvB3nPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-	TokenUserID:        "uBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG",
+	TokenUserID:    "uBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG",
 }
 
 /*
@@ -76,7 +76,7 @@ func TestAddThenFind(t *testing.T) {
 				Name:           "Full User",
 				Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCoIbfKlI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 				HashedPassword: "28ZuYpwprirXKRvnvB3nPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-				TokenUserID:        "uBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID:    "uBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: true,
 		},
 		{
@@ -85,7 +85,7 @@ func TestAddThenFind(t *testing.T) {
 				Name:           "Empty Email User",
 				Email:          "",
 				HashedPassword: "28ZuYpwprirXKRvnvB3asdfasdfnPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-				TokenUserID:        "uBIH3ZsbyJ5JUiasdfasdfatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID:    "uBIH3ZsbyJ5JUiasdfasdfatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: false,
 		},
 		{
@@ -93,7 +93,7 @@ func TestAddThenFind(t *testing.T) {
 			user: authentication.User{
 				Name:           "Missing Email User",
 				HashedPassword: "28ZuYpwprirXKRvnvB3asdfasdfnPLd0NasdfA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCasdfasdfKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-				TokenUserID:        "uBIH3ZsbyJ5JUasdfasiasdfasdfatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID:    "uBIH3ZsbyJ5JUasdfasiasdfasdfatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: false,
 		},
 		{
@@ -102,14 +102,14 @@ func TestAddThenFind(t *testing.T) {
 				Name:           "Empty HashedPassword User",
 				Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCo345ggbIbfKlI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 				HashedPassword: "",
-				TokenUserID:        "uBIH3ZsbyJ5JUiatbe345qfasdfUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID:    "uBIH3ZsbyJ5JUiatbe345qfasdfUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: false,
 		},
 		{
 			desc: "Missing HashedPassword",
 			user: authentication.User{
-				Name:    "Missing HashedPassword User",
-				Email:   "SCcedYbuiRCqN86clZ9Jo0KgxOCoIbfKnuymylI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
+				Name:        "Missing HashedPassword User",
+				Email:       "SCcedYbuiRCqN86clZ9Jo0KgxOCoIbfKnuymylI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 				TokenUserID: "uBIH3ZsbyJ5JsdfgUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: false,
 		},
@@ -119,7 +119,7 @@ func TestAddThenFind(t *testing.T) {
 				Name:           "Empty TokenUserID User",
 				Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCsdfgsdfgoIbfKlI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 				HashedPassword: "28ZuYpwprirXKRvnvB3nPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3asdgadfgJ73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-				TokenUserID:        ""},
+				TokenUserID:    ""},
 			isValid: false,
 		},
 		{
@@ -201,7 +201,7 @@ func TestUpdate(t *testing.T) {
 		Name:           "Test",
 		Email:          "test@test.com",
 		HashedPassword: "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
-		TokenUserID:        "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
+		TokenUserID:    "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
 	}
 	enduser := authentication.User{
 		/*
@@ -212,7 +212,7 @@ func TestUpdate(t *testing.T) {
 		Name:           "Testy",
 		Email:          "testy@testing.com",
 		HashedPassword: "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
-		TokenUserID:        "cP7Pd9RiZyWpuZEweCpDnzSk7zB7aJKj9ZcGgAyJMVBzKMgymh2GVajWxn3hEZ5b",
+		TokenUserID:    "cP7Pd9RiZyWpuZEweCpDnzSk7zB7aJKj9ZcGgAyJMVBzKMgymh2GVajWxn3hEZ5b",
 	}
 
 	var usc *UserServiceCache
@@ -283,7 +283,7 @@ func TestDelete(t *testing.T) {
 		Name:           "Test",
 		Email:          "test@test.com",
 		HashedPassword: "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
-		TokenUserID:        "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
+		TokenUserID:    "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
 	}
 
 	var usc *UserServiceCache

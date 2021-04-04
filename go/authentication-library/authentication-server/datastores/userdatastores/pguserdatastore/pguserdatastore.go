@@ -95,7 +95,7 @@ func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err e
 			Name:           name,
 			Email:          email,
 			HashedPassword: hashedPassword,
-			TokenUserID:        tokenUserID,
+			TokenUserID:    tokenUserID,
 		}, nil
 	default:
 		log.Println("authentication/sql: user lookup error")

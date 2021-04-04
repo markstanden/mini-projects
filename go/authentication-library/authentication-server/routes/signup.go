@@ -17,20 +17,7 @@ func SignUp(us authentication.UserDataStore, ts authentication.AccessTokenServic
 		if r.Method == "GET" {
 
 			w.Header().Set("type", "html")
-			fmt.Fprintln(w, `
-		<h1> Sign Up for a new StandenSoft Account </h1>
-		<form action="/signup" method="POST">
-			<label for="name">Name:</label>
-			<input id="name" name="name" type="text" maxlength="255"/><br>
-			<label for="email">Email:</label>
-			<input id="email" name="email" type="email" maxlength="255"/><br>
-			<label for="password">Password</label>
-			<input id="password" name="password" type="password" maxlength="255"/><br>
-			<label for="confirmpassword">Confirm Password</label>
-			<input id="confirmpassword" name="confirmpassword" type="password" /><br>
-			<input value="Submit Info" type="submit" />
-		</form>
-	`)
+			fmt.Fprintln(w, getHTMLFORM("Sign Up here for a new account!"))
 		}
 		if r.Method == "POST" {
 			// Parse the form data in the response
@@ -42,21 +29,19 @@ func SignUp(us authentication.UserDataStore, ts authentication.AccessTokenServic
 
 			// Check the form data
 			if r.PostForm.Get("name") == "" || r.PostForm.Get("email") == "" || r.PostForm.Get("password") == "" || r.PostForm.Get("confirmpassword") == "" {
-				log.Println("empty field(s) in form")
-				http.Redirect(w, r, "/signup", http.StatusSeeOther)
+				fmt.Fprintln(w, getHTMLFORM("Empty field(s) in form"))
 				return
 			}
 			// Check that the passwords match
 			if r.PostForm.Get("password") != r.PostForm.Get("confirmpassword") {
-				log.Println("Passwords do not match, Cannot create account")
-				http.Redirect(w, r, "/signup", http.StatusSeeOther)
+				fmt.Fprintln(w, getHTMLFORM("Passwords do not match, Cannot create account"))
 				return
 			}
 
 			// hash the password
 			passwordHash := argonhasher.Encode(r.PostForm.Get("password"), 0)
 			if passwordHash == "" {
-				log.Println("failed to create hash: ", err)
+				fmt.Fprintln(w, getHTMLFORM("SERVER ERROR - FAILED TO CREATE HASH"))
 			}
 
 			err = us.Add(&authentication.User{
@@ -66,8 +51,7 @@ func SignUp(us authentication.UserDataStore, ts authentication.AccessTokenServic
 				TokenUserID:    securerandom.String(32),
 			})
 			if err != nil {
-				log.Println("failed to create user account :\n", err)
-				http.Redirect(w, r, "/", http.StatusSeeOther)
+				fmt.Fprintln(w, getHTMLFORM("failed to create user account :\n"+err.Error()))
 				return
 			}
 			log.Println("User Account Created OK")
@@ -97,7 +81,7 @@ func SignUp(us authentication.UserDataStore, ts authentication.AccessTokenServic
 			log.Println("\n/routes/signup:\nUserID (Decoded from JWT):\n", uid)
 			log.Println("\n/routes/signup:\njwtid (Decoded from JWT):\n", jwtid)
 
-			u, err := us.Find("tokenid", uid)
+			u, err := us.Find("tokenuserid", uid)
 			if err != nil {
 				log.Printf("/routes/signup: error looking up user\n%v\nError:\n%v", jwt, err.Error())
 				return
@@ -107,4 +91,23 @@ func SignUp(us authentication.UserDataStore, ts authentication.AccessTokenServic
 		}
 
 	})
+}
+
+func getHTMLFORM(subtitle string) (html string) {
+	html = fmt.Sprintf(`
+		<h1> Sign Up </h1>
+		<h3> %v </h3>
+		<form action="/signup" method="POST">
+			<label for="name">Name:</label>
+			<input id="name" name="name" type="text" maxlength="255"/><br>
+			<label for="email">Email:</label>
+			<input id="email" name="email" type="email" maxlength="255"/><br>
+			<label for="password">Password</label>
+			<input id="password" name="password" type="password" maxlength="255"/><br>
+			<label for="confirmpassword">Confirm Password</label>
+			<input id="confirmpassword" name="confirmpassword" type="password" /><br>
+			<input value="Submit Info" type="submit" />
+		</form>
+	`, subtitle)
+	return
 }

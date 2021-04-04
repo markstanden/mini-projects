@@ -16,7 +16,7 @@ import (
 	UserCache is the base struct for the cache,
 */
 type userCache struct {
-	emailCache   map[string]*authentication.User
+	emailCache       map[string]*authentication.User
 	tokenUserIDCache map[string]*authentication.User
 }
 
@@ -47,7 +47,7 @@ func (usc UserServiceCache) LogStatus(message string) {
 */
 func NewUserCache(us authentication.UserDataStore) *UserServiceCache {
 	uc := userCache{
-		emailCache:   make(map[string]*authentication.User),
+		emailCache:       make(map[string]*authentication.User),
 		tokenUserIDCache: make(map[string]*authentication.User),
 	}
 	return &UserServiceCache{

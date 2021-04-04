@@ -14,6 +14,7 @@ import (
 	"github.com/markstanden/authentication/datastores/userdatastores/pguserdatastore"
 	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
+	"github.com/markstanden/authentication/userservice"
 )
 
 func main() {
@@ -72,30 +73,33 @@ func run(args []string, stdout io.Writer) error {
 	}
 	defer authdb.DB.Close()
 
-	/* Create a UserService to handle our user database */
-	us := pguserdatastore.PGUserDataStore{DB: authdb}
-
-	/* Create a SecretService to handle our rotating keys */
+	userDB := pguserdatastore.PGUserDataStore{DB: authdb}
 	ss := pgsecretdatastore.PGSecretDataStore{DB: authdb, Lifespan: 3600}
 
-	/* Create a userservice cache and shadow the db */
-	usc := cache.NewUserCache(us)
+	us := userservice.UserService{
 
-	/* create a token service to create authentication tokens for users */
-	ts := &jwtaccesstokenservice.JWTAccessTokenService{
-		Issuer:     "markstanden.dev",
-		Audience:   "markstanden.dev",
-		HoursValid: 24,
-		Secret:     ss,
-		StartTime:  1617020114,
+		/* Create a userstore cache and shadow the main userstore */
+		UserDS: cache.NewUserCache(userDB),
+
+		/* Create a SecretStore to handle our rotating keys */
+		SecretDS: ss,
+
+		/* create a token service to create authentication tokens for users */
+		AccessTS: &jwtaccesstokenservice.JWTAccessTokenService{
+			Issuer:    "markstanden.dev",
+			Audience:  "markstanden.dev",
+			MinsValid: 60,
+			Secret:    ss,
+			StartTime: 1617020114,
+		},
 	}
 
 	/* Create a handler for our routes, pass in the cache */
-	http.Handle("/", routes.Home(usc))
-	http.Handle("/reset-users-table", routes.ResetUsersTable(usc))
-	http.Handle("/reset-keys-table", routes.ResetKeysTable(ss))
-	http.Handle("/signin", routes.SignIn(usc))
-	http.Handle("/signup", routes.SignUp(usc, ts))
+	http.Handle("/", routes.Home(us.UserDS))
+	http.Handle("/reset-users-table", routes.ResetUsersTable(us.UserDS))
+	http.Handle("/reset-keys-table", routes.ResetKeysTable(us.SecretDS))
+	http.Handle("/signin", routes.SignIn(us.UserDS))
+	http.Handle("/signup", routes.SignUp(us.UserDS, us.AccessTS))
 
 	/* start the server. */
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

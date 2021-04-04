@@ -18,7 +18,7 @@ type User struct {
 	Name           string
 	Email          string
 	HashedPassword string
-	TokenUserID        string
+	TokenUserID    string
 }
 
 type Secret struct {
@@ -67,6 +67,10 @@ type AccessTokenService interface {
 
 type RefreshTokenService interface {
 	Create(userID string) (refreshToken string)
+}
+
+type UserService interface {
+	NewUser(user User) error
 }
 
 var (

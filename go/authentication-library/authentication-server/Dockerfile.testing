@@ -15,5 +15,5 @@ RUN go mod download
 ENV CGO_ENABLED=0
 ENV PGTESTHOST=test
 ENV PGTESTPORT=5432
-ENV PGTESTDB=postgres
+ENV PGTESTDB=test
 CMD go test ./... -v

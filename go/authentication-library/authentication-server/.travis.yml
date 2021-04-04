@@ -1,6 +1,7 @@
 os: linux
 dist: focal
-language: go
+#language: go
+language: generic
 
 services:
   - docker

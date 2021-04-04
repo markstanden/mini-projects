@@ -7,4 +7,4 @@ services:
 
 script:
   - docker-compose -f docker-compose.yml up --abort-on-container-exit \
-    --exit-code-from webserver --build webserver
+    --exit-code-from testserver --build testserver

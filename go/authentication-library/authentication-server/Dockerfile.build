@@ -1,0 +1,30 @@
+FROM golang:1.16.3 AS builder
+
+# install git to pull down repo
+RUN apt-get install git -y
+
+# clone the repo
+WORKDIR /app
+RUN git clone https://github.com/markstanden/authentication.git /app
+
+# download the dependancies
+RUN go mod download
+
+# Build the executable
+RUN go build -o ./build/ ./cmd/authentication/
+
+
+#
+#   Now create the minimal run container
+#
+FROM debian:buster-slim
+#FROM alpine:latest
+
+#need to work on the certs later
+#RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+#COPY ./mycert.crt /usr/local/share/ca-certificates/mycert.crt
+#RUN update-ca-certificates
+
+# Copy and run the binary
+COPY --from=builder /app/build/ /app
+CMD /app/authentication

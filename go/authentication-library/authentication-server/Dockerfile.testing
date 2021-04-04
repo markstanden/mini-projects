@@ -16,4 +16,7 @@ ENV CGO_ENABLED=0
 ENV PGTESTHOST=test
 ENV PGTESTPORT=5432
 ENV PGTESTDB=test
-CMD go test ./... -v
+
+# download the dependancies
+CMD go mod download
+#CMD go test ./... -v

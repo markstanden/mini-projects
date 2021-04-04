@@ -1,4 +1,4 @@
-package postgres
+package pgsecretdatastore
 
 import (
 	"database/sql"
@@ -7,17 +7,18 @@ import (
 	"time"
 
 	"github.com/markstanden/authentication"
+	"github.com/markstanden/authentication/datastores/postgres"
 	"github.com/markstanden/securerandom"
 )
 
-type SecretService struct {
-	DB DataStore
+type PGSecretDataStore struct {
+	DB postgres.DataStore
 
 	Lifespan int64
 }
 
-func NewSecretService(db DataStore, lifespan int64) (ss SecretService) {
-	return SecretService{
+func NewSecretService(db postgres.DataStore, lifespan int64) (ss PGSecretDataStore) {
+	return PGSecretDataStore{
 		DB:       db,
 		Lifespan: lifespan,
 	}
@@ -30,17 +31,17 @@ func NewSecretService(db DataStore, lifespan int64) (ss SecretService) {
 	Valid Key not found:
 		- Triggers the creation of a new key, and returns the created Key ID
 */
-func (ss SecretService) GetKeyID(keyName string) (keyID string) {
+func (ss PGSecretDataStore) GetKeyID(keyName string) (keyID string) {
 	now := time.Now().UTC().Unix()
 	earliestValid := now - ss.Lifespan
-	fmt.Println("SecretService/GetKeyID: earliestValid", earliestValid)
+	fmt.Println("PGSecretDataStore/GetKeyID: earliestValid", earliestValid)
 	query := `SELECT keyid FROM keys WHERE keyname = $1 AND created <= $2 GROUP BY keyid HAVING MAX(created) > $3`
 	row := ss.DB.QueryRow(query, keyName, now, earliestValid)
 	err := row.Scan(&keyID)
-	log.Println("SecretService/GetKeyID:\n\tkeyID:\n\t", keyID)
+	log.Println("PGSecretDataStore/GetKeyID:\n\tkeyID:\n\t", keyID)
 	switch err {
 	case sql.ErrNoRows:
-		log.Println("SecretService/GetKeyID:\n\tErrNoRows Reached")
+		log.Println("PGSecretDataStore/GetKeyID:\n\tErrNoRows Reached")
 		s := authentication.Secret{
 			KeyName: keyName,
 			KeyID:   securerandom.String(16),
@@ -56,22 +57,22 @@ func (ss SecretService) GetKeyID(keyName string) (keyID string) {
 	}
 }
 
-func (ss SecretService) AddSecret(s authentication.Secret) (err error) {
-	fmt.Println("SecretService/AddSecret:\n\tRequest to add secret made.\n\tSecret:\n\t", s)
+func (ss PGSecretDataStore) AddSecret(s authentication.Secret) (err error) {
+	fmt.Println("pgsecretstore/AddSecret:\n\tRequest to add secret made.\n\tSecret:\n\t", s)
 	query := "INSERT INTO keys (keyname, keyid, value, created) VALUES ($1, $2, $3, $4)"
 	_, err = ss.DB.Exec(query, s.KeyName, s.KeyID, s.Value, s.Created)
 	if err != nil {
-		log.Println("SecretService/AddSecret:\n\terr:\n\t", err)
+		log.Println("pgsecretstore/AddSecret:\n\terr:\n\t", err)
 		return err
 	}
 
 	// Log addition to database.
-	log.Printf("SecretService/AddSecret:\n\tKeyName %v\n\tKeyID %v\nSuccessfully added to db", s.KeyName, s.KeyID)
+	log.Printf("pgsecretstore/AddSecret:\n\tKeyName %v\n\tKeyID %v\nSuccessfully added to db", s.KeyName, s.KeyID)
 
 	return nil
 }
 
-func (ss SecretService) GetSecret(keyName string) func(keyID string) (value string) {
+func (ss PGSecretDataStore) GetSecret(keyName string) func(keyID string) (value string) {
 
 	switch keyName {
 	case "JWT":
@@ -82,8 +83,8 @@ func (ss SecretService) GetSecret(keyName string) func(keyID string) (value stri
 			case sql.ErrNoRows:
 				return
 			}
-			log.Println("secretservice/GetSecret Secret Request Made:\nKeyID: ", keyID)
-			log.Println("secretservice/GetSecret Value: ", value)
+			log.Println("pgsecretstore/GetSecret Secret Request Made:\nKeyID: ", keyID)
+			log.Println("pgsecretstore/GetSecret Value: ", value)
 			return value
 		}
 	}
@@ -92,7 +93,7 @@ func (ss SecretService) GetSecret(keyName string) func(keyID string) (value stri
 	}
 }
 
-func (ss SecretService) FullReset() (err error) {
+func (ss PGSecretDataStore) FullReset() (err error) {
 	// If the table already exists, drop it
 	_, err = ss.DB.Exec(`DROP TABLE IF EXISTS keys;`)
 	if err != nil {

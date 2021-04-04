@@ -8,7 +8,7 @@ import (
 )
 
 // SignIn produces the signin route
-func Home(us authentication.UserService) http.Handler {
+func Home(us authentication.UserDataStore) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "GET" {

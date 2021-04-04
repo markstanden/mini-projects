@@ -11,7 +11,7 @@ import (
 // CreateUsersTable drops the existing user table if it exists and creates a
 // new fresh table. Obviously this is for use in development only, to allow quick changes to
 // the database structure / authentication.User struct object.
-func ResetUsersTable(us authentication.UserService) http.Handler {
+func ResetUsersTable(us authentication.UserDataStore) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "GET" {

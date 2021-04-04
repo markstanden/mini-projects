@@ -10,7 +10,7 @@ import (
 )
 
 // SignIn produces the signin route
-func SignIn(us authentication.UserService) http.Handler {
+func SignIn(us authentication.UserDataStore) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "GET" {
@@ -51,9 +51,9 @@ func SignIn(us authentication.UserService) http.Handler {
 			ID: %v
 			Name: %v
 			Email: %v
-			TokenID: %v
+			TokenUserID: %v
 			Error: %v
-			`, user.UniqueID, user.Name, user.Email, user.TokenID, err)
+			`, user.UniqueID, user.Name, user.Email, user.TokenUserID, err)
 			}
 		}
 	})

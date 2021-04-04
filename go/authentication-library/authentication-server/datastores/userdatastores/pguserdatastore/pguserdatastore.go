@@ -1,4 +1,4 @@
-package postgres
+package pguserdatastore
 
 import (
 	"database/sql"
@@ -6,23 +6,21 @@ import (
 	"fmt"
 	"log"
 
-	// This is the required postgres driver for the database/sql package
-
-	_ "github.com/lib/pq"
 	"github.com/markstanden/authentication"
+	"github.com/markstanden/authentication/datastores/postgres"
 )
 
 // UserService is a struct providing a psql implementation of authentication.UserService
-type UserService struct {
-	DB DataStore
+type PGUserDataStore struct {
+	DB postgres.DataStore
 }
 
 /*
 	NewUserService returns a new UserService object with the
 	supplied datastore.
 */
-func NewUserService(db DataStore) (us UserService) {
-	return UserService{
+func NewUserService(db postgres.DataStore) (us PGUserDataStore) {
+	return PGUserDataStore{
 		DB: db,
 	}
 }
@@ -31,13 +29,13 @@ func NewUserService(db DataStore) (us UserService) {
 	**  Add  **
 	adds the user to the Database
 */
-func (us UserService) Add(u *authentication.User) (err error) {
-	if u.Name == "" || u.Email == "" || u.HashedPassword == "" || u.TokenID == "" {
+func (us PGUserDataStore) Add(u *authentication.User) (err error) {
+	if u.Name == "" || u.Email == "" || u.HashedPassword == "" || u.TokenUserID == "" {
 		return errors.New("missing user data")
 	}
 	var id int
-	query := "INSERT INTO users (name, email, hashedpassword, tokenid) VALUES ($1, $2, $3, $4) RETURNING uniqueid"
-	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenID).Scan(&id)
+	query := "INSERT INTO users (name, email, hashedpassword, tokenuserid) VALUES ($1, $2, $3, $4) RETURNING uniqueid"
+	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenUserID).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -56,7 +54,7 @@ func (us UserService) Add(u *authentication.User) (err error) {
 	**  Delete  **
 	deletes a user from the Database
 */
-func (us UserService) Delete(u *authentication.User) (err error) {
+func (us PGUserDataStore) Delete(u *authentication.User) (err error) {
 	_, err = us.DB.Exec("DELETE FROM users WHERE email = $1", u.Email)
 	return err
 }
@@ -67,16 +65,16 @@ func (us UserService) Delete(u *authentication.User) (err error) {
 	it is intended to search unique keys only.
 	valid options for key:
 		email 	- The user's entered email address
-		tokenid	- The
+		tokenuserid	- The
 */
-func (us UserService) Find(key, value string) (u *authentication.User, err error) {
+func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err error) {
 	var row *sql.Row
 
 	switch key {
 	case "email":
-		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenid FROM users WHERE email = $1", value)
-	case "tokenid":
-		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenid FROM users WHERE tokenid = $1", value)
+		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid FROM users WHERE email = $1", value)
+	case "tokenuserid":
+		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid FROM users WHERE tokenuserid = $1", value)
 	default:
 		return nil, errors.New("user not found")
 	}
@@ -85,8 +83,8 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 	name := ""
 	email := ""
 	hashedPassword := ""
-	tokenID := ""
-	err = row.Scan(&uniqueID, &name, &email, &hashedPassword, &tokenID)
+	tokenUserID := ""
+	err = row.Scan(&uniqueID, &name, &email, &hashedPassword, &tokenUserID)
 
 	switch err {
 	case sql.ErrNoRows:
@@ -97,7 +95,7 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 			Name:           name,
 			Email:          email,
 			HashedPassword: hashedPassword,
-			TokenID:        tokenID,
+			TokenUserID:        tokenUserID,
 		}, nil
 	default:
 		log.Println("authentication/sql: user lookup error")
@@ -111,7 +109,7 @@ func (us UserService) Find(key, value string) (u *authentication.User, err error
 	updates a user in the Database
 	This definitely needs refactoring!
 */
-func (us UserService) Update(u *authentication.User, updatedFields authentication.User) (err error) {
+func (us PGUserDataStore) Update(u *authentication.User, updatedFields authentication.User) (err error) {
 
 	if updatedFields.Name != "" && updatedFields.Name != u.Name {
 		us.updateName(u.UniqueID, updatedFields.Name)
@@ -122,27 +120,27 @@ func (us UserService) Update(u *authentication.User, updatedFields authenticatio
 	if updatedFields.HashedPassword != "" && updatedFields.HashedPassword != u.HashedPassword {
 		us.updateHashedPW(u.UniqueID, updatedFields.HashedPassword)
 	}
-	if updatedFields.TokenID != "" && updatedFields.TokenID != u.TokenID {
-		us.updateTokenID(u.UniqueID, updatedFields.TokenID)
+	if updatedFields.TokenUserID != "" && updatedFields.TokenUserID != u.TokenUserID {
+		us.updateTokenUserID(u.UniqueID, updatedFields.TokenUserID)
 	}
 
 	return err
 }
 
-func (us UserService) updateName(uniqueID int, name string) (err error) {
+func (us PGUserDataStore) updateName(uniqueID int, name string) (err error) {
 	_, err = us.DB.Exec("UPDATE users SET name = $1 WHERE uniqueid = $2", name, uniqueID)
 	return err
 }
-func (us UserService) updateEmail(uniqueID int, email string) (err error) {
+func (us PGUserDataStore) updateEmail(uniqueID int, email string) (err error) {
 	_, err = us.DB.Exec("UPDATE users SET email = $1 WHERE uniqueid = $2", email, uniqueID)
 	return err
 }
-func (us UserService) updateHashedPW(uniqueID int, hashedPW string) (err error) {
+func (us PGUserDataStore) updateHashedPW(uniqueID int, hashedPW string) (err error) {
 	_, err = us.DB.Exec("UPDATE users SET hashedpassword = $1 WHERE uniqueid = $2", hashedPW, uniqueID)
 	return err
 }
-func (us UserService) updateTokenID(uniqueID int, tokenID string) (err error) {
-	_, err = us.DB.Exec("UPDATE users SET tokenid = $1 WHERE uniqueid = $2", tokenID, uniqueID)
+func (us PGUserDataStore) updateTokenUserID(uniqueID int, tokenUserID string) (err error) {
+	_, err = us.DB.Exec("UPDATE users SET tokenuserid = $1 WHERE uniqueid = $2", tokenUserID, uniqueID)
 	return err
 }
 
@@ -153,7 +151,7 @@ func (us UserService) updateTokenID(uniqueID int, tokenID string) (err error) {
 	**  FullReset  **
 	drops and re-Creates the user table
 */
-func (us UserService) FullReset() (err error) {
+func (us PGUserDataStore) FullReset() (err error) {
 	// If the table already exists, drop it
 	_, err = us.DB.Exec(`DROP TABLE IF EXISTS users;`)
 	if err != nil {
@@ -166,7 +164,7 @@ func (us UserService) FullReset() (err error) {
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
     hashedpassword varchar(160) NOT NULL,
-    tokenid varchar(160) UNIQUE NOT NULL);`)
+    tokenuserid varchar(160) UNIQUE NOT NULL);`)
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}

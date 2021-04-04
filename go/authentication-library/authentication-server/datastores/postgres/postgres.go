@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 	"strconv"
+
+	// This is the required postgres driver for the database/sql package
+	_ "github.com/lib/pq"
 )
 
 type DataStore struct {
@@ -150,6 +153,9 @@ func (config PGConfig) Host(host string) PGConfig {
 	and the original config is returned unchanged.
 */
 func (config PGConfig) Port(port string) PGConfig {
+	if port == "" {
+		return config
+	}
 	if num, err := strconv.ParseInt(port, 10, 32); err == nil {
 		if num < 1 || num > 65535 {
 			log.Println("authentication/postgres: port override value is outside valid range, port number unchanged")

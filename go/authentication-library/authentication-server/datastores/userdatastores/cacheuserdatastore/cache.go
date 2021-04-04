@@ -17,7 +17,7 @@ import (
 */
 type userCache struct {
 	emailCache   map[string]*authentication.User
-	tokenIDCache map[string]*authentication.User
+	tokenUserIDCache map[string]*authentication.User
 }
 
 /*
@@ -26,7 +26,7 @@ type userCache struct {
 */
 type UserServiceCache struct {
 	cache userCache
-	store authentication.UserService
+	store authentication.UserDataStore
 }
 
 /*
@@ -37,18 +37,18 @@ func (usc UserServiceCache) LogStatus(message string) {
 	log.Println(
 		message+" - Current Cache Values:\nEmail Cache:\n\t",
 		usc.cache.emailCache,
-		"\nTokenID Cache:\n\t",
-		usc.cache.tokenIDCache,
+		"\nTokenUserID Cache:\n\t",
+		usc.cache.tokenUserIDCache,
 	)
 }
 
 /*
 	NewUserCache returns an empty new read-through cache for the wrapped UserService.
 */
-func NewUserCache(us authentication.UserService) *UserServiceCache {
+func NewUserCache(us authentication.UserDataStore) *UserServiceCache {
 	uc := userCache{
 		emailCache:   make(map[string]*authentication.User),
-		tokenIDCache: make(map[string]*authentication.User),
+		tokenUserIDCache: make(map[string]*authentication.User),
 	}
 	return &UserServiceCache{
 		cache: uc,
@@ -67,8 +67,8 @@ func (usc UserServiceCache) Find(key, value string) (*authentication.User, error
 	switch key {
 	case "email":
 		cache = usc.cache.emailCache
-	case "tokenid":
-		cache = usc.cache.tokenIDCache
+	case "tokenuserid":
+		cache = usc.cache.tokenUserIDCache
 	default:
 		return nil, fmt.Errorf("authentication/cache:find - lookup key not found in switch statement")
 	}
@@ -149,7 +149,7 @@ func (usc UserServiceCache) deleteFromAll(u *authentication.User) {
 		Built in function delete only deletes the record if it exists,
 		so no requirement for a comma ok.
 	*/
-	delete(usc.cache.tokenIDCache, u.TokenID)
+	delete(usc.cache.tokenUserIDCache, u.TokenUserID)
 	delete(usc.cache.emailCache, u.Email)
 }
 
@@ -171,7 +171,7 @@ func (usc UserServiceCache) FullReset() (err error) {
 		Reset the current user cache, otherwise previous user entries will persist.
 	*/
 	usc.cache.emailCache = make(map[string]*authentication.User)
-	usc.cache.tokenIDCache = make(map[string]*authentication.User)
+	usc.cache.tokenUserIDCache = make(map[string]*authentication.User)
 
 	/*
 		reset the main DataStore and return any errors.

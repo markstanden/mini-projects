@@ -11,7 +11,7 @@ import (
 )
 
 // SignUp produces the signup route
-func SignUp(us authentication.UserService, ts authentication.TokenService) http.Handler {
+func SignUp(us authentication.UserDataStore, ts authentication.AccessTokenService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "GET" {
@@ -63,7 +63,7 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 				Name:           r.PostForm.Get("name"),
 				Email:          r.PostForm.Get("email"),
 				HashedPassword: passwordHash,
-				TokenID:        securerandom.String(32),
+				TokenUserID:    securerandom.String(32),
 			})
 			if err != nil {
 				log.Println("failed to create user account :\n", err)
@@ -77,13 +77,13 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			}
 			log.Println("authentication/signup: created user read from store: \n", userCheck)
 
-			jwt, jwtid, err := ts.Create(userCheck.TokenID)
+			jwt, jwtid, err := ts.Create(userCheck.TokenUserID)
 			if err != nil {
 				fmt.Fprintf(w, "/routes/signup: error creating jwt\n%v\nError:\n%v", jwt, err.Error())
 			}
 			log.Println("/routes/signup:\n\tEncoded jwt: \n", jwt, "\n\tjwtid (From Create):\n\t", jwtid)
 
-			userCheck.TokenID = jwtid
+			userCheck.TokenUserID = jwtid
 			// update user table
 			//.....
 
@@ -100,6 +100,7 @@ func SignUp(us authentication.UserService, ts authentication.TokenService) http.
 			u, err := us.Find("tokenid", uid)
 			if err != nil {
 				log.Printf("/routes/signup: error looking up user\n%v\nError:\n%v", jwt, err.Error())
+				return
 			}
 			log.Printf("/routes/signup: created and decoded jwt.\nJWT String:\n%v\nUserData:\n%v", jwt, u)
 			http.Redirect(w, r, "/", http.StatusSeeOther)

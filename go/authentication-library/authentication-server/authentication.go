@@ -18,7 +18,7 @@ type User struct {
 	Name           string
 	Email          string
 	HashedPassword string
-	TokenID        string
+	TokenUserID        string
 }
 
 type Secret struct {
@@ -29,7 +29,7 @@ type Secret struct {
 }
 
 // UserService specifies the requred functions of the user store
-type UserService interface {
+type UserDataStore interface {
 	DataStore
 	Add(user *User) error
 	Find(key, value string) (*User, error)
@@ -39,7 +39,7 @@ type UserService interface {
 
 // SecretService is an interface for the secret storage logic to retrieve secrets,
 // which will be platform dependant.
-type SecretService interface {
+type SecretDataStore interface {
 	DataStore
 	// Takes directly from the store
 	GetSecret(keyName string) func(keyID string) (secret string)
@@ -59,10 +59,14 @@ type PasswordHash interface {
 	Compare(plainTextPassword, hashedPassword string) bool
 }
 
-type TokenService interface {
+type AccessTokenService interface {
 	Create(userID string) (jwt, jwtID string, err error)
 	Decode(jwt string) (userID, jwtID string, err error)
 	//GetSecret(version string) (secret string)
+}
+
+type RefreshTokenService interface {
+	Create(userID string) (refreshToken string)
 }
 
 var (

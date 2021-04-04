@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/markstanden/authentication/accesstokenservices/jwtaccesstokenservice"
+	"github.com/markstanden/authentication/datastores/postgres"
+	"github.com/markstanden/authentication/datastores/secretdatastores/pgsecretdatastore"
+	cache "github.com/markstanden/authentication/datastores/userdatastores/cacheuserdatastore"
+	"github.com/markstanden/authentication/datastores/userdatastores/pguserdatastore"
 	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
-	"github.com/markstanden/authentication/tokenservice"
-	"github.com/markstanden/authentication/userstore/cache"
-	"github.com/markstanden/authentication/userstore/postgres"
 )
 
 func main() {
@@ -71,16 +73,16 @@ func run(args []string, stdout io.Writer) error {
 	defer authdb.DB.Close()
 
 	/* Create a UserService to handle our user database */
-	us := postgres.UserService{DB: authdb}
+	us := pguserdatastore.PGUserDataStore{DB: authdb}
 
 	/* Create a SecretService to handle our rotating keys */
-	ss := postgres.SecretService{DB: authdb, Lifespan: 3600}
+	ss := pgsecretdatastore.PGSecretDataStore{DB: authdb, Lifespan: 3600}
 
 	/* Create a userservice cache and shadow the db */
 	usc := cache.NewUserCache(us)
 
 	/* create a token service to create authentication tokens for users */
-	ts := &tokenservice.TokenService{
+	ts := &jwtaccesstokenservice.JWTAccessTokenService{
 		Issuer:     "markstanden.dev",
 		Audience:   "markstanden.dev",
 		HoursValid: 24,

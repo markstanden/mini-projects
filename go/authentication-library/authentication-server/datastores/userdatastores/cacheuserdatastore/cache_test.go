@@ -4,14 +4,15 @@ import (
 	"testing"
 
 	"github.com/markstanden/authentication"
-	"github.com/markstanden/authentication/userstore/postgres"
+	"github.com/markstanden/authentication/datastores/postgres"
+	"github.com/markstanden/authentication/datastores/userdatastores/pguserdatastore"
 )
 
 var testuser1 = authentication.User{
 	Name:           "Test",
 	Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCoIbfKlI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 	HashedPassword: "28ZuYpwprirXKRvnvB3nPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-	TokenID:        "uBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG",
+	TokenUserID:        "uBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG",
 }
 
 /*
@@ -29,7 +30,7 @@ func GetTestUserCache(t *testing.T) *UserServiceCache {
 		Wrap the database in a new userservice,
 		and wrap the userservice in our cache
 	*/
-	return NewUserCache(postgres.UserService{DB: testdb})
+	return NewUserCache(pguserdatastore.PGUserDataStore{DB: testdb})
 }
 
 func TestNewUserCache(t *testing.T) {
@@ -42,11 +43,11 @@ func TestNewUserCache(t *testing.T) {
 	/*
 		Test that the maps have been created correctly
 	*/
-	if usc.cache.emailCache == nil || usc.cache.tokenIDCache == nil {
+	if usc.cache.emailCache == nil || usc.cache.tokenUserIDCache == nil {
 		t.Error("cache not initialised correctly")
 	}
 
-	if len(usc.cache.emailCache) != 0 || len(usc.cache.tokenIDCache) != 0 {
+	if len(usc.cache.emailCache) != 0 || len(usc.cache.tokenUserIDCache) != 0 {
 		t.Error("cache contains data!")
 	}
 }
@@ -75,7 +76,7 @@ func TestAddThenFind(t *testing.T) {
 				Name:           "Full User",
 				Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCoIbfKlI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 				HashedPassword: "28ZuYpwprirXKRvnvB3nPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-				TokenID:        "uBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID:        "uBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: true,
 		},
 		{
@@ -84,7 +85,7 @@ func TestAddThenFind(t *testing.T) {
 				Name:           "Empty Email User",
 				Email:          "",
 				HashedPassword: "28ZuYpwprirXKRvnvB3asdfasdfnPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-				TokenID:        "uBIH3ZsbyJ5JUiasdfasdfatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID:        "uBIH3ZsbyJ5JUiasdfasdfatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: false,
 		},
 		{
@@ -92,7 +93,7 @@ func TestAddThenFind(t *testing.T) {
 			user: authentication.User{
 				Name:           "Missing Email User",
 				HashedPassword: "28ZuYpwprirXKRvnvB3asdfasdfnPLd0NasdfA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCasdfasdfKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-				TokenID:        "uBIH3ZsbyJ5JUasdfasiasdfasdfatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID:        "uBIH3ZsbyJ5JUasdfasiasdfasdfatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: false,
 		},
 		{
@@ -101,7 +102,7 @@ func TestAddThenFind(t *testing.T) {
 				Name:           "Empty HashedPassword User",
 				Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCo345ggbIbfKlI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 				HashedPassword: "",
-				TokenID:        "uBIH3ZsbyJ5JUiatbe345qfasdfUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID:        "uBIH3ZsbyJ5JUiatbe345qfasdfUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: false,
 		},
 		{
@@ -109,22 +110,22 @@ func TestAddThenFind(t *testing.T) {
 			user: authentication.User{
 				Name:    "Missing HashedPassword User",
 				Email:   "SCcedYbuiRCqN86clZ9Jo0KgxOCoIbfKnuymylI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
-				TokenID: "uBIH3ZsbyJ5JsdfgUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
+				TokenUserID: "uBIH3ZsbyJ5JsdfgUiatbeUViBhqNg0p7uaGuBIH3ZsbyJ5JUiatbeUViBhqNg0p7uaG"},
 			isValid: false,
 		},
 		{
-			desc: "Empty TokenID",
+			desc: "Empty TokenUserID",
 			user: authentication.User{
-				Name:           "Empty TokenID User",
+				Name:           "Empty TokenUserID User",
 				Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCsdfgsdfgoIbfKlI6ySPWiOWvcRJFeqoQAp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 				HashedPassword: "28ZuYpwprirXKRvnvB3nPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3asdgadfgJ73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq",
-				TokenID:        ""},
+				TokenUserID:        ""},
 			isValid: false,
 		},
 		{
-			desc: "Missing TokenID",
+			desc: "Missing TokenUserID",
 			user: authentication.User{
-				Name:           "Missing TokenID User",
+				Name:           "Missing TokenUserID User",
 				Email:          "SCcedYbuiRCqN86clZ9Jo0KgxOCoIbfKlI6ySPWiOWvcRJFeqoQAhjlhjklp09nfjIQvm7VpFNr4oZiLlVAFR9P93w+dPzeSyY@test.com",
 				HashedPassword: "28ZuYpwprirXKhjklhjklvnvB3nPLd0NA1VbJfv32yoht9x4pZLYrFOD8W4M15n/TRPLvQ7Ey+MEvPQ8Ln61chXP5IsKggIMf3J73N3VORDLTCKhxmwdxpm_XiEALASgk1LijzClRYpRP6Gzeyq"},
 			isValid: false,
@@ -172,19 +173,19 @@ func TestAddThenFind(t *testing.T) {
 			})
 			t.Run("Find User in token cache", func(t *testing.T) {
 				/* user should not be in the cache yet so will need to be fetched from the store */
-				if _, ok := usc.cache.tokenIDCache[test.user.TokenID]; ok {
+				if _, ok := usc.cache.tokenUserIDCache[test.user.TokenUserID]; ok {
 					/* User data is already present in the cache */
 					t.Error(test.desc, " - user already present in the cache")
 				}
 
-				if _, err := usc.Find("tokenid", test.user.TokenID); err != nil && test.isValid {
+				if _, err := usc.Find("tokenuserid", test.user.TokenUserID); err != nil && test.isValid {
 					t.Error(test.desc, " - failed to retrieve test user from datastore")
 				} else if err == nil && !test.isValid {
 					t.Error(test.desc, " - retrieved an unexpected/invalid user from datastore")
 				}
 
 				/* user should now have been fetched from the store and added to the cache */
-				if _, ok := usc.cache.tokenIDCache[test.user.TokenID]; !ok && test.isValid {
+				if _, ok := usc.cache.tokenUserIDCache[test.user.TokenUserID]; !ok && test.isValid {
 					/* User data is not present in the cache */
 					t.Error(test.desc, " - user not present in the cache, after being successfully found in the datastore")
 				} else if ok && !test.isValid {
@@ -200,7 +201,7 @@ func TestUpdate(t *testing.T) {
 		Name:           "Test",
 		Email:          "test@test.com",
 		HashedPassword: "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
-		TokenID:        "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
+		TokenUserID:        "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
 	}
 	enduser := authentication.User{
 		/*
@@ -211,7 +212,7 @@ func TestUpdate(t *testing.T) {
 		Name:           "Testy",
 		Email:          "testy@testing.com",
 		HashedPassword: "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
-		TokenID:        "cP7Pd9RiZyWpuZEweCpDnzSk7zB7aJKj9ZcGgAyJMVBzKMgymh2GVajWxn3hEZ5b",
+		TokenUserID:        "cP7Pd9RiZyWpuZEweCpDnzSk7zB7aJKj9ZcGgAyJMVBzKMgymh2GVajWxn3hEZ5b",
 	}
 
 	var usc *UserServiceCache
@@ -233,9 +234,9 @@ func TestUpdate(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to find user in UserStore by email")
 		}
-		userbytoken, err := usc.Find("tokenid", startuser.TokenID)
+		userbytoken, err := usc.Find("tokenuserid", startuser.TokenUserID)
 		if err != nil {
-			t.Fatalf("failed to find user in UserStore by tokenID")
+			t.Fatalf("failed to find user in UserStore by tokenUserID")
 		}
 		if *userbyemail != *userbytoken {
 			t.Fatalf("Users are not the same")
@@ -253,7 +254,7 @@ func TestUpdate(t *testing.T) {
 			/* user is still in the cache! */
 			t.Fatalf("Failed to remove user from emailcache on user update")
 		}
-		if _, ok := usc.cache.tokenIDCache[startuser.TokenID]; ok {
+		if _, ok := usc.cache.tokenUserIDCache[startuser.TokenUserID]; ok {
 			/* user is still in the cache! */
 			t.Fatalf("Failed to remove user from tokencache on user update")
 		}
@@ -269,8 +270,8 @@ func TestUpdate(t *testing.T) {
 		} else if *u != enduser {
 			t.Fatalf("returned user is not as expected.\nWanted:\n%v\nGot:\n%v", enduser, *u)
 		}
-		if u, err := usc.Find("tokenid", enduser.TokenID); err != nil {
-			t.Fatalf("failed to find updated user in UserStore by tokenID")
+		if u, err := usc.Find("tokenuserid", enduser.TokenUserID); err != nil {
+			t.Fatalf("failed to find updated user in UserStore by tokenUserID")
 		} else if *u != enduser {
 			t.Fatalf("returned user is not updated as expected.\nWanted:\n%v\nGot:\n%v", enduser, *u)
 		}
@@ -282,7 +283,7 @@ func TestDelete(t *testing.T) {
 		Name:           "Test",
 		Email:          "test@test.com",
 		HashedPassword: "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
-		TokenID:        "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
+		TokenUserID:        "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
 	}
 
 	var usc *UserServiceCache
@@ -305,9 +306,9 @@ func TestDelete(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to find user in UserStore by email")
 		}
-		userbytoken, err := usc.Find("tokenid", startuser.TokenID)
+		userbytoken, err := usc.Find("tokenuserid", startuser.TokenUserID)
 		if err != nil {
-			t.Fatalf("failed to find user in UserStore by tokenID")
+			t.Fatalf("failed to find user in UserStore by tokenUserID")
 		}
 		if *userbyemail != *userbytoken {
 			t.Fatalf("Users are not the same")
@@ -331,7 +332,7 @@ func TestDelete(t *testing.T) {
 			/* user is still in the cache! */
 			t.Fatalf("Failed to remove user from emailcache on user delete")
 		}
-		if _, ok := usc.cache.tokenIDCache[founduser.TokenID]; ok {
+		if _, ok := usc.cache.tokenUserIDCache[founduser.TokenUserID]; ok {
 			/* user is still in the cache! */
 			t.Fatalf("Failed to remove user from tokencache on user delete")
 		}
@@ -346,8 +347,8 @@ func TestDelete(t *testing.T) {
 		if _, err := usc.Find("email", founduser.Email); err == nil {
 			t.Fatalf("found user in UserStore by email")
 		}
-		if _, err := usc.Find("tokenID", founduser.TokenID); err == nil {
-			t.Fatalf("found user in UserStore by tokenID")
+		if _, err := usc.Find("tokenUserID", founduser.TokenUserID); err == nil {
+			t.Fatalf("found user in UserStore by tokenUserID")
 		}
 	})
 }

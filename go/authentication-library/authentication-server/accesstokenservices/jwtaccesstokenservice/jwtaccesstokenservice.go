@@ -1,4 +1,4 @@
-package tokenservice
+package jwtaccesstokenservice
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/markstanden/securerandom"
 )
 
-type TokenService struct {
+type JWTAccessTokenService struct {
 	/*
 		Issuer is the Issuer's ID/Name/URL.
 		This gets set to the "iss" field within the payload of the JWT
@@ -38,15 +38,14 @@ type TokenService struct {
 		secret used to encode/decode the token.
 		if err != nil the secret should be returned empty
 	*/
-	Secret authentication.SecretService
-
+	Secret authentication.SecretDataStore
 	/*
 		StartTime is the time the server was started, in Unix time UTC
 	*/
 	StartTime int64
 }
 
-func (ts *TokenService) Create(userID string) (jwtString, jwtID string, err error) {
+func (ts *JWTAccessTokenService) Create(userID string) (jwtString, jwtID string, err error) {
 
 	// The unique identifier for this particular token
 	jwtID = securerandom.String(64)
@@ -74,7 +73,7 @@ func (ts *TokenService) Create(userID string) (jwtString, jwtID string, err erro
 
 }
 
-func (ts *TokenService) Decode(jwtString string) (userID, jwtID string, err error) {
+func (ts *JWTAccessTokenService) Decode(jwtString string) (userID, jwtID string, err error) {
 	data := &jwt.Token{}
 	data.Config.Lifespan = hoursToSeconds(ts.HoursValid)
 	//data.Config.ValidFrom = ts.StartTime

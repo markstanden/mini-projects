@@ -1,16 +1,17 @@
-package postgres_test
+package pguserdatastore_test
 
 import (
 	"testing"
 
-	"github.com/markstanden/authentication/userstore/postgres"
+	"github.com/markstanden/authentication/datastores/postgres"
+	"github.com/markstanden/authentication/datastores/userdatastores/pguserdatastore"
 )
 
 /*
 	Wraps a connection to the test DB in a userservice to allow testing on a real store.
 */
-func GetTestUserService(testDB postgres.DataStore) (testUS postgres.UserService) {
-	testUS = postgres.NewUserService(testDB)
+func GetTestUserService(testDB postgres.DataStore) (testUS pguserdatastore.PGUserDataStore) {
+	testUS = pguserdatastore.NewUserService(testDB)
 	// test.US.XXX = XXX
 	return testUS
 }

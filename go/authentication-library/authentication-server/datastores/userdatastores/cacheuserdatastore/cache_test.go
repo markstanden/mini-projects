@@ -198,21 +198,25 @@ func TestAddThenFind(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	startuser := authentication.User{
-		Name:           "Test",
-		Email:          "test@test.com",
-		HashedPassword: "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
-		TokenUserID:    "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
+		Name:                 "Test",
+		Email:                "test@test.com",
+		HashedPassword:       "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
+		TokenUserID:          "CFJvAi9moQFqteznLkceR5xvnWB7d3bPwPEy3ao6hvhQyYEdN5z8ZREiggESLJbJ",
+		CurrentRefreshToken:  "hdfkahsdskldjhfalksdhfkaljsdhflshdflahsldfhahdfkajhsdfkhasllksjdhflakshdflahsdlfhasl",
+		CurrentAccessTokenID: "asdfa;ksjdf;askdjf;ajsdshfajskdhfa",
 	}
 	enduser := authentication.User{
 		/*
 			The store will sequentially assign numbers to the user,
 			and this is the first user, so it's ID will be 1
 		*/
-		UniqueID:       1,
-		Name:           "Testy",
-		Email:          "testy@testing.com",
-		HashedPassword: "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
-		TokenUserID:    "cP7Pd9RiZyWpuZEweCpDnzSk7zB7aJKj9ZcGgAyJMVBzKMgymh2GVajWxn3hEZ5b",
+		UniqueID:             1,
+		Name:                 "Testy",
+		Email:                "testy@testing.com",
+		HashedPassword:       "Cm#oG8JTTMbr%CcY!#Ky8yD*KMM!v%LwC^YY889!eaG3s4pzVKT6&dBwrzVK5GdBUm%6i$cL7tUg3M@^3MD$zsPyFhdmojwkkHEc$$7*UZZwLQvVnX%hi327Tcb7AsDo",
+		TokenUserID:          "cP7Pd9RiZyWpuZEweCpDnzSk7zB7aJKj9ZcGgAyJMVBzKMgymh2GVajWxn3hEZ5b",
+		CurrentRefreshToken:  "qlifakne5mncakvnlaiejflautua3sfdhv,zdgklsjzvckzjxdjchzskuefheaksuhfasjhdfjnzxjdvhdlz",
+		CurrentAccessTokenID: "uwperuotun;vwiervtieurvtwnileilurvtlwertil",
 	}
 
 	var usc *UserServiceCache

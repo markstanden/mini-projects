@@ -35,9 +35,10 @@ func (us PGUserDataStore) Add(u *authentication.User) (err error) {
 	}
 
 	var id int
-	query := "INSERT INTO users (name, email, hashedpassword, tokenuserid) VALUES ($1, $2, $3, $4) RETURNING uniqueid"
-	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenUserID).Scan(&id)
+	query := "INSERT INTO users (name, email, hashedpassword, tokenuserid, currentrefresh, currentaccess) VALUES ($1, $2, $3, $4, $5, $6) RETURNING uniqueid"
+	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenUserID, u.CurrentRefreshToken, u.CurrentAccessTokenID).Scan(&id)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -69,9 +70,9 @@ func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err e
 
 	switch key {
 	case "email":
-		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid FROM users WHERE email = $1", value)
+		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid, currentrefresh, currentaccess FROM users WHERE email = $1", value)
 	case "tokenuserid":
-		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid FROM users WHERE tokenuserid = $1", value)
+		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid, currentrefresh, currentaccess FROM users WHERE tokenuserid = $1", value)
 	default:
 		return nil, errors.New("user not found")
 	}
@@ -81,18 +82,22 @@ func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err e
 	email := ""
 	hashedPassword := ""
 	tokenUserID := ""
-	err = row.Scan(&uniqueID, &name, &email, &hashedPassword, &tokenUserID)
+	currentRefresh := ""
+	currentAccess := ""
+	err = row.Scan(&uniqueID, &name, &email, &hashedPassword, &tokenUserID, &currentRefresh, &currentAccess)
 
 	switch err {
 	case sql.ErrNoRows:
 		return nil, fmt.Errorf("user not found")
 	case nil:
 		return &authentication.User{
-			UniqueID:       uniqueID,
-			Name:           name,
-			Email:          email,
-			HashedPassword: hashedPassword,
-			TokenUserID:    tokenUserID,
+			UniqueID:             uniqueID,
+			Name:                 name,
+			Email:                email,
+			HashedPassword:       hashedPassword,
+			TokenUserID:          tokenUserID,
+			CurrentRefreshToken:  currentRefresh,
+			CurrentAccessTokenID: currentAccess,
 		}, nil
 	default:
 		log.Println("authentication/sql: user lookup error")
@@ -120,24 +125,72 @@ func (us PGUserDataStore) Update(u *authentication.User, updatedFields authentic
 	if updatedFields.TokenUserID != "" && updatedFields.TokenUserID != u.TokenUserID {
 		us.updateTokenUserID(u.UniqueID, updatedFields.TokenUserID)
 	}
-
+	if updatedFields.CurrentRefreshToken != "" && updatedFields.CurrentRefreshToken != u.CurrentRefreshToken {
+		us.updateRefresh(u.UniqueID, updatedFields.CurrentRefreshToken)
+	}
+	if updatedFields.CurrentAccessTokenID != "" && updatedFields.CurrentAccessTokenID != u.CurrentAccessTokenID {
+		us.updateAccess(u.UniqueID, updatedFields.CurrentAccessTokenID)
+	}
 	return err
 }
 
+/*
+	*** updateName ***
+	updateName is a private function that updates the users name
+	within the datastore.
+*/
 func (us PGUserDataStore) updateName(uniqueID int, name string) (err error) {
 	_, err = us.DB.Exec("UPDATE users SET name = $1 WHERE uniqueid = $2", name, uniqueID)
 	return err
 }
+
+/*
+	*** updateEmail ***
+	updateEmail is a private function that updates the users email
+	within the datastore.
+*/
 func (us PGUserDataStore) updateEmail(uniqueID int, email string) (err error) {
 	_, err = us.DB.Exec("UPDATE users SET email = $1 WHERE uniqueid = $2", email, uniqueID)
 	return err
 }
+
+/*
+	*** updateHashedPW ***
+	updateHashedPW is a private function that updates the users hashed password
+	within the datastore.
+*/
 func (us PGUserDataStore) updateHashedPW(uniqueID int, hashedPW string) (err error) {
 	_, err = us.DB.Exec("UPDATE users SET hashedpassword = $1 WHERE uniqueid = $2", hashedPW, uniqueID)
 	return err
 }
+
+/*
+	*** updateRefresh ***
+	updateRefresh is a private function that updates the users Refresh token
+	within the datastore.
+*/
+func (us PGUserDataStore) updateRefresh(uniqueID int, refresh string) (err error) {
+	_, err = us.DB.Exec("UPDATE users SET currentrefresh = $1 WHERE uniqueid = $2", refresh, uniqueID)
+	return err
+}
+
+/*
+	*** updateTokenUserID ***
+	updateTokenUserID is a private function that updates the ID string that identifies the current
+	user within an issued access token within the datastore.
+*/
 func (us PGUserDataStore) updateTokenUserID(uniqueID int, tokenUserID string) (err error) {
 	_, err = us.DB.Exec("UPDATE users SET tokenuserid = $1 WHERE uniqueid = $2", tokenUserID, uniqueID)
+	return err
+}
+
+/*
+	*** updateAccess ***
+	updateAccess is a private function that updates the ID string that identifies the current access token
+	within the datastore.
+*/
+func (us PGUserDataStore) updateAccess(uniqueID int, accessID string) (err error) {
+	_, err = us.DB.Exec("UPDATE users SET currentaccess = $1 WHERE uniqueid = $2", accessID, uniqueID)
 	return err
 }
 
@@ -161,7 +214,9 @@ func (us PGUserDataStore) FullReset() (err error) {
     name varchar(255) NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
     hashedpassword varchar(160) NOT NULL,
-    tokenuserid varchar(160) UNIQUE NOT NULL);`)
+    currentrefresh varchar(255) UNIQUE,
+    tokenuserid varchar(160) UNIQUE NOT NULL,
+    currentaccess varchar(255) UNIQUE);`)
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}

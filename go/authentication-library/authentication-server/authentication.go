@@ -14,11 +14,13 @@ import "errors"
 //	TokenUserID string
 //		The generated identification token stored within the ID token
 type User struct {
-	UniqueID       int
-	Name           string
-	Email          string
-	HashedPassword string
-	TokenUserID    string
+	UniqueID             int
+	Name                 string
+	Email                string
+	HashedPassword       string
+	TokenUserID          string
+	CurrentRefreshToken  string
+	CurrentAccessTokenID string
 }
 
 type Secret struct {

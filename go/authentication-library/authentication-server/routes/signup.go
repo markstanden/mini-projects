@@ -40,10 +40,16 @@ func SignUp(us authentication.UserService) http.Handler {
 				return
 			}
 
+			/*
+				Create the user and add to the datastore
+			*/
 			u, err := us.NewUser(r.PostForm.Get("name"), r.PostForm.Get("email"), r.PostForm.Get("password"))
 			if err != nil {
 				fmt.Fprintln(w, getHTMLFORM("Failed to create user, please try again"))
 				return
+
+				/* email verification goes here? */
+
 			}
 			fmt.Fprintf(w, `
 			Welcome %v,

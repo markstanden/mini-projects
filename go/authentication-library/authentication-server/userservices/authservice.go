@@ -10,10 +10,29 @@ import (
 )
 
 type UserService struct {
-	UserDS    authentication.UserDataStore
-	SecretDS  authentication.SecretDataStore
+	/*
+		User data storage
+	*/
+	UserDS authentication.UserDataStore
+
+	/*
+		Application secret storage
+	*/
+	SecretDS authentication.SecretDataStore
+
+	/*
+		Session management
+	*/
 	AccessTS  authentication.AccessTokenService  // short lived jwt
 	RefreshTS authentication.RefreshTokenService // long lived opaque token
+
+	/*
+		Config
+	*/
+
+	Config struct {
+		RefreshTokenSize uint
+	}
 }
 
 /*
@@ -42,6 +61,11 @@ func (us UserService) NewUser(name, email, password string) (u *authentication.U
 	}
 	//log.Println("User Account Created OK")
 	return u, nil
+}
+
+func (us UserService) GetNewRefreshToken(user *authentication.User) (refreshToken string) {
+	user.CurrentRefreshToken = securerandom.String(us.Config.RefreshTokenSize)
+	return user.CurrentRefreshToken
 }
 
 /*

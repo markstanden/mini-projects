@@ -8,12 +8,12 @@ import (
 	"github.com/markstanden/securerandom"
 )
 
+/*
+	** JWTAccessTokenService **
+	This struct holds the config for the creation, verification, and decoding
+	of the short lived access tokens used for stateless authentication
+*/
 type JWTAccessTokenService struct {
-	/*
-		Issuer is the Issuer's ID/Name/URL.
-		This gets set to the "iss" field within the payload of the JWT
-	*/
-	Issuer string
 
 	/*
 		Audience is the URL that the token is intended for.
@@ -22,6 +22,12 @@ type JWTAccessTokenService struct {
 		Audience does not match the expected value
 	*/
 	Audience string
+
+	/*
+		Issuer is the Issuer's ID/Name/URL.
+		This gets set to the "iss" field within the payload of the JWT
+	*/
+	Issuer string
 
 	/*
 		MinsValid is the number of mins until the JWT expires.
@@ -39,12 +45,20 @@ type JWTAccessTokenService struct {
 		if err != nil the secret should be returned empty
 	*/
 	Secret authentication.SecretDataStore
+
 	/*
-		StartTime is the time the server was started, in Unix time UTC
+		StartTime is time the server started issuing tokens in Unix time UTC
+		It is used as the earliest possible time a token is valid.  Tokens made
+		before this will time will be automatically discarded
 	*/
 	StartTime int64
 }
 
+/*
+	** Create **
+	Create takes the provided (anonymous) userID and creates a new JWT
+	returning the new JWT, and the unique identifer for the token itself.
+*/
 func (ts *JWTAccessTokenService) Create(userID string) (jwtString, jwtID string, err error) {
 
 	// The unique identifier for this particular token
@@ -54,8 +68,6 @@ func (ts *JWTAccessTokenService) Create(userID string) (jwtString, jwtID string,
 	}
 
 	// the unique identifier for the secret
-	//keyID := securerandom.String(64)
-
 	keyID := ts.Secret.GetKeyID("JWT")
 
 	// the number of seconds the token is valid for
@@ -73,10 +85,15 @@ func (ts *JWTAccessTokenService) Create(userID string) (jwtString, jwtID string,
 
 }
 
-func (ts *JWTAccessTokenService) Decode(jwtString string) (userID, jwtID string, err error) {
+/*
+	** Decode **
+	Decode takes a JWT string, verifies it and returns the embedded UserID and JwtID.
+	The UserID is an (anonymous) identifier for the issued to user,
+	and the JwtID is the identifier for the token itself.
+*/
+func (ts *JWTAccessTokenService) Decode(jwtString string) (tokenUserID, jwtID string, err error) {
 	data := &jwt.Token{}
 	data.Config.Lifespan = minsToSeconds(ts.MinsValid)
-	//data.Config.ValidFrom = ts.StartTime
 
 	err = jwt.Decode(jwtString, ts.Secret.GetSecret("JWT"), data)
 	if err != nil {
@@ -92,7 +109,11 @@ func (ts *JWTAccessTokenService) Decode(jwtString string) (userID, jwtID string,
 	return data.UserID, data.JwtID, nil
 }
 
-// returns hours in seconds
+/*
+	** minsToSeconds **
+	minsToSeconds returns the minutes valid (int) in seconds (int64)
+	so it can be easily used as a unix time measurement
+*/
 func minsToSeconds(mins int) (secs int64) {
 	return int64(mins * 60)
 }

@@ -5,12 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/markstanden/argonhasher"
 	"github.com/markstanden/authentication"
 )
 
 // SignIn produces the signin route
-func SignIn(us authentication.UserDataStore) http.Handler {
+func SignIn(us authentication.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "GET" {
@@ -27,34 +26,19 @@ func SignIn(us authentication.UserDataStore) http.Handler {
 				return
 			}
 
-			user, err := us.Find("email", r.PostForm.Get("email"))
+			u, err := us.Login(r.PostForm.Get("name"), r.PostForm.Get("password"))
 			if err != nil {
-				fmt.Fprintln(w, getHTML("Sign In - Invalid UserName", r.PostForm.Get("email")))
-				return
+				fmt.Fprintln(w, getHTML("Invalid Username/Password - Have another go...", ""))
 			}
 
-			// Initialise a boolean variable that hold whether the password matches the stored, hashed password.
-			compareOK := false
-			valid := argonhasher.Confirm(r.PostForm.Get("password"), user.HashedPassword)
-			if !valid {
-				fmt.Fprintln(w, getHTML("Sign In - Invalid Password", r.PostForm.Get("email")))
-				return
-			} else {
-				compareOK = true
-			}
-
-			if compareOK {
-				log.Println("User Account Logged In OK")
-
-				fmt.Fprintf(w, `
-			User Account Details:
-			ID: %v
-			Name: %v
-			Email: %v
-			TokenUserID: %v
-			Error: %v
-			`, user.UniqueID, user.Name, user.Email, user.TokenUserID, err)
-			}
+			fmt.Fprintf(w, `
+				User Account Details:
+				ID: %v
+				Name: %v
+				Email: %v
+				TokenUserID: %v
+				Error: %v
+				`, u.UniqueID, u.Name, u.Email, u.TokenUserID, err)
 		}
 	})
 }

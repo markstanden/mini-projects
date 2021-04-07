@@ -14,7 +14,7 @@ import (
 	"github.com/markstanden/authentication/datastores/userdatastores/pguserdatastore"
 	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
-	"github.com/markstanden/authentication/userservice"
+	userservice "github.com/markstanden/authentication/userservices"
 )
 
 func main() {
@@ -98,8 +98,8 @@ func run(args []string, stdout io.Writer) error {
 	http.Handle("/", routes.Home(us.UserDS))
 	http.Handle("/reset-users-table", routes.ResetUsersTable(us.UserDS))
 	http.Handle("/reset-keys-table", routes.ResetKeysTable(us.SecretDS))
-	http.Handle("/signin", routes.SignIn(us.UserDS))
-	http.Handle("/signup", routes.SignUp(us.UserDS, us.AccessTS))
+	http.Handle("/signin", routes.SignIn(us))
+	http.Handle("/signup", routes.SignUp(us))
 
 	/* start the server. */
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

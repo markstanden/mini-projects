@@ -33,6 +33,7 @@ func (us PGUserDataStore) Add(u *authentication.User) (err error) {
 	if u.Name == "" || u.Email == "" || u.HashedPassword == "" || u.TokenUserID == "" {
 		return errors.New("missing user data")
 	}
+
 	var id int
 	query := "INSERT INTO users (name, email, hashedpassword, tokenuserid) VALUES ($1, $2, $3, $4) RETURNING uniqueid"
 	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenUserID).Scan(&id)
@@ -43,10 +44,6 @@ func (us PGUserDataStore) Add(u *authentication.User) (err error) {
 	// The current user doesn't have an id set yet, so set it now.
 	u.UniqueID = id
 
-	// Log addition to database.
-	//log.Printf("authentication/postgres: user (%d) added to db", id)
-
-	//return the ID of the created user
 	return nil
 }
 

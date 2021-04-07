@@ -30,7 +30,8 @@ type UserServiceCache struct {
 }
 
 /*
-	LogStatus takes a message and prefixes it to the start of a cache status log
+	** LogStatus **
+	takes a message and prefixes it to the start of a cache status log
 	Helpful to ensure that the cache is acting as expected.
 */
 func (usc UserServiceCache) LogStatus(message string) {
@@ -43,7 +44,8 @@ func (usc UserServiceCache) LogStatus(message string) {
 }
 
 /*
-	NewUserCache returns an empty new read-through cache for the wrapped UserService.
+	** NewUserCache **
+	returns an empty new read-through cache for the wrapped UserService.
 */
 func NewUserCache(us authentication.UserDataStore) *UserServiceCache {
 	uc := userCache{
@@ -57,7 +59,8 @@ func NewUserCache(us authentication.UserDataStore) *UserServiceCache {
 }
 
 /*
-	Find looks up a user in the cache first,
+	** Find **
+	looks up a user in the cache first,
 	and if not present consults the wrapped UserService
 */
 func (usc UserServiceCache) Find(key, value string) (*authentication.User, error) {
@@ -86,6 +89,7 @@ func (usc UserServiceCache) Find(key, value string) (*authentication.User, error
 
 	// User not found in the cache, so check in the wrapped service.
 	u, err := usc.store.Find(key, value)
+	fmt.Println(u)
 
 	// If the user is not found return nil user, error
 	if err != nil {
@@ -98,12 +102,13 @@ func (usc UserServiceCache) Find(key, value string) (*authentication.User, error
 	}
 
 	// Return the found user
-	return u, err
+	return u, nil
 
 }
 
 /*
-	Add passes the Add request to the wrapped store.
+	** Add **
+	passes the Add request to the wrapped store.
 	Since the cache is only meant to speed up duplicate reads,
 	and not replace the main UserService, this is a passthough method.
 	This means the main UserService can perform any validation required
@@ -120,7 +125,8 @@ func (usc UserServiceCache) Add(u *authentication.User) (err error) {
 }
 
 /*
-	Update passes the Update request to the wrapped store
+	** Update **
+	passes the Update request to the wrapped store
 	It is now possible that the cache will hold out of date information
 	so we will need to delete the entry from the cache(s).
 */
@@ -140,7 +146,8 @@ func (usc UserServiceCache) Update(u *authentication.User, fields authentication
 }
 
 /*
-	deleteFromAll is intended as a single function to delete the current
+	** deleteFromAll **
+	is intended as a single function to delete the current
 	user from the cache, useful for deleting and updating users.
 */
 func (usc UserServiceCache) deleteFromAll(u *authentication.User) {
@@ -160,7 +167,8 @@ func (usc UserServiceCache) Delete(u *authentication.User) (err error) {
 }
 
 /*
-	FullReset resets the cache, and forwards the error (if any)
+	** FullReset **
+	resets the cache, and forwards the error (if any)
 	created by the main datastore following a call to drop the existing user table and rebuild.
 	This is intended for use in *development only*, to allow quick changes to
 	the database structure / authentication.User struct object while still experimenting with the

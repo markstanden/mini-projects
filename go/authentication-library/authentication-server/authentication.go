@@ -11,7 +11,7 @@ import "errors"
 //		The user's email, for communication and ID at login
 //	hashedPassword string
 //		The hashed password string.  This must never be used to store a plain text password
-//	TokenID string
+//	TokenUserID string
 //		The generated identification token stored within the ID token
 type User struct {
 	UniqueID       int
@@ -37,8 +37,10 @@ type UserDataStore interface {
 	Delete(user *User) error
 }
 
-// SecretService is an interface for the secret storage logic to retrieve secrets,
-// which will be platform dependant.
+/*
+	** SecretService ** is an interface for the secret storage logic to retrieve secrets,
+	which will be platform dependant.
+*/
 type SecretDataStore interface {
 	DataStore
 	// Takes directly from the store
@@ -47,36 +49,66 @@ type SecretDataStore interface {
 }
 
 /*
+	** DataStore **
 	A DataStore holds a connection to a datastore
 */
 type DataStore interface {
 	FullReset() (err error)
 }
 
-// PasswordHash specifies the requirements of the passord hashing module
+/*
+	** PasswordHash **
+	specifies the requirements of the passord hashing module
+*/
 type PasswordHash interface {
 	Encode(plainTextPassword string) string
 	Compare(plainTextPassword, hashedPassword string) bool
 }
 
+/*
+	** Access Token Service **
+	The required methods to create and verify the access tokens
+	used to authorise users within areas of our site.
+*/
 type AccessTokenService interface {
 	Create(userID string) (jwt, jwtID string, err error)
 	Decode(jwt string) (userID, jwtID string, err error)
 	//GetSecret(version string) (secret string)
 }
 
+/*
+	** Refresh Token Service **
+	The required methods to issue and verify the refresh token implementation
+	for the site.  The refresh token is used as a long duration token used to identify the session,
+	and is generally a high entropy private unique string stored within a cookie
+*/
 type RefreshTokenService interface {
 	Create(userID string) (refreshToken string)
 }
 
+/*
+	** UserService **
+	The userservice combines all of the components of the user login and authentication system
+	including creation and addition of a new user, the logging in and creation of new tokens,
+	and the verification of existing tokens
+*/
 type UserService interface {
-	NewUser(user User) error
+	NewUser(name, email, password string) (user *User, err error)
+	Login(email, password string) (user *User, err error)
 }
 
+/*
+	** ERRORS **
+	list of accepted errors to be used and checked against
+*/
 var (
 	// users
-	ErrUserNotFound = errors.New("user not found")
+	ErrUserNotFound      = errors.New("user not found")
+	ErrIncorrectPassword = errors.New("incorrect password")
 
 	// tokens
 	ErrExpiredToken = errors.New("expired token")
+
+	// internal error
+	ErrInternalServerError = errors.New("internal server error")
 )

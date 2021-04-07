@@ -10,12 +10,13 @@ import (
 	"github.com/markstanden/authentication/datastores/postgres"
 )
 
-// UserService is a struct providing a psql implementation of authentication.UserService
+// UserService is a struct providing a psql implementation of authentication.UserDataStore
 type PGUserDataStore struct {
 	DB postgres.DataStore
 }
 
 /*
+	**  NewUserService  **
 	NewUserService returns a new UserService object with the
 	supplied datastore.
 */
@@ -194,9 +195,6 @@ func (us PGUserDataStore) updateAccess(uniqueID int, accessID string) (err error
 	return err
 }
 
-/*
-************** DEVELOPMENT USE ONLY!!! ***************
- */
 /*
 	**  FullReset  **
 	drops and re-Creates the user table

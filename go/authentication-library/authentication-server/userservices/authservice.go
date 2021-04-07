@@ -29,10 +29,12 @@ type UserService struct {
 	/*
 		Config
 	*/
+	Config USConfig
+}
 
-	Config struct {
-		RefreshTokenSize uint
-	}
+type USConfig struct {
+	TokenIDSize      uint
+	RefreshTokenSize uint
 }
 
 /*
@@ -53,7 +55,7 @@ func (us UserService) NewUser(name, email, password string) (u *authentication.U
 		Name:           name,
 		Email:          email,
 		HashedPassword: passwordHash,
-		TokenUserID:    securerandom.String(32),
+		TokenUserID:    securerandom.String(us.Config.TokenIDSize),
 	}
 
 	if err = us.UserDS.Add(u); err != nil {

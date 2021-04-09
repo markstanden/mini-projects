@@ -242,23 +242,30 @@ func TestNewUserAndLogin(t *testing.T) {
 *
 ***/
 
-var result string
+/*
+	required to keep the bechmark tests from being collected
+*/
+var (
+	benchResult *authentication.User
+)
 
-func benchmarkNewUser(cost int, b *testing.B) {
-	var hash string
-	for n := 0; n < b.N; n++ {
-		//		hash = Encode("secretcode", uint(cost))
+func BenchmarkNewUser(b *testing.B) {
+
+	ds, err := postgres.GetTestConfig().FromEnv().Connect()
+	if err != nil {
+		b.Fatal("failed to connect to the temp database")
 	}
-	result = hash
-}
 
-//func BenchmarkEncodeCost1(b *testing.B)  { benchmarkEncode(1, b) }
-//func BenchmarkEncodeCost2(b *testing.B)  { benchmarkEncode(2, b) }
-//func BenchmarkEncodeCost3(b *testing.B)  { benchmarkEncode(3, b) }
-//func BenchmarkEncodeCost4(b *testing.B)  { benchmarkEncode(4, b) }
-//func BenchmarkEncodeCost5(b *testing.B)  { benchmarkEncode(5, b) }
-//func BenchmarkEncodeCost6(b *testing.B)  { benchmarkEncode(6, b) }
-//func BenchmarkEncodeCost7(b *testing.B)  { benchmarkEncode(7, b) }
-//func BenchmarkEncodeCost8(b *testing.B)  { benchmarkEncode(8, b) }
-//func BenchmarkEncodeCost9(b *testing.B)  { benchmarkEncode(9, b) }
-//func BenchmarkEncodeCost10(b *testing.B) { benchmarkEncode(10, b) }
+	userStore := pguserdatastore.NewUserService(ds)
+	us := userservice.UserService{
+		UserDS: userStore,
+		Config: userservice.USConfig{TokenIDSize: 32},
+	}
+
+	var user *authentication.User
+	for n := 0; n < b.N; n++ {
+		user, _ = us.NewUser("name", "email@address.com", "password")
+	}
+
+	benchResult = user
+}

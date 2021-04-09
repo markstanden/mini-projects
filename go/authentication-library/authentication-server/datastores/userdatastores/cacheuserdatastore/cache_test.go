@@ -138,7 +138,7 @@ func TestAddThenFind(t *testing.T) {
 		*/
 		t.Run("Add User to DB", func(t *testing.T) {
 			if err := usc.Add(&test.user); err != nil && test.isValid {
-				t.Error(test.desc, " - failed to add test user to datastore")
+				t.Fatal(test.desc, " - failed to add test user to datastore")
 			} else if err == nil && !test.isValid {
 				t.Error(test.desc, " - added an unexpected/invalid user from datastore")
 			}

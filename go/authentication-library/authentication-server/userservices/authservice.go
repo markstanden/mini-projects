@@ -1,12 +1,21 @@
 package userservice
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/markstanden/argonhasher"
 	"github.com/markstanden/authentication"
 	"github.com/markstanden/securerandom"
+)
+
+var (
+	ErrInvalidInput = errors.New("invalid input")
+
+	MinInputLength = 3
+	MaxInputLength = 255
 )
 
 type UserService struct {
@@ -45,6 +54,17 @@ type USConfig struct {
 */
 func (us UserService) NewUser(name, email, password string) (u *authentication.User, err error) {
 
+	if emptyString(name) ||
+		tooLong(name) ||
+		emptyString(email) ||
+		tooLong(email) ||
+		!validEmail(email) ||
+		emptyString(password) ||
+		tooLong(password) ||
+		tooShort(password) {
+		return nil, ErrInvalidInput
+	}
+
 	// hash the password, default complexity
 	passwordHash := argonhasher.Encode(password, 0)
 	if passwordHash == "" {
@@ -59,9 +79,10 @@ func (us UserService) NewUser(name, email, password string) (u *authentication.U
 	}
 
 	if err = us.UserDS.Add(u); err != nil {
+
 		return nil, fmt.Errorf("failed to create user account :\n%v" + err.Error())
 	}
-	//log.Println("User Account Created OK")
+
 	return u, nil
 }
 
@@ -125,10 +146,25 @@ func (us UserService) AuthenticateAccess(jwt string) (user *authentication.User,
 	if the password validation fails a nil pointer and an error returned.
 */
 func (us UserService) Login(email, password string) (user *authentication.User, err error) {
+
+	/*
+		check inputs to potentially save unnecessary hashing or DB lookups
+	*/
+	if emptyString(email) || emptyString(password) {
+		return nil, ErrInvalidInput
+	}
+
+	if tooShort(email) || !validEmail(email) || tooLong(email) {
+		return nil, ErrInvalidInput
+	}
+
+	if tooShort(password) || tooLong(password) {
+		return nil, ErrInvalidInput
+	}
+
 	user, err = us.UserDS.Find("email", email)
 
 	if err != nil {
-		fmt.Println("Invalid UserName")
 		return nil, err
 	}
 
@@ -141,4 +177,50 @@ func (us UserService) Login(email, password string) (user *authentication.User, 
 	} else {
 		return user, nil
 	}
+}
+
+/*
+	*** emptyString ***
+	emptyString checks for an empty input string and true if empty.
+*/
+func emptyString(input string) bool {
+	if input == "" {
+		return true
+	}
+	return false
+}
+
+/*
+	*** tooLong ***
+	tooLong returns true if the input string is too long
+	(longer than MaxInputLength)
+*/
+func tooLong(input string) bool {
+	if len(input) > MaxInputLength {
+		return true
+	}
+	return false
+}
+
+/*
+	*** tooShort ***
+	tooShort returns true if the input string is too short
+	(shorter than MinInputLength)
+*/
+func tooShort(input string) bool {
+	if len(input) < MinInputLength {
+		return true
+	}
+	return false
+}
+func validEmail(input string) bool {
+	parts := strings.Split(input, "@")
+	if len(parts) != 2 {
+		return false
+	}
+	domain := strings.Split(parts[1], ".")
+	if len(domain) != 2 {
+		return false
+	}
+	return true
 }

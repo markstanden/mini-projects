@@ -10,7 +10,7 @@ func GetTestConfig() PGConfig {
 	/*
 		create a new default config but with the dbname "test"
 	*/
-	config := NewConfig().DBName(os.Getenv("PGTESTDB")).Host(os.Getenv("PGTESTHOST")).Port(os.Getenv("PGTESTPORT"))
+	config := NewConfig().DBName("test").DBName(os.Getenv("PGTESTDB")).Host(os.Getenv("PGTESTHOST")).Port(os.Getenv("PGTESTPORT"))
 
 	/*
 		attempt to to connect to the google secret store (if possible) to retreive secret for production tests

@@ -10,6 +10,11 @@ import (
 	"github.com/markstanden/authentication/datastores/postgres"
 )
 
+var (
+	ErrEmailAddressAlreadyInUse = errors.New("email address already in use")
+	ErrTokenUserIDInUse         = errors.New("TokenUserID already in use")
+)
+
 // UserService is a struct providing a psql implementation of authentication.UserDataStore
 type PGUserDataStore struct {
 	DB postgres.DataStore
@@ -34,12 +39,24 @@ func (us PGUserDataStore) Add(u *authentication.User) (err error) {
 	if u.Name == "" || u.Email == "" || u.HashedPassword == "" || u.TokenUserID == "" {
 		return errors.New("missing user data")
 	}
+	/*
+		check the record does not already exist
+	*/
+	if _, err := us.Find("email", u.Email); err == nil {
+		return ErrEmailAddressAlreadyInUse
+	}
+
+	/*
+		check for duplicated tokenUserID
+	*/
+	if _, err := us.Find("tokenuserid", u.TokenUserID); err == nil {
+		return ErrTokenUserIDInUse
+	}
 
 	var id int
 	query := "INSERT INTO users (name, email, hashedpassword, tokenuserid, currentrefresh, currentaccess) VALUES ($1, $2, $3, $4, $5, $6) RETURNING uniqueid"
 	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenUserID, u.CurrentRefreshToken, u.CurrentAccessTokenID).Scan(&id)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 

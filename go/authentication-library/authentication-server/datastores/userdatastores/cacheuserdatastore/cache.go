@@ -89,7 +89,6 @@ func (usc UserServiceCache) Find(key, value string) (*authentication.User, error
 
 	// User not found in the cache, so check in the wrapped service.
 	u, err := usc.store.Find(key, value)
-	fmt.Println(u)
 
 	// If the user is not found return nil user, error
 	if err != nil {

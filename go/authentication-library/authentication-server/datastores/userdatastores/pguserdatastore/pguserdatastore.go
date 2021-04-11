@@ -13,6 +13,7 @@ import (
 var (
 	ErrEmailAddressAlreadyInUse = errors.New("email address already in use")
 	ErrTokenUserIDInUse         = errors.New("TokenUserID already in use")
+	ErrInvalidInput             = errors.New("invalid input")
 )
 
 // UserService is a struct providing a psql implementation of authentication.UserDataStore
@@ -54,8 +55,8 @@ func (us PGUserDataStore) Add(u *authentication.User) (err error) {
 	}
 
 	var id int
-	query := "INSERT INTO users (name, email, hashedpassword, tokenuserid, currentrefresh, currentaccess) VALUES ($1, $2, $3, $4, $5, $6) RETURNING uniqueid"
-	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenUserID, u.CurrentRefreshToken, u.CurrentAccessTokenID).Scan(&id)
+	query := "INSERT INTO users (name, email, hashedpassword, tokenuserid, currentrefresh) VALUES ($1, $2, $3, $4, $5) RETURNING uniqueid"
+	err = us.DB.QueryRow(query, u.Name, u.Email, u.HashedPassword, u.TokenUserID, u.CurrentRefreshToken).Scan(&id)
 	if err != nil {
 		return err
 	}
@@ -88,9 +89,9 @@ func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err e
 
 	switch key {
 	case "email":
-		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid, currentrefresh, currentaccess FROM users WHERE email = $1", value)
+		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid, currentrefresh FROM users WHERE email = $1", value)
 	case "tokenuserid":
-		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid, currentrefresh, currentaccess FROM users WHERE tokenuserid = $1", value)
+		row = us.DB.QueryRow("SELECT uniqueid, name, email, hashedpassword, tokenuserid, currentrefresh FROM users WHERE tokenuserid = $1", value)
 	default:
 		return nil, errors.New("user not found")
 	}
@@ -101,21 +102,19 @@ func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err e
 	hashedPassword := ""
 	tokenUserID := ""
 	currentRefresh := ""
-	currentAccess := ""
-	err = row.Scan(&uniqueID, &name, &email, &hashedPassword, &tokenUserID, &currentRefresh, &currentAccess)
+	err = row.Scan(&uniqueID, &name, &email, &hashedPassword, &tokenUserID, &currentRefresh)
 
 	switch err {
 	case sql.ErrNoRows:
 		return nil, fmt.Errorf("user not found")
 	case nil:
 		return &authentication.User{
-			UniqueID:             uniqueID,
-			Name:                 name,
-			Email:                email,
-			HashedPassword:       hashedPassword,
-			TokenUserID:          tokenUserID,
-			CurrentRefreshToken:  currentRefresh,
-			CurrentAccessTokenID: currentAccess,
+			UniqueID:            uniqueID,
+			Name:                name,
+			Email:               email,
+			HashedPassword:      hashedPassword,
+			TokenUserID:         tokenUserID,
+			CurrentRefreshToken: currentRefresh,
 		}, nil
 	default:
 		log.Println("authentication/sql: user lookup error")
@@ -131,25 +130,29 @@ func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err e
 */
 func (us PGUserDataStore) Update(u *authentication.User, updatedFields authentication.User) (err error) {
 
-	if updatedFields.Name != "" && updatedFields.Name != u.Name {
-		us.updateName(u.UniqueID, updatedFields.Name)
+	fmt.Println(updatedFields)
+
+	if updatedFields.Name == "" || updatedFields.Name == u.Name {
+		return ErrInvalidInput
 	}
-	if updatedFields.Email != "" && updatedFields.Email != u.Email {
-		us.updateEmail(u.UniqueID, updatedFields.Email)
+	us.updateName(u.UniqueID, updatedFields.Name)
+
+	if updatedFields.Email == "" || updatedFields.Email == u.Email {
+		return ErrInvalidInput
 	}
-	if updatedFields.HashedPassword != "" && updatedFields.HashedPassword != u.HashedPassword {
-		us.updateHashedPW(u.UniqueID, updatedFields.HashedPassword)
+	us.updateEmail(u.UniqueID, updatedFields.Email)
+
+	if updatedFields.HashedPassword == "" || updatedFields.HashedPassword == u.HashedPassword {
+		return ErrInvalidInput
 	}
-	if updatedFields.TokenUserID != "" && updatedFields.TokenUserID != u.TokenUserID {
-		us.updateTokenUserID(u.UniqueID, updatedFields.TokenUserID)
+	us.updateHashedPW(u.UniqueID, updatedFields.HashedPassword)
+
+	if updatedFields.CurrentRefreshToken == "" || updatedFields.CurrentRefreshToken == u.CurrentRefreshToken {
+		return ErrInvalidInput
 	}
-	if updatedFields.CurrentRefreshToken != "" && updatedFields.CurrentRefreshToken != u.CurrentRefreshToken {
-		us.updateRefresh(u.UniqueID, updatedFields.CurrentRefreshToken)
-	}
-	if updatedFields.CurrentAccessTokenID != "" && updatedFields.CurrentAccessTokenID != u.CurrentAccessTokenID {
-		us.updateAccess(u.UniqueID, updatedFields.CurrentAccessTokenID)
-	}
-	return err
+	us.updateRefresh(u.UniqueID, updatedFields.CurrentRefreshToken)
+
+	return nil
 }
 
 /*
@@ -193,16 +196,6 @@ func (us PGUserDataStore) updateRefresh(uniqueID int, refresh string) (err error
 }
 
 /*
-	*** updateTokenUserID ***
-	updateTokenUserID is a private function that updates the ID string that identifies the current
-	user within an issued access token within the datastore.
-*/
-func (us PGUserDataStore) updateTokenUserID(uniqueID int, tokenUserID string) (err error) {
-	_, err = us.DB.Exec("UPDATE users SET tokenuserid = $1 WHERE uniqueid = $2", tokenUserID, uniqueID)
-	return err
-}
-
-/*
 	*** updateAccess ***
 	updateAccess is a private function that updates the ID string that identifies the current access token
 	within the datastore.
@@ -230,8 +223,7 @@ func (us PGUserDataStore) FullReset() (err error) {
     email varchar(255) UNIQUE NOT NULL,
     hashedpassword varchar(160) NOT NULL,
     currentrefresh varchar(255) UNIQUE,
-    tokenuserid varchar(160) UNIQUE NOT NULL,
-    currentaccess varchar(255) UNIQUE);`)
+    tokenuserid varchar(160) UNIQUE NOT NULL);`)
 	if err != nil {
 		return fmt.Errorf("authentication/postgres: Failed to create users table:\n%v", err)
 	}

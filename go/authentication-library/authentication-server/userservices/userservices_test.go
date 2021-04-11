@@ -1,6 +1,7 @@
 package userservice_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -112,6 +113,14 @@ var tests = []test{
 }
 
 /*
+**********************************
+*
+*          Tests
+*
+**********************************
+ */
+
+/*
 	*** TestNewUser ***
 	TestNewUser creates a new user from the test slice,
 	and checks that the user has been created and added
@@ -128,14 +137,12 @@ func TestNewUserAndLogin(t *testing.T) {
 	}
 
 	userStore := pguserdatastore.NewUserService(ds)
-	//	userStore.FullReset()
+	userStore.FullReset()
 	/*
 		create the UserService using the test DB
 	*/
-	us := userservice.UserService{
-		UserDS: userStore,
-		Config: userservice.USConfig{TokenIDSize: 32},
-	}
+	us := userservice.NewUserService()
+	us.UserDS = userStore
 
 	var usersCreated []authentication.User
 
@@ -152,7 +159,7 @@ func TestNewUserAndLogin(t *testing.T) {
 				*/
 				newUser, err = us.NewUser(test.user.name, test.user.email, test.user.password)
 				if test.isValid && err != nil {
-					t.Fatalf("failed to add user (%v) to db", test.user.email)
+					t.Fatalf("failed to add user (%v) to db :\n%v", test.user.email, err)
 				} else if !test.isValid && err == nil {
 					t.Fatalf("failed to return an error for an invalid user (%v)", test.user.email)
 				}
@@ -236,20 +243,95 @@ func TestNewUserAndLogin(t *testing.T) {
 	}
 }
 
-/***
+/*
+**********************************
 *
-*	Benchmarks
+*          Benchmarks
 *
-***/
+**********************************
+ */
 
 /*
 	required to keep the bechmark tests from being collected
 */
 var (
-	benchResult *authentication.User
+	benchResult = new(authentication.User)
 )
 
+/*
+** New User Benchmark **
+ */
 func BenchmarkNewUser(b *testing.B) {
+
+	/*
+		connect to the test database
+	*/
+	ds, err := postgres.GetTestConfig().FromEnv().Connect()
+	if err != nil {
+		b.Fatal("failed to connect to the temp database")
+	}
+
+	userStore := pguserdatastore.NewUserService(ds)
+	/*
+		create the UserService using the test DB
+	*/
+	us := userservice.NewUserService()
+
+	us.UserDS = userStore
+	if err := us.UserDS.FullReset(); err != nil {
+		b.Fatalf("Failed to reset DB:\n%v", err)
+	}
+
+	user := new(authentication.User)
+	for n := 0; n < b.N; n++ {
+		user, err = us.NewUser("name", fmt.Sprintf("%v", n)+"@address.com", "password")
+		if err != nil {
+			b.Fatalf("failed to create user:\n%s", err.Error())
+		}
+	}
+	benchResult = user
+	us.UserDS.Delete(user)
+}
+
+/*
+** Login Benchmark **
+ */
+
+func BenchmarkLogin(b *testing.B) {
+
+	ds, err := postgres.GetTestConfig().FromEnv().Connect()
+	if err != nil {
+		b.Fatal("failed to connect to the temp database")
+	}
+
+	userStore := pguserdatastore.NewUserService(ds)
+	us := userservice.NewUserService()
+	us.UserDS = userStore
+	userStore.FullReset()
+
+	u := new(authentication.User)
+
+	for n := 0; n < b.N; n++ {
+
+		b.StopTimer()
+		pass := "falsjef;aaoitqeirotualkfvz.x,mccvn.zx,vnailrutadfhkasdkfsa"
+		user, _ := us.NewUser("name", fmt.Sprint(n)+"@address.com", pass)
+		b.StartTimer()
+
+		u, err = us.Login(user.Email, pass)
+	}
+	if err != nil {
+		b.Fatal("failed to create user")
+	}
+
+	benchResult = u
+}
+
+/*
+** Update User Benchmark **
+ */
+func BenchmarkUpdateUser(b *testing.B) {
+	b.StopTimer() // Setup Benchmark
 
 	ds, err := postgres.GetTestConfig().FromEnv().Connect()
 	if err != nil {
@@ -263,9 +345,41 @@ func BenchmarkNewUser(b *testing.B) {
 	}
 
 	var user *authentication.User
+	user, err = us.NewUser("name", "email@address.com", "password")
+	if err != nil {
+		b.Fatal("failed to create user")
+	}
+
+	b.StartTimer() // Benchmark Setup Complete
+
 	for n := 0; n < b.N; n++ {
-		user, _ = us.NewUser("name", "email@address.com", "password")
+		if err := us.UpdateUser(user,
+			userservice.UpdateName("New Name"),
+			userservice.UpdateEmail("New Email"),
+			userservice.UpdatePassword("newpassword"),
+		); err != nil {
+			b.Fatalf("Failed to update user: \n%v", err)
+		}
+		fmt.Println(user)
 	}
 
 	benchResult = user
+	b.StopTimer()
+
+	us.UserDS.Delete(user)
 }
+
+/*
+** Delete User Benchmark **
+ */
+func BenchmarkDeleteUser(b *testing.B) {
+	// Delete Here
+}
+
+/*
+*********************************
+*
+*          Examples
+*
+**********************************
+ */

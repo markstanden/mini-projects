@@ -30,6 +30,11 @@ type UserService struct {
 	SecretDS authentication.SecretDataStore
 
 	/*
+		Password Protection Package
+	*/
+	PasswordHasher authentication.PasswordHash
+
+	/*
 		Session management
 	*/
 	AccessTS  authentication.AccessTokenService  // short lived jwt
@@ -44,6 +49,21 @@ type UserService struct {
 type USConfig struct {
 	TokenIDSize      uint
 	RefreshTokenSize uint
+}
+
+/*
+	** NewUserService **
+	NewUserService returns a new UserService struct with system defaults
+*/
+func NewUserService() (us UserService) {
+	//us.UserDS = pguserdatastore
+	//us.SecretDS
+	//us.AccessTS
+	//us.RefreshTS
+	//us.PasswordHasher = argonhasher
+	us.Config.RefreshTokenSize = uint(100)
+	us.Config.TokenIDSize = uint(100)
+	return us
 }
 
 /*
@@ -71,12 +91,12 @@ func (us UserService) NewUser(name, email, password string) (u *authentication.U
 		return nil, fmt.Errorf("SERVER ERROR - FAILED TO CREATE HASH")
 	}
 
-	u = &authentication.User{
-		Name:           name,
-		Email:          email,
-		HashedPassword: passwordHash,
-		TokenUserID:    securerandom.String(us.Config.TokenIDSize),
-	}
+	u = new(authentication.User)
+	u.Name = name
+	u.Email = email
+	u.HashedPassword = passwordHash
+	u.TokenUserID = securerandom.String(us.Config.TokenIDSize)
+	u.CurrentRefreshToken = us.NewRefreshToken()
 
 	if err = us.UserDS.Add(u); err != nil {
 
@@ -86,9 +106,21 @@ func (us UserService) NewUser(name, email, password string) (u *authentication.U
 	return u, nil
 }
 
-func (us UserService) GetNewRefreshToken(user *authentication.User) (refreshToken string) {
-	user.CurrentRefreshToken = securerandom.String(us.Config.RefreshTokenSize)
-	return user.CurrentRefreshToken
+/*
+	** NewRefreshToken **
+	NewRefreshToken generates a new refresh token and returns the result as a string
+*/
+func (us UserService) NewRefreshToken() (refreshToken string) {
+	refreshToken = securerandom.String(us.Config.RefreshTokenSize)
+	return refreshToken
+}
+
+/*
+	** UpdateRefreshToken **
+	Helper function that gets a new refresh token, and updates the local and stored version.
+*/
+func (us UserService) UpdateRefreshToken(user *authentication.User) {
+	us.UpdateUser(user, UpdateRefreshToken(us.NewRefreshToken()))
 }
 
 /*
@@ -177,6 +209,80 @@ func (us UserService) Login(email, password string) (user *authentication.User, 
 	} else {
 		return user, nil
 	}
+}
+
+/*
+	The closure function to set the fields of the update struct
+*/
+type UpdateFunc func(us UserService, updates *authentication.User) error
+
+/*
+	** UpdateName **
+	UpdateName is a configuration function passed to the UpdateUser
+	function as argument, used to add the new name to the configuration
+	struct.
+*/
+func UpdateName(name string) UpdateFunc {
+	return UpdateFunc(func(us UserService, updates *authentication.User) error {
+		updates.Name = name
+		return nil
+	})
+}
+
+/*
+	** UpdateEmail **
+	UpdateEmail is a configuration function passed to the UpdateUser
+	function as argument, used to add the new email address to the configuration
+	struct.
+*/
+func UpdateEmail(email string) UpdateFunc {
+	return UpdateFunc(func(us UserService, updates *authentication.User) error {
+		updates.Email = email
+		return nil
+	})
+}
+
+/*
+	** UpdatePassword **
+	UpdatePassword is a configuration function passed to the UpdateUser
+	function as argument, used to add the new hashed password to the configuration
+	struct.
+*/
+func UpdatePassword(plaintext string) UpdateFunc {
+	return UpdateFunc(func(us UserService, updates *authentication.User) error {
+		newHashedPW := argonhasher.Encode(plaintext, 0)
+		if newHashedPW == "" {
+			return ErrInvalidInput
+		}
+		updates.HashedPassword = newHashedPW
+		return nil
+	})
+}
+
+/*
+	*** UpdateRefreshToken ***
+	Updates the current users refresh token.
+*/
+func UpdateRefreshToken(refreshtoken string) UpdateFunc {
+	return UpdateFunc(func(us UserService, updates *authentication.User) error {
+		updates.CurrentRefreshToken = refreshtoken
+		return nil
+	})
+}
+
+/*
+	*** UpdateUser ***
+	Updates the current user with the updated fields within the struct.
+*/
+func (us UserService) UpdateUser(u *authentication.User, updates ...UpdateFunc) (err error) {
+	updatedFields := new(authentication.User)
+	for _, update := range updates {
+		if err = update(us, updatedFields); err != nil {
+			return err
+		}
+
+	}
+	return us.UserDS.Update(u, *updatedFields)
 }
 
 /*

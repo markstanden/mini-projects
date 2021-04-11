@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/markstanden/authentication"
 	"github.com/markstanden/authentication/datastores/postgres"
@@ -126,77 +127,91 @@ func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err e
 /*
 	**  Update  **
 	updates a user in the Database
-	This definitely needs refactoring!
 */
-func (us PGUserDataStore) Update(u *authentication.User, updatedFields authentication.User) (err error) {
+func (us PGUserDataStore) Update(upd authentication.User) (err error) {
 
-	fmt.Println(updatedFields)
-
-	if updatedFields.Name == "" || updatedFields.Name == u.Name {
+	if !valid(upd) {
 		return ErrInvalidInput
 	}
-	us.updateName(u.UniqueID, updatedFields.Name)
 
-	if updatedFields.Email == "" || updatedFields.Email == u.Email {
-		return ErrInvalidInput
-	}
-	us.updateEmail(u.UniqueID, updatedFields.Email)
-
-	if updatedFields.HashedPassword == "" || updatedFields.HashedPassword == u.HashedPassword {
-		return ErrInvalidInput
-	}
-	us.updateHashedPW(u.UniqueID, updatedFields.HashedPassword)
-
-	if updatedFields.CurrentRefreshToken == "" || updatedFields.CurrentRefreshToken == u.CurrentRefreshToken {
-		return ErrInvalidInput
-	}
-	us.updateRefresh(u.UniqueID, updatedFields.CurrentRefreshToken)
-
-	return nil
-}
-
-/*
-	*** updateName ***
-	updateName is a private function that updates the users name
-	within the datastore.
-*/
-func (us PGUserDataStore) updateName(uniqueID int, name string) (err error) {
-	_, err = us.DB.Exec("UPDATE users SET name = $1 WHERE uniqueid = $2", name, uniqueID)
+	_, err = us.DB.Exec("UPDATE users SET (name, email, hashedpassword) = ($1, $2, $3) WHERE uniqueid = $4", upd.Name, upd.Email, upd.HashedPassword, upd.UniqueID)
 	return err
 }
 
 /*
-	*** updateEmail ***
-	updateEmail is a private function that updates the users email
+	** UpdateRefresh **
+	UpdateRefresh is a private function that updates the users Refresh token
 	within the datastore.
 */
-func (us PGUserDataStore) updateEmail(uniqueID int, email string) (err error) {
-	_, err = us.DB.Exec("UPDATE users SET email = $1 WHERE uniqueid = $2", email, uniqueID)
-	return err
-}
-
-/*
-	*** updateHashedPW ***
-	updateHashedPW is a private function that updates the users hashed password
-	within the datastore.
-*/
-func (us PGUserDataStore) updateHashedPW(uniqueID int, hashedPW string) (err error) {
-	_, err = us.DB.Exec("UPDATE users SET hashedpassword = $1 WHERE uniqueid = $2", hashedPW, uniqueID)
-	return err
-}
-
-/*
-	*** updateRefresh ***
-	updateRefresh is a private function that updates the users Refresh token
-	within the datastore.
-*/
-func (us PGUserDataStore) updateRefresh(uniqueID int, refresh string) (err error) {
+func (us PGUserDataStore) UpdateRefresh(uniqueID int, refresh string) (err error) {
+	if refresh == "" {
+		return ErrInvalidInput
+	}
 	_, err = us.DB.Exec("UPDATE users SET currentrefresh = $1 WHERE uniqueid = $2", refresh, uniqueID)
 	return err
 }
 
 /*
-	*** updateAccess ***
+	** valid **
+	valid takes a user as an argument and returns true if the fields
+	pass the field specific validation checks
+*/
+func valid(user authentication.User) bool {
+	if !validName(user.Name) || !validEmail(user.Email) || !validPW(user.HashedPassword) {
+		return false
+	}
+	return true
+}
+
+/*
+	** validName **
+	valid name is a private method that verifies the supplied string as
+*/
+func validName(name string) bool {
+	length := len(name)
+	if length < 2 {
+		return false
+	}
+	if length > 100 {
+		return false
+	}
+	return true
+}
+
+/*
+	*** validEmail ***
+	validEmail checks the supplied string is a valid email address
+	and returns true if valid.
+*/
+func validEmail(input string) bool {
+	parts := strings.Split(input, "@")
+	if len(parts) != 2 {
+		return false
+	}
+	domain := strings.Split(parts[1], ".")
+	if len(domain) != 2 {
+		return false
+	}
+	return true
+}
+
+/*
+	** validName **
+	valid name is a private method that verifies the supplied string as
+*/
+func validPW(name string) bool {
+	length := len(name)
+	if length < 2 {
+		return false
+	}
+	if length > 255 {
+		return false
+	}
+	return true
+}
+
+/*
+	** updateAccess **
 	updateAccess is a private function that updates the ID string that identifies the current access token
 	within the datastore.
 */

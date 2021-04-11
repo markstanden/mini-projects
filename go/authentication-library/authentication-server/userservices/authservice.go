@@ -13,9 +13,6 @@ import (
 
 var (
 	ErrInvalidInput = errors.New("invalid input")
-
-	MinInputLength = 3
-	MaxInputLength = 255
 )
 
 type UserService struct {
@@ -47,6 +44,8 @@ type UserService struct {
 }
 
 type USConfig struct {
+	MinInputLength   int
+	MaxInputLength   int
 	TokenIDSize      uint
 	RefreshTokenSize uint
 }
@@ -61,6 +60,10 @@ func NewUserService() (us UserService) {
 	//us.AccessTS
 	//us.RefreshTS
 	//us.PasswordHasher = argonhasher
+
+	us.Config.MinInputLength = 3
+	us.Config.MaxInputLength = 255
+
 	us.Config.RefreshTokenSize = uint(100)
 	us.Config.TokenIDSize = uint(100)
 	return us
@@ -75,13 +78,13 @@ func NewUserService() (us UserService) {
 func (us UserService) NewUser(name, email, password string) (u *authentication.User, err error) {
 
 	if emptyString(name) ||
-		tooLong(name) ||
+		tooLong(name, us.Config.MaxInputLength) ||
 		emptyString(email) ||
-		tooLong(email) ||
+		tooLong(email, us.Config.MaxInputLength) ||
 		!validEmail(email) ||
 		emptyString(password) ||
-		tooLong(password) ||
-		tooShort(password) {
+		tooLong(password, us.Config.MaxInputLength) ||
+		tooShort(password, us.Config.MinInputLength) {
 		return nil, ErrInvalidInput
 	}
 
@@ -186,11 +189,14 @@ func (us UserService) Login(email, password string) (user *authentication.User, 
 		return nil, ErrInvalidInput
 	}
 
-	if tooShort(email) || !validEmail(email) || tooLong(email) {
+	if tooShort(email, us.Config.MinInputLength) ||
+		!validEmail(email) ||
+		tooLong(email, us.Config.MaxInputLength) {
 		return nil, ErrInvalidInput
 	}
 
-	if tooShort(password) || tooLong(password) {
+	if tooShort(password, us.Config.MinInputLength) ||
+		tooLong(password, us.Config.MaxInputLength) {
 		return nil, ErrInvalidInput
 	}
 
@@ -275,14 +281,15 @@ func UpdateRefreshToken(refreshtoken string) UpdateFunc {
 	Updates the current user with the updated fields within the struct.
 */
 func (us UserService) UpdateUser(u *authentication.User, updates ...UpdateFunc) (err error) {
-	updatedFields := new(authentication.User)
-	for _, update := range updates {
-		if err = update(us, updatedFields); err != nil {
+	updatedUser := *u
+	for _, updateFunc := range updates {
+		if err = updateFunc(us, &updatedUser); err != nil {
 			return err
 		}
-
 	}
-	return us.UserDS.Update(u, *updatedFields)
+
+	fmt.Println(*u, updatedUser)
+	return us.UserDS.Update(updatedUser)
 }
 
 /*
@@ -301,8 +308,8 @@ func emptyString(input string) bool {
 	tooLong returns true if the input string is too long
 	(longer than MaxInputLength)
 */
-func tooLong(input string) bool {
-	if len(input) > MaxInputLength {
+func tooLong(input string, max int) bool {
+	if len(input) > max {
 		return true
 	}
 	return false
@@ -313,12 +320,18 @@ func tooLong(input string) bool {
 	tooShort returns true if the input string is too short
 	(shorter than MinInputLength)
 */
-func tooShort(input string) bool {
-	if len(input) < MinInputLength {
+func tooShort(input string, min int) bool {
+	if len(input) < min {
 		return true
 	}
 	return false
 }
+
+/*
+	*** validEmail ***
+	validEmail checks the supplied string is a valid email address
+	and returns true if valid.
+*/
 func validEmail(input string) bool {
 	parts := strings.Split(input, "@")
 	if len(parts) != 2 {

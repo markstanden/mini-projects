@@ -35,7 +35,7 @@ type UserDataStore interface {
 	DataStore
 	Add(user *User) error
 	Find(key, value string) (*User, error)
-	Update(user *User, updatedFields User) error
+	Update(user User) error
 	Delete(user *User) error
 }
 

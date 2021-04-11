@@ -339,10 +339,9 @@ func BenchmarkUpdateUser(b *testing.B) {
 	}
 
 	userStore := pguserdatastore.NewUserService(ds)
-	us := userservice.UserService{
-		UserDS: userStore,
-		Config: userservice.USConfig{TokenIDSize: 32},
-	}
+	us := userservice.NewUserService()
+	userStore.FullReset()
+	us.UserDS = userStore
 
 	var user *authentication.User
 	user, err = us.NewUser("name", "email@address.com", "password")
@@ -353,10 +352,11 @@ func BenchmarkUpdateUser(b *testing.B) {
 	b.StartTimer() // Benchmark Setup Complete
 
 	for n := 0; n < b.N; n++ {
+		prefix := fmt.Sprint(n)
 		if err := us.UpdateUser(user,
-			userservice.UpdateName("New Name"),
-			userservice.UpdateEmail("New Email"),
-			userservice.UpdatePassword("newpassword"),
+			userservice.UpdateName(prefix+"New Name"),
+			userservice.UpdateEmail(prefix+"Email@address.com"),
+			userservice.UpdatePassword(prefix+"newpassword"),
 		); err != nil {
 			b.Fatalf("Failed to update user: \n%v", err)
 		}

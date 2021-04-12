@@ -143,11 +143,11 @@ func (us PGUserDataStore) Update(upd authentication.User) (err error) {
 	UpdateRefresh is a private function that updates the users Refresh token
 	within the datastore.
 */
-func (us PGUserDataStore) UpdateRefresh(uniqueID int, refresh string) (err error) {
+func (us PGUserDataStore) UpdateRefreshToken(u *authentication.User, refresh string) (err error) {
 	if refresh == "" {
 		return ErrInvalidInput
 	}
-	_, err = us.DB.Exec("UPDATE users SET currentrefresh = $1 WHERE uniqueid = $2", refresh, uniqueID)
+	_, err = us.DB.Exec("UPDATE users SET currentrefresh = $1 WHERE uniqueid = $2", refresh, u.UniqueID)
 	return err
 }
 

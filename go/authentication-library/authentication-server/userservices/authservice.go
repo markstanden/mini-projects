@@ -293,7 +293,7 @@ func (us UserService) UpdateUser(u *authentication.User, updates ...UpdateFunc) 
 }
 
 /*
-	*** emptyString ***
+		*** emptyString ***
 	emptyString checks for an empty input string and true if empty.
 */
 func emptyString(input string) bool {

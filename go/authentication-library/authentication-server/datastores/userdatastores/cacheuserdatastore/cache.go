@@ -129,27 +129,44 @@ func (usc UserServiceCache) Add(u *authentication.User) (err error) {
 	It is now possible that the cache will hold out of date information
 	so we will need to delete the entry from the cache(s).
 */
-func (usc UserServiceCache) Update(u *authentication.User, fields authentication.User) (err error) {
+func (usc UserServiceCache) Update(updatedUser authentication.User) (err error) {
 
 	/*
 		delete the user from all caches as
 		information may now be out of date
 	*/
-	usc.deleteFromAll(u)
+	usc.deleteFromAllCaches(&updatedUser)
 
 	/*
 		update the user in the main store,
 		return any errors directly
 	*/
-	return usc.store.Update(u, fields)
+	return usc.store.Update(updatedUser)
+}
+
+func (usc UserServiceCache) UpdateRefreshToken(u *authentication.User, newRefreshToken string) (err error) {
+
+	/*
+		delete the user from all caches as
+		information may now be out of date
+	*/
+	usc.deleteFromAllCaches(u)
+
+	/*
+		update the user in the main store,
+		return any errors directly
+	*/
+	return usc.store.UpdateRefreshToken(u, newRefreshToken)
 }
 
 /*
-	** deleteFromAll **
+	** deleteFromAllCaches **
 	is intended as a single function to delete the current
 	user from the cache, useful for deleting and updating users.
+	Will only delete caches that exist, and will not panic if a non existant
+	cache is attempted to be deleted.
 */
-func (usc UserServiceCache) deleteFromAll(u *authentication.User) {
+func (usc UserServiceCache) deleteFromAllCaches(u *authentication.User) {
 
 	/*
 		Built in function delete only deletes the record if it exists,
@@ -160,7 +177,7 @@ func (usc UserServiceCache) deleteFromAll(u *authentication.User) {
 }
 
 func (usc UserServiceCache) Delete(u *authentication.User) (err error) {
-	usc.deleteFromAll(u)
+	usc.deleteFromAllCaches(u)
 
 	return usc.store.Delete(u)
 }

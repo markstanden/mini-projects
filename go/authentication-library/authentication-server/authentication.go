@@ -36,6 +36,7 @@ type UserDataStore interface {
 	Add(user *User) error
 	Find(key, value string) (*User, error)
 	Update(user User) error
+	UpdateRefreshToken(user *User, newRefreshToken string) error
 	Delete(user *User) error
 }
 

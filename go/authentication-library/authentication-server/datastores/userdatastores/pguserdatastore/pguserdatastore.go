@@ -128,13 +128,13 @@ func (us PGUserDataStore) Find(key, value string) (u *authentication.User, err e
 	**  Update  **
 	updates a user in the Database
 */
-func (us PGUserDataStore) Update(upd authentication.User) (err error) {
+func (us PGUserDataStore) Update(user *authentication.User, upd authentication.User) (err error) {
 
 	if !valid(upd) {
 		return ErrInvalidInput
 	}
 
-	_, err = us.DB.Exec("UPDATE users SET (name, email, hashedpassword) = ($1, $2, $3) WHERE uniqueid = $4", upd.Name, upd.Email, upd.HashedPassword, upd.UniqueID)
+	_, err = us.DB.Exec("UPDATE users SET (name, email, hashedpassword, tokenuserid) = ($1, $2, $3, $4) WHERE uniqueid = $5", upd.Name, upd.Email, upd.HashedPassword, upd.TokenUserID, upd.UniqueID)
 	return err
 }
 
@@ -157,7 +157,10 @@ func (us PGUserDataStore) UpdateRefreshToken(u *authentication.User, refresh str
 	pass the field specific validation checks
 */
 func valid(user authentication.User) bool {
-	if !validName(user.Name) || !validEmail(user.Email) || !validPW(user.HashedPassword) {
+	if !validName(user.Name) ||
+		!validEmail(user.Email) ||
+		!validPW(user.HashedPassword) ||
+		!validTokenID(user.TokenUserID) {
 		return false
 	}
 	return true
@@ -196,12 +199,23 @@ func validEmail(input string) bool {
 }
 
 /*
-	** validName **
-	valid name is a private method that verifies the supplied string as
+	** validPW **
+	validPW is a private method that verifies the supplied string as an appropriate password
 */
 func validPW(name string) bool {
 	length := len(name)
 	if length < 2 {
+		return false
+	}
+	if length > 255 {
+		return false
+	}
+	return true
+}
+
+func validTokenID(tokenID string) bool {
+	length := len(tokenID)
+	if length < 32 {
 		return false
 	}
 	if length > 255 {

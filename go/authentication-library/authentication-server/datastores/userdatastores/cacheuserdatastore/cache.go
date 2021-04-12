@@ -129,19 +129,19 @@ func (usc UserServiceCache) Add(u *authentication.User) (err error) {
 	It is now possible that the cache will hold out of date information
 	so we will need to delete the entry from the cache(s).
 */
-func (usc UserServiceCache) Update(updatedUser authentication.User) (err error) {
+func (usc UserServiceCache) Update(user *authentication.User, updatedUser authentication.User) (err error) {
 
 	/*
 		delete the user from all caches as
 		information may now be out of date
 	*/
-	usc.deleteFromAllCaches(&updatedUser)
+	usc.deleteFromAllCaches(&user)
 
 	/*
 		update the user in the main store,
 		return any errors directly
 	*/
-	return usc.store.Update(updatedUser)
+	return usc.store.Update(user, updatedUser)
 }
 
 func (usc UserServiceCache) UpdateRefreshToken(u *authentication.User, newRefreshToken string) (err error) {

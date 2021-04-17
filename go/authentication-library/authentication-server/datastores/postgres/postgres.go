@@ -89,9 +89,11 @@ func NewConfig() PGConfig {
 }
 
 /*
-	FromEnv attempts to take the connnection options from the ENV variables.  if not set, the values remain as previously set.  This enables the function to be placed wherever most convenient in the builder chain.
-	The values are taken from the ENV variables and added to the config via the builder methods to keep one source of truth for the validation logic for each field.
-
+	FromEnv attempts to take the connnection options from the ENV variables.
+	If not set, the values remain as previously set.
+	This enables the function to be placed wherever most convenient in the builder chain.
+	The values are taken from the ENV variables and added to the config via the builder
+	methods to keep one source of truth for the validation logic for each field.
 */
 func (config PGConfig) FromEnv() PGConfig {
 

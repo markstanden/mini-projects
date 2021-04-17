@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/markstanden/authentication/accesstokenservices/jwtaccesstokenservice"
+	accesstoken "github.com/markstanden/authentication/accesstokenservices/jwtaccesstokenservice"
 	"github.com/markstanden/authentication/datastores/postgres"
-	"github.com/markstanden/authentication/datastores/secretdatastores/pgsecretdatastore"
+	secretstore "github.com/markstanden/authentication/datastores/secrets"
 	cache "github.com/markstanden/authentication/datastores/userdatastores/cacheuserdatastore"
-	"github.com/markstanden/authentication/datastores/userdatastores/pguserdatastore"
+	"github.com/markstanden/authentication/datastores/userdatastores/userstore"
 	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
 	userservice "github.com/markstanden/authentication/userservices"
@@ -73,9 +73,12 @@ func run(args []string, stdout io.Writer) error {
 	}
 	defer authdb.DB.Close()
 
-	userDB := pguserdatastore.PGUserDataStore{DB: authdb}
-	ss := pgsecretdatastore.PGSecretDataStore{DB: authdb, Lifespan: 3600}
+	// create the userstore instance and connect it to the postgres DB
+	userDB := userstore.New(authdb)
+	// create the secretstore instance and connect it to our database
+	ss := secretstore.New(authdb, 3600)
 
+	// create the userservice
 	us := userservice.UserService{
 
 		/* Create a userstore cache and shadow the main userstore */
@@ -85,7 +88,7 @@ func run(args []string, stdout io.Writer) error {
 		SecretDS: ss,
 
 		/* create a token service to create authentication tokens for users */
-		AccessTS: &jwtaccesstokenservice.JWTAccessTokenService{
+		AccessTS: &accesstoken.AccessToken{
 			Issuer:    "markstanden.dev",
 			Audience:  "markstanden.dev",
 			MinsValid: 60,

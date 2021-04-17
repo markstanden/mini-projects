@@ -1,11 +1,11 @@
-package cache
+package usercache
 
 import (
 	"testing"
 
 	"github.com/markstanden/authentication"
 	"github.com/markstanden/authentication/datastores/postgres"
-	"github.com/markstanden/authentication/datastores/userdatastores/pguserdatastore"
+	"github.com/markstanden/authentication/datastores/userstore"
 )
 
 var testuser1 = authentication.User{
@@ -18,7 +18,7 @@ var testuser1 = authentication.User{
 /*
 	Create a new user cache, with a connection to the test DB
 */
-func GetTestUserCache(t *testing.T) *UserServiceCache {
+func GetTestUserCache(t *testing.T) *Cache {
 	/*
 		Create a connection to the test database
 	*/
@@ -30,24 +30,24 @@ func GetTestUserCache(t *testing.T) *UserServiceCache {
 		Wrap the database in a new userservice,
 		and wrap the userservice in our cache
 	*/
-	return NewUserCache(pguserdatastore.PGUserDataStore{DB: testdb})
+	return New(userstore.New(testdb))
 }
 
 func TestNewUserCache(t *testing.T) {
 
-	usc := GetTestUserCache(t)
-	if err := usc.FullReset(); err != nil {
+	uc := GetTestUserCache(t)
+	if err := uc.FullReset(); err != nil {
 		t.Fatalf("failed to initialise test database")
 	}
 
 	/*
 		Test that the maps have been created correctly
 	*/
-	if usc.cache.emailCache == nil || usc.cache.tokenUserIDCache == nil {
+	if uc.email == nil || uc.UserID == nil {
 		t.Error("cache not initialised correctly")
 	}
 
-	if len(usc.cache.emailCache) != 0 || len(usc.cache.tokenUserIDCache) != 0 {
+	if len(uc.email) != 0 || len(uc.UserID) != 0 {
 		t.Error("cache contains data!")
 	}
 }
@@ -55,8 +55,8 @@ func TestNewUserCache(t *testing.T) {
 /* Test the add and Find functions by first adding to the cache/store and then retreiving, first from the store, then the cache */
 func TestAddThenFind(t *testing.T) {
 
-	usc := GetTestUserCache(t)
-	if err := usc.FullReset(); err != nil {
+	uc := GetTestUserCache(t)
+	if err := uc.FullReset(); err != nil {
 		t.Fatalf("failed to initialise test database")
 	}
 
@@ -137,7 +137,7 @@ func TestAddThenFind(t *testing.T) {
 			Add from the test table to the store
 		*/
 		t.Run("Add User to DB", func(t *testing.T) {
-			if err := usc.Add(&test.user); err != nil && test.isValid {
+			if err := uc.Add(&test.user); err != nil && test.isValid {
 				t.Fatal(test.desc, " - failed to add test user to datastore")
 			} else if err == nil && !test.isValid {
 				t.Error(test.desc, " - added an unexpected/invalid user from datastore")
@@ -152,19 +152,19 @@ func TestAddThenFind(t *testing.T) {
 		t.Run("Find User", func(t *testing.T) {
 			t.Run("Find User in email cache", func(t *testing.T) {
 				/* user should not be in the cache yet so will need to be fetched from the store */
-				if _, ok := usc.cache.emailCache[test.user.Email]; ok {
+				if _, ok := uc.email[test.user.Email]; ok {
 					/* User data is already present in the cache */
 					t.Error(test.desc, " - user already present in the cache")
 				}
 
-				if _, err := usc.Find("email", test.user.Email); err != nil && test.isValid {
+				if _, err := uc.Find("email", test.user.Email); err != nil && test.isValid {
 					t.Error(test.desc, " - failed to retrieve test user from datastore")
 				} else if err == nil && !test.isValid {
 					t.Error(test.desc, " - retrieved an unexpected/invalid user from datastore")
 				}
 
 				/* user should now have been fetched from the store and added to the cache */
-				if _, ok := usc.cache.emailCache[test.user.Email]; !ok && test.isValid {
+				if _, ok := uc.email[test.user.Email]; !ok && test.isValid {
 					/* User data is not present in the cache */
 					t.Error(test.desc, " - user not present in the cache, after being successfully found in the datastore")
 				} else if ok && !test.isValid {
@@ -173,19 +173,19 @@ func TestAddThenFind(t *testing.T) {
 			})
 			t.Run("Find User in token cache", func(t *testing.T) {
 				/* user should not be in the cache yet so will need to be fetched from the store */
-				if _, ok := usc.cache.tokenUserIDCache[test.user.TokenUserID]; ok {
+				if _, ok := uc.UserID[test.user.TokenUserID]; ok {
 					/* User data is already present in the cache */
 					t.Error(test.desc, " - user already present in the cache")
 				}
 
-				if _, err := usc.Find("tokenuserid", test.user.TokenUserID); err != nil && test.isValid {
+				if _, err := uc.Find("tokenuserid", test.user.TokenUserID); err != nil && test.isValid {
 					t.Error(test.desc, " - failed to retrieve test user from datastore")
 				} else if err == nil && !test.isValid {
 					t.Error(test.desc, " - retrieved an unexpected/invalid user from datastore")
 				}
 
 				/* user should now have been fetched from the store and added to the cache */
-				if _, ok := usc.cache.tokenUserIDCache[test.user.TokenUserID]; !ok && test.isValid {
+				if _, ok := uc.UserID[test.user.TokenUserID]; !ok && test.isValid {
 					/* User data is not present in the cache */
 					t.Error(test.desc, " - user not present in the cache, after being successfully found in the datastore")
 				} else if ok && !test.isValid {
@@ -217,26 +217,26 @@ func TestUpdate(t *testing.T) {
 		CurrentRefreshToken: "qlifakne5mncakvnlaiejflautua3sfdhv,zdgklsjzvckzjxdjchzskuefheaksuhfasjhdfjnzxjdvhdlz",
 	}
 
-	var usc *UserServiceCache
+	var uc *Cache
 
 	t.Run("Init", func(t *testing.T) {
-		usc = GetTestUserCache(t)
-		if err := usc.FullReset(); err != nil {
+		uc = GetTestUserCache(t)
+		if err := uc.FullReset(); err != nil {
 			t.Fatalf("failed to initialise test database")
 		}
 		/* Create a user in the datastore */
-		if err := usc.Add(&startuser); err != nil {
+		if err := uc.Add(&startuser); err != nil {
 			t.Fatalf("failed to add user to UserStore")
 		}
 	})
 
 	t.Run("Prep", func(t *testing.T) {
 		/* Load the user in the cache */
-		userbyemail, err := usc.Find("email", startuser.Email)
+		userbyemail, err := uc.Find("email", startuser.Email)
 		if err != nil {
 			t.Fatalf("failed to find user in UserStore by email")
 		}
-		userbytoken, err := usc.Find("tokenuserid", startuser.TokenUserID)
+		userbytoken, err := uc.Find("tokenuserid", startuser.TokenUserID)
 		if err != nil {
 			t.Fatalf("failed to find user in UserStore by tokenUserID")
 		}
@@ -247,20 +247,20 @@ func TestUpdate(t *testing.T) {
 
 	t.Run("Update", func(t *testing.T) {
 		/* Update the user.  This should update in the UserStore and delete from the cache */
-		if err := usc.Update(&startuser, enduser); err != nil {
+		if err := uc.Update(&startuser, enduser); err != nil {
 			t.Fatalf("Failed to update user")
 		}
 
-		if err := usc.UpdateRefreshToken(&startuser, enduser.CurrentRefreshToken); err != nil {
+		if err := uc.UpdateRefreshToken(&startuser, enduser.CurrentRefreshToken); err != nil {
 			t.Fatalf("Failed to update user")
 		}
 
 		/* Check the user is no longer in the cache */
-		//if _, ok := usc.cache.emailCache[startuser.Email]; ok {
+		//if _, ok := uc.email[startuser.Email]; ok {
 		/* user is still in the cache! */
 		//	t.Fatalf("Failed to remove user from emailcache on user update")
 		//}
-		//if _, ok := usc.cache.tokenUserIDCache[startuser.TokenUserID]; ok {
+		//if _, ok := uc.UserID[startuser.TokenUserID]; ok {
 		/* user is still in the cache! */
 		//	t.Fatalf("Failed to remove user from tokencache on user update")
 		//}
@@ -271,12 +271,12 @@ func TestUpdate(t *testing.T) {
 			to prove the update has been made,
 			and load the user into the cache
 		*/
-		if u, err := usc.Find("email", enduser.Email); err != nil {
+		if u, err := uc.Find("email", enduser.Email); err != nil {
 			t.Fatalf("failed to find user in UserStore by email")
 		} else if *u != enduser {
 			t.Fatalf("returned user is not as expected.\nWanted:\n%v\nGot:\n%v", enduser, *u)
 		}
-		if u, err := usc.Find("tokenuserid", enduser.TokenUserID); err != nil {
+		if u, err := uc.Find("tokenuserid", enduser.TokenUserID); err != nil {
 			t.Fatalf("failed to find updated user in UserStore by tokenUserID")
 		} else if *u != enduser {
 			t.Fatalf("returned user is not updated as expected.\nWanted:\n%v\nGot:\n%v", enduser, *u)
@@ -293,27 +293,27 @@ func TestDelete(t *testing.T) {
 		CurrentRefreshToken: "jhlasdjfhlasshdflaehqruipowerupoqiweriuqywetuoahsdfasdfasfdjl321asd14asdaf1",
 	}
 
-	var usc *UserServiceCache
+	var uc *Cache
 	var founduser authentication.User
 
 	t.Run("Init", func(t *testing.T) {
-		usc = GetTestUserCache(t)
-		if err := usc.FullReset(); err != nil {
+		uc = GetTestUserCache(t)
+		if err := uc.FullReset(); err != nil {
 			t.Fatalf("failed to initialise test database")
 		}
 		/* Create a user in the datastore */
-		if err := usc.Add(&startuser); err != nil {
+		if err := uc.Add(&startuser); err != nil {
 			t.Fatalf("failed to add user to UserStore")
 		}
 	})
 
 	t.Run("Prep", func(t *testing.T) {
 		/* Load the user in the cache */
-		userbyemail, err := usc.Find("email", startuser.Email)
+		userbyemail, err := uc.Find("email", startuser.Email)
 		if err != nil {
 			t.Fatalf("failed to find user in UserStore by email")
 		}
-		userbytoken, err := usc.Find("tokenuserid", startuser.TokenUserID)
+		userbytoken, err := uc.Find("tokenuserid", startuser.TokenUserID)
 		if err != nil {
 			t.Fatalf("failed to find user in UserStore by tokenUserID")
 		}
@@ -329,17 +329,17 @@ func TestDelete(t *testing.T) {
 		and delete from the cache
 	*/
 	t.Run("Delete", func(t *testing.T) {
-		if err := usc.Delete(&founduser); err != nil {
+		if err := uc.Delete(&founduser); err != nil {
 			t.Fatalf("Failed to delete user")
 		}
 	})
 	t.Run("Check Deleted from cache", func(t *testing.T) {
 		/* Check the user is no longer in the cache */
-		if _, ok := usc.cache.emailCache[founduser.Email]; ok {
+		if _, ok := uc.email[founduser.Email]; ok {
 			/* user is still in the cache! */
 			t.Fatalf("Failed to remove user from emailcache on user delete")
 		}
-		if _, ok := usc.cache.tokenUserIDCache[founduser.TokenUserID]; ok {
+		if _, ok := uc.UserID[founduser.TokenUserID]; ok {
 			/* user is still in the cache! */
 			t.Fatalf("Failed to remove user from tokencache on user delete")
 		}
@@ -351,10 +351,10 @@ func TestDelete(t *testing.T) {
 			to prove the delete has been made,
 			obviously we would expect this to fail
 		*/
-		if _, err := usc.Find("email", founduser.Email); err == nil {
+		if _, err := uc.Find("email", founduser.Email); err == nil {
 			t.Fatalf("found user in UserStore by email")
 		}
-		if _, err := usc.Find("tokenUserID", founduser.TokenUserID); err == nil {
+		if _, err := uc.Find("tokenUserID", founduser.TokenUserID); err == nil {
 			t.Fatalf("found user in UserStore by tokenUserID")
 		}
 	})

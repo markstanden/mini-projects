@@ -1,14 +1,15 @@
-package secrets_test
+package secretstore_test
 
 import (
 	"testing"
 
 	"github.com/markstanden/authentication"
 	"github.com/markstanden/authentication/datastores/postgres"
+	"github.com/markstanden/authentication/datastores/secretstore"
 )
 
 func GetTestSecretService(testDB postgres.DataStore) (testSS authentication.SecretDataStore) {
-	testSS = secrets.New(testDB, 5 /* seconds */)
+	testSS = secretstore.New(testDB, 5 /* seconds */)
 	// test.US.XXX = XXX
 	return testSS
 }

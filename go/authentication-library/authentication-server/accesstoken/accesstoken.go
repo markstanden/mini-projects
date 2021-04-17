@@ -60,6 +60,10 @@ type AccessToken struct {
 	StartTime int64
 }
 
+func New() (at AccessToken) {
+	return at
+}
+
 /*
 	** Create **
 	Create takes the provided (anonymous) userID and creates a new JWT

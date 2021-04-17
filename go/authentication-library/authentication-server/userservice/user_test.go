@@ -7,8 +7,8 @@ import (
 
 	"github.com/markstanden/authentication"
 	"github.com/markstanden/authentication/datastores/postgres"
-	"github.com/markstanden/authentication/datastores/userdatastores/pguserdatastore"
-	userservice "github.com/markstanden/authentication/userservices"
+	"github.com/markstanden/authentication/datastores/userstore"
+	"github.com/markstanden/authentication/userservice"
 )
 
 /*
@@ -136,7 +136,7 @@ func TestNewUserAndLogin(t *testing.T) {
 		t.Fatal("failed to connect to the temp database")
 	}
 
-	userStore := pguserdatastore.NewUserService(ds)
+	userStore := userstore.New(ds)
 	userStore.FullReset()
 	/*
 		create the UserService using the test DB
@@ -271,7 +271,7 @@ func BenchmarkNewUser(b *testing.B) {
 		b.Fatal("failed to connect to the temp database")
 	}
 
-	userStore := pguserdatastore.NewUserService(ds)
+	userStore := userstore.New(ds)
 	/*
 		create the UserService using the test DB
 	*/
@@ -304,7 +304,7 @@ func BenchmarkLogin(b *testing.B) {
 		b.Fatal("failed to connect to the temp database")
 	}
 
-	userStore := pguserdatastore.NewUserService(ds)
+	userStore := userstore.New(ds)
 	us := userservice.NewUserService()
 	us.UserDS = userStore
 	userStore.FullReset()
@@ -338,7 +338,7 @@ func BenchmarkUpdateUser(b *testing.B) {
 		b.Fatal("failed to connect to the temp database")
 	}
 
-	userStore := pguserdatastore.NewUserService(ds)
+	userStore := userstore.New(ds)
 	us := userservice.NewUserService()
 	userStore.FullReset()
 	us.UserDS = userStore

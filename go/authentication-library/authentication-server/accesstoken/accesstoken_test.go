@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/markstanden/authentication/datastores/postgres"
-	secretstore "github.com/markstanden/authentication/datastores/secrets"
+	"github.com/markstanden/authentication/datastores/secretstore"
 	"github.com/markstanden/securerandom"
 )
 
@@ -40,22 +40,10 @@ func TestCreate(t *testing.T) {
 			tokenUserID: securerandom.String(tokenLength),
 			isValid:     true,
 		},
-
-		{
-			desc:        "Short TokenUserID",
-			tokenUserID: securerandom.String(tokenLength - 1),
-			isValid:     false,
-		},
-
-		{
-			desc:        "Long TokenUserID",
-			tokenUserID: securerandom.String(tokenLength + 1),
-			isValid:     false,
-		},
 	}
 
 	/* Create the token handler */
-	ts := new(JWTAccessTokenService)
+	ts := New()
 	ts.Audience = "Test"
 	ts.Issuer = "Test Issuer"
 	ts.MinsValid = 10

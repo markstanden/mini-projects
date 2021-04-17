@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"os"
 
-	accesstoken "github.com/markstanden/authentication/accesstokenservices/jwtaccesstokenservice"
+	"github.com/markstanden/authentication/accesstoken"
 	"github.com/markstanden/authentication/datastores/postgres"
-	secretstore "github.com/markstanden/authentication/datastores/secrets"
-	cache "github.com/markstanden/authentication/datastores/userdatastores/cacheuserdatastore"
-	"github.com/markstanden/authentication/datastores/userdatastores/userstore"
+	"github.com/markstanden/authentication/datastores/secretstore"
+	"github.com/markstanden/authentication/datastores/usercache"
+	"github.com/markstanden/authentication/datastores/userstore"
 	"github.com/markstanden/authentication/deployment/googlecloud"
 	"github.com/markstanden/authentication/routes"
-	userservice "github.com/markstanden/authentication/userservices"
+	"github.com/markstanden/authentication/userservice"
 )
 
 func main() {
@@ -82,7 +82,7 @@ func run(args []string, stdout io.Writer) error {
 	us := userservice.UserService{
 
 		/* Create a userstore cache and shadow the main userstore */
-		UserDS: cache.NewUserCache(userDB),
+		UserDS: usercache.New(userDB),
 
 		/* Create a SecretStore to handle our rotating keys */
 		SecretDS: ss,

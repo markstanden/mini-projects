@@ -45,7 +45,7 @@ func SignUp(us authentication.UserService) http.Handler {
 			*/
 			u, err := us.NewUser(r.PostForm.Get("name"), r.PostForm.Get("email"), r.PostForm.Get("password"))
 			if err != nil {
-				fmt.Fprintln(w, getHTMLFORM("Failed to create user, please try again"))
+				fmt.Fprintln(w, getHTMLFORM("Failed to create user, please try again"+err.Error()))
 				return
 
 				/* email verification goes here? */

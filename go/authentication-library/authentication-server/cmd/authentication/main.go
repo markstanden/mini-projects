@@ -79,22 +79,21 @@ func run(args []string, stdout io.Writer) error {
 	ss := secretstore.New(authdb, 3600)
 
 	// create the userservice
-	us := userservice.UserService{
+	us := userservice.NewUserService()
 
-		/* Create a userstore cache and shadow the main userstore */
-		UserDS: usercache.New(userDB),
+	/* Create a userstore cache and shadow the main userstore */
+	us.UserDS = usercache.New(userDB)
 
-		/* Create a SecretStore to handle our rotating keys */
-		SecretDS: ss,
+	/* Create a SecretStore to handle our rotating keys */
+	us.SecretDS = ss
 
-		/* create a token service to create authentication tokens for users */
-		AccessTS: &accesstoken.AccessToken{
-			Issuer:    "markstanden.dev",
-			Audience:  "markstanden.dev",
-			MinsValid: 60,
-			Secret:    ss,
-			StartTime: 1617020114,
-		},
+	/* create a token service to create authentication tokens for users */
+	us.AccessTS = &accesstoken.AccessToken{
+		Issuer:    "markstanden.dev",
+		Audience:  "markstanden.dev",
+		MinsValid: 60,
+		Secret:    ss,
+		StartTime: 1617020114,
 	}
 
 	/* Create a handler for our routes, pass in the cache */

@@ -9,9 +9,11 @@ require (
 	github.com/markstanden/argonhasher v0.3.0
 	github.com/markstanden/jwt v0.9.2
 	github.com/markstanden/securerandom v0.4.1
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
-	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1 // indirect
+	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc // indirect
+	golang.org/x/net v0.0.0-20210415231046-e915ea6b2b7d // indirect
+	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
+	golang.org/x/sys v0.0.0-20210419170143-37df388d1f33 // indirect
 	google.golang.org/api v0.44.0 // indirect
-	google.golang.org/genproto v0.0.0-20210406143921-e86de6bf7a46
+	google.golang.org/genproto v0.0.0-20210416161957-9910b6c460de
 	google.golang.org/grpc v1.37.0 // indirect
 )
